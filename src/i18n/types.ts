@@ -1,4 +1,4 @@
-export type SupportedLocale = "en" | "ru";
+export type SupportedLocale = "en" | "zh-CN";
 
 export type UiLanguagePreference = "system" | SupportedLocale;
 

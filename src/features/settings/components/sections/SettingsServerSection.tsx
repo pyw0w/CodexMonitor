@@ -8,11 +8,6 @@ import type {
   TcpDaemonStatus,
 } from "@/types";
 import { ModalShell } from "@/features/design-system/components/modal/ModalShell";
-import {
-  SettingsSection,
-  SettingsToggleRow,
-  SettingsToggleSwitch,
-} from "@/features/design-system/components/settings/SettingsPrimitives";
 import { useI18n } from "@/i18n/useI18n";
 
 type AddRemoteBackendDraft = {
@@ -108,7 +103,8 @@ export function SettingsServerSection({
   onTcpDaemonStatus,
   onMobileConnectTest,
 }: SettingsServerSectionProps) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
+  const zh = locale === "zh-CN";
   const [pendingDeleteRemoteId, setPendingDeleteRemoteId] = useState<string | null>(
     null,
   );
@@ -131,24 +127,20 @@ export function SettingsServerSection({
       return null;
     }
     if (tcpDaemonStatus.state === "running") {
-      const addr =
-        tcpDaemonStatus.listenAddr ?? t("settings.server.mobileDaemon.status.listenAddrFallback");
       return tcpDaemonStatus.pid
-        ? t("settings.server.mobileDaemon.status.running.withPid", {
-            pid: tcpDaemonStatus.pid,
-            addr,
-          })
-        : t("settings.server.mobileDaemon.status.running.noPid", { addr });
+        ? zh
+          ? `移动端守护进程正在运行（pid ${tcpDaemonStatus.pid}），监听 ${tcpDaemonStatus.listenAddr ?? "已配置监听地址"}。`
+          : `Mobile daemon is running (pid ${tcpDaemonStatus.pid}) on ${tcpDaemonStatus.listenAddr ?? "configured listen address"}.`
+        : zh
+          ? `移动端守护进程正在运行，监听 ${tcpDaemonStatus.listenAddr ?? "已配置监听地址"}。`
+          : `Mobile daemon is running on ${tcpDaemonStatus.listenAddr ?? "configured listen address"}.`;
     }
     if (tcpDaemonStatus.state === "error") {
       return tcpDaemonStatus.lastError ?? t("settings.server.mobileDaemon.errorFallback");
     }
-    if (tcpDaemonStatus.listenAddr) {
-      return t("settings.server.mobileDaemon.status.stopped.withAddr", {
-        addr: tcpDaemonStatus.listenAddr,
-      });
-    }
-    return t("settings.server.mobileDaemon.status.stopped.noAddr");
+    return zh
+      ? `移动端守护进程已停止${tcpDaemonStatus.listenAddr ? `（${tcpDaemonStatus.listenAddr}）` : ""}。`
+      : `Mobile daemon is stopped${tcpDaemonStatus.listenAddr ? ` (${tcpDaemonStatus.listenAddr})` : ""}.`;
   })();
 
   const openAddRemoteModal = () => {
@@ -192,14 +184,13 @@ export function SettingsServerSection({
   };
 
   return (
-    <SettingsSection
-      title={t("settings.server.sectionTitle")}
-      subtitle={
-        isMobileSimplified
+    <section className="settings-section">
+      <div className="settings-section-title">{t("settings.server.sectionTitle")}</div>
+      <div className="settings-section-subtitle">
+        {isMobileSimplified
           ? t("settings.server.sectionSubtitle.mobile")
-          : t("settings.server.sectionSubtitle.desktop")
-      }
-    >
+          : t("settings.server.sectionSubtitle.desktop")}
+      </div>
 
       {!isMobileSimplified && (
         <div className="settings-field">
@@ -357,20 +348,27 @@ export function SettingsServerSection({
         )}
 
         {!isMobileSimplified && (
-          <SettingsToggleRow
-            title={t("settings.server.keepDaemon.title")}
-            subtitle={t("settings.server.keepDaemon.subtitle")}
-          >
-            <SettingsToggleSwitch
-              pressed={appSettings.keepDaemonRunningAfterAppClose}
+          <div className="settings-toggle-row">
+            <div>
+              <div className="settings-toggle-title">{t("settings.server.keepDaemon.title")}</div>
+              <div className="settings-toggle-subtitle">
+                {t("settings.server.keepDaemon.subtitle")}
+              </div>
+            </div>
+            <button
+              type="button"
+              className={`settings-toggle ${appSettings.keepDaemonRunningAfterAppClose ? "on" : ""}`}
               onClick={() =>
                 void onUpdateAppSettings({
                   ...appSettings,
                   keepDaemonRunningAfterAppClose: !appSettings.keepDaemonRunningAfterAppClose,
                 })
               }
-            />
-          </SettingsToggleRow>
+              aria-pressed={appSettings.keepDaemonRunningAfterAppClose}
+            >
+              <span className="settings-toggle-knob" />
+            </button>
+          </div>
         )}
 
         <div className="settings-field">
@@ -413,8 +411,12 @@ export function SettingsServerSection({
           {remoteHostError && <div className="settings-help settings-help-error">{remoteHostError}</div>}
           <div className="settings-help">
             {isMobileSimplified
-              ? t("settings.server.remoteBackend.help.mobile")
-              : t("settings.server.remoteBackend.help.desktop")}
+              ? (zh
+                ? "使用桌面端 CodexMonitor（Server 分区）里的 Tailscale 主机，例如 `macbook.your-tailnet.ts.net:4732`。"
+                : "Use the Tailscale host from your desktop CodexMonitor app (Server section), for example `macbook.your-tailnet.ts.net:4732`.")
+              : (zh
+                ? "此主机/令牌用于移动端客户端和桌面端远程模式测试。"
+                : "This host/token is used by mobile clients and desktop remote-mode testing.")}
           </div>
         </div>
 
@@ -702,6 +704,6 @@ export function SettingsServerSection({
           </div>
         </ModalShell>
       )}
-    </SettingsSection>
+    </section>
   );
 }

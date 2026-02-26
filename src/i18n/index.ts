@@ -1,5 +1,5 @@
 import { en } from "./locales/en";
-import { ru } from "./locales/ru";
+import { zhCN } from "./locales/zh-CN";
 import type {
   SupportedLocale,
   TranslationDictionary,
@@ -11,28 +11,21 @@ export const DEFAULT_LOCALE: SupportedLocale = "en";
 
 export const dictionaries: Record<SupportedLocale, TranslationDictionary> = {
   en,
-  "ru": ru,
+  "zh-CN": zhCN,
 };
-
-export function hasTranslationKey(
-  key: string,
-  locale: SupportedLocale = DEFAULT_LOCALE,
-): boolean {
-  return dictionaries[locale][key] !== undefined || dictionaries.en[key] !== undefined;
-}
 
 export function resolveEffectiveLocale(
   languagePreference: UiLanguagePreference | string | null | undefined,
 ): SupportedLocale {
-  if (languagePreference === "en" || languagePreference === "ru") {
+  if (languagePreference === "en" || languagePreference === "zh-CN") {
     return languagePreference;
   }
   if (typeof navigator === "undefined") {
     return DEFAULT_LOCALE;
   }
   const normalized = String(navigator.language ?? "").toLowerCase();
-  if (normalized.startsWith("ru")) {
-    return "ru";
+  if (normalized.startsWith("zh")) {
+    return "zh-CN";
   }
   return DEFAULT_LOCALE;
 }

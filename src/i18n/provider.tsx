@@ -1,18 +1,11 @@
 import { createContext, useMemo, type ReactNode } from "react";
-import {
-  DEFAULT_LOCALE,
-  dictionaries,
-  formatTranslation,
-  hasTranslationKey,
-  resolveEffectiveLocale,
-} from "./index";
+import { DEFAULT_LOCALE, dictionaries, formatTranslation, resolveEffectiveLocale } from "./index";
 import type { SupportedLocale, TranslationParams, UiLanguagePreference } from "./types";
 
 export type I18nValue = {
   locale: SupportedLocale;
   languagePreference: UiLanguagePreference;
   t: (key: string, params?: TranslationParams) => string;
-  hasKey: (key: string) => boolean;
 };
 
 function fallbackTranslate(key: string, params?: TranslationParams): string {
@@ -24,7 +17,6 @@ export const I18nContext = createContext<I18nValue>({
   locale: DEFAULT_LOCALE,
   languagePreference: "system",
   t: fallbackTranslate,
-  hasKey: (key) => hasTranslationKey(key, DEFAULT_LOCALE),
 });
 
 type I18nProviderProps = {
@@ -34,7 +26,7 @@ type I18nProviderProps = {
 
 export function I18nProvider({ children, languagePreference }: I18nProviderProps) {
   const resolvedPreference: UiLanguagePreference = (() => {
-    if (languagePreference === "en" || languagePreference === "ru") {
+    if (languagePreference === "en" || languagePreference === "zh-CN") {
       return languagePreference;
     }
     return "system";
@@ -54,7 +46,6 @@ export function I18nProvider({ children, languagePreference }: I18nProviderProps
         }
         return formatTranslation(template, params);
       },
-      hasKey: (key) => hasTranslationKey(key, locale),
     };
   }, [locale, resolvedPreference]);
 

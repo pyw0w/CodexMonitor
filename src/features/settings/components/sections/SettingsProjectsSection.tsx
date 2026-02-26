@@ -4,7 +4,6 @@ import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import type { Dispatch, SetStateAction } from "react";
 import type { WorkspaceGroup, WorkspaceInfo } from "@/types";
 import { useI18n } from "@/i18n/useI18n";
-import { SettingsSection } from "@/features/design-system/components/settings/SettingsPrimitives";
 
 type GroupedWorkspaces = Array<{
   id: string | null;
@@ -57,10 +56,9 @@ export function SettingsProjectsSection({
 }: SettingsProjectsSectionProps) {
   const { t } = useI18n();
   return (
-    <SettingsSection
-      title={t("settings.projects.sectionTitle")}
-      subtitle={t("settings.projects.sectionSubtitle")}
-    >
+    <section className="settings-section">
+      <div className="settings-section-title">{t("settings.projects.sectionTitle")}</div>
+      <div className="settings-section-subtitle">{t("settings.projects.sectionSubtitle")}</div>
       <div className="settings-subsection-title">{t("settings.projects.groups.title")}</div>
       <div className="settings-subsection-subtitle">{t("settings.projects.groups.subtitle")}</div>
       <div className="settings-groups">
@@ -255,6 +253,6 @@ export function SettingsProjectsSection({
           <div className="settings-empty">{t("settings.projects.list.empty")}</div>
         )}
       </div>
-    </SettingsSection>
+    </section>
   );
 }

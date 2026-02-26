@@ -2,11 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { ModelOption } from "@/types";
 import {
-  SettingsSection,
-  SettingsToggleRow,
-  SettingsToggleSwitch,
-} from "@/features/design-system/components/settings/SettingsPrimitives";
-import {
   MagicSparkleIcon,
   MagicSparkleLoaderIcon,
 } from "@/features/shared/components/MagicSparkleIcon";
@@ -62,7 +57,8 @@ export function SettingsAgentsSection({
   modelOptionsLoading,
   modelOptionsError,
 }: SettingsAgentsSectionProps) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
+  const zh = locale === "zh-CN";
   const [openPathError, setOpenPathError] = useState<string | null>(null);
   const [maxThreadsDraft, setMaxThreadsDraft] = useState("6");
   const [maxDepthDraft, setMaxDepthDraft] = useState("1");
@@ -182,10 +178,9 @@ export function SettingsAgentsSection({
       setCreateError(null);
       setEditError(null);
       setOpenPathError(
-        t("settings.agents.maxThreads.invalidRange", {
-          min: MIN_MAX_THREADS,
-          max: MAX_MAX_THREADS,
-        }),
+        zh
+          ? `最大线程数必须是 ${MIN_MAX_THREADS} 到 ${MAX_MAX_THREADS} 之间的整数。`
+          : `Max threads must be an integer between ${MIN_MAX_THREADS} and ${MAX_MAX_THREADS}.`,
       );
       return;
     }
@@ -220,10 +215,9 @@ export function SettingsAgentsSection({
       setCreateError(null);
       setEditError(null);
       setOpenPathError(
-        t("settings.agents.maxDepth.invalidRange", {
-          min: MIN_MAX_DEPTH,
-          max: MAX_MAX_DEPTH,
-        }),
+        zh
+          ? `最大深度必须是 ${MIN_MAX_DEPTH} 到 ${MAX_MAX_DEPTH} 之间的整数。`
+          : `Max depth must be an integer between ${MIN_MAX_DEPTH} and ${MAX_MAX_DEPTH}.`,
       );
       return;
     }
@@ -357,10 +351,9 @@ export function SettingsAgentsSection({
   };
 
   return (
-    <SettingsSection
-      title={t("settings.agents.sectionTitle")}
-      subtitle={t("settings.agents.sectionSubtitle")}
-    >
+    <section className="settings-section">
+      <div className="settings-section-title">{t("settings.agents.sectionTitle")}</div>
+      <div className="settings-section-subtitle">{t("settings.agents.sectionSubtitle")}</div>
       <div className="settings-help settings-agents-builtins-help">
         {t("settings.agents.builtins.before")}
         <code>default</code>
@@ -371,10 +364,13 @@ export function SettingsAgentsSection({
         {t("settings.agents.builtins.after")}
       </div>
 
-      <SettingsToggleRow
-        title={t("settings.agents.configFile.title")}
-        subtitle={t("settings.agents.configFile.subtitle", { fileManager: fileManagerName() })}
-      >
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.agents.configFile.title")}</div>
+          <div className="settings-toggle-subtitle">
+            {t("settings.agents.configFile.subtitle", { fileManager: fileManagerName() })}
+          </div>
+        </div>
         <div className="settings-agents-actions">
           <button type="button" className="ghost" onClick={onRefresh} disabled={isLoading}>
             {t("settings.agents.refresh")}
@@ -388,33 +384,35 @@ export function SettingsAgentsSection({
             {openInFileManagerLabel()}
           </button>
         </div>
-      </SettingsToggleRow>
+      </div>
 
-      <SettingsToggleRow
-        title={t("settings.agents.multiAgent.title")}
-        subtitle={
-          <>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.agents.multiAgent.title")}</div>
+          <div className="settings-toggle-subtitle">
             Writes <code>features.multi_agent</code> in config.toml.
-          </>
-        }
-      >
-        <SettingsToggleSwitch
-          pressed={settings?.multiAgentEnabled ?? false}
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${settings?.multiAgentEnabled ? "on" : ""}`}
           onClick={() => void handleToggleMultiAgent()}
+          aria-pressed={settings?.multiAgentEnabled ?? false}
           disabled={!settings || isUpdatingCore}
-        />
-      </SettingsToggleRow>
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
 
-      <SettingsToggleRow
-        title={t("settings.agents.maxThreads.title")}
-        subtitle={
-          <>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.agents.maxThreads.title")}</div>
+          <div className="settings-toggle-subtitle">
             {t("settings.agents.maxThreads.subtitle.before")}
             <code>1-12</code>
             {t("settings.agents.maxThreads.subtitle.after")}
-          </>
-        }
-      >
+          </div>
+        </div>
         <div
           className="settings-agents-stepper"
           role="group"
@@ -446,18 +444,17 @@ export function SettingsAgentsSection({
             ▲
           </button>
         </div>
-      </SettingsToggleRow>
+      </div>
 
-      <SettingsToggleRow
-        title={t("settings.agents.maxDepth.title")}
-        subtitle={
-          <>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.agents.maxDepth.title")}</div>
+          <div className="settings-toggle-subtitle">
             {t("settings.agents.maxDepth.subtitle.before")}
             <code>1-4</code>
             {t("settings.agents.maxDepth.subtitle.after")}
-          </>
-        }
-      >
+          </div>
+        </div>
         <div
           className="settings-agents-stepper"
           role="group"
@@ -489,7 +486,7 @@ export function SettingsAgentsSection({
             ▲
           </button>
         </div>
-      </SettingsToggleRow>
+      </div>
 
       <div className="settings-subsection-title">{t("settings.agents.create.title")}</div>
       <div className="settings-subsection-subtitle">
@@ -619,8 +616,12 @@ export function SettingsAgentsSection({
         {modelOptions.length === 0 && (
           <div className="settings-help">
             {modelOptionsLoading
-              ? t("settings.agents.modelFallback.loading")
-              : t("settings.agents.modelFallback.ready")}
+              ? zh
+                ? "正在加载工作区模型元数据，当前先使用回退模型默认值。"
+                : "Loading workspace model metadata. Using fallback model defaults for now."
+              : zh
+                ? "在工作区模型元数据可用前，先使用回退模型默认值。"
+                : "Using fallback model defaults until workspace model metadata is available."}
           </div>
         )}
         {modelOptionsError && <div className="settings-help">{modelOptionsError}</div>}
@@ -892,6 +893,6 @@ export function SettingsAgentsSection({
       {isLoading && <div className="settings-help">{t("settings.agents.loading")}</div>}
       {openPathError && <div className="settings-agents-error">{openPathError}</div>}
       {error && <div className="settings-agents-error">{error}</div>}
-    </SettingsSection>
+    </section>
   );
 }

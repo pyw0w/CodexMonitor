@@ -1,5 +1,4 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Plus from "lucide-react/dist/esm/icons/plus";
 import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
 import "./styles/base.css";
 import "./styles/ds-tokens.css";
@@ -13,7 +12,6 @@ import "./styles/sidebar.css";
 import "./styles/home.css";
 import "./styles/workspace-home.css";
 import "./styles/main.css";
-import "./styles/linux-menu.css";
 import "./styles/messages.css";
 import "./styles/approval-toasts.css";
 import "./styles/error-toasts.css";
@@ -78,14 +76,11 @@ import { useRenameWorktreePrompt } from "@/features/workspaces/hooks/useRenameWo
 import { useLayoutController } from "@app/hooks/useLayoutController";
 import { useWindowLabel } from "@/features/layout/hooks/useWindowLabel";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { exit as exitApp } from "@tauri-apps/plugin-process";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   SidebarCollapseButton,
   TitlebarExpandControls,
 } from "@/features/layout/components/SidebarToggleControls";
 import { WindowCaptionControls } from "@/features/layout/components/WindowCaptionControls";
-import { LinuxAppMenuBar } from "@/features/layout/components/LinuxAppMenuBar";
 import { useUpdaterController } from "@app/hooks/useUpdaterController";
 import { useResponseRequiredNotificationsController } from "@app/hooks/useResponseRequiredNotificationsController";
 import { useErrorToasts } from "@/features/notifications/hooks/useErrorToasts";
@@ -94,7 +89,6 @@ import { useComposerMenuActions } from "@/features/composer/hooks/useComposerMen
 import { useComposerEditorState } from "@/features/composer/hooks/useComposerEditorState";
 import { useComposerController } from "@app/hooks/useComposerController";
 import { useComposerInsert } from "@app/hooks/useComposerInsert";
-import { usePredictedResponse } from "@/features/composer/hooks/usePredictedResponse";
 import { useRenameThreadPrompt } from "@threads/hooks/useRenameThreadPrompt";
 import { useWorktreePrompt } from "@/features/workspaces/hooks/useWorktreePrompt";
 import { useClonePrompt } from "@/features/workspaces/hooks/useClonePrompt";
@@ -119,13 +113,6 @@ import { useWorkspaceLaunchScripts } from "@app/hooks/useWorkspaceLaunchScripts"
 import { useWorktreeSetupScript } from "@app/hooks/useWorktreeSetupScript";
 import { useGitCommitController } from "@app/hooks/useGitCommitController";
 import { effectiveCommitMessageModelId } from "@/features/git/utils/commitMessageModelSelection";
-import { formatCompactTokenCount } from "@utils/tokenUsage";
-import {
-  estimateThreadUsageCost,
-  formatUsageCostLabel,
-  mergeUsageCostSummaries,
-  type UsageCostSummary,
-} from "@app/utils/usageCost";
 import { WorkspaceHome } from "@/features/workspaces/components/WorkspaceHome";
 import { MobileServerSetupWizard } from "@/features/mobile/components/MobileServerSetupWizard";
 import { useMobileServerSetup } from "@/features/mobile/hooks/useMobileServerSetup";
@@ -133,7 +120,6 @@ import { useWorkspaceHome } from "@/features/workspaces/hooks/useWorkspaceHome";
 import { useWorkspaceAgentMd } from "@/features/workspaces/hooks/useWorkspaceAgentMd";
 import type {
   ComposerEditorSettings,
-  ThreadTokenUsage,
   WorkspaceInfo,
 } from "@/types";
 import { computePlanFollowupState } from "@/features/messages/utils/messageRenderUtils";
@@ -165,27 +151,13 @@ import {
 } from "@app/orchestration/useWorkspaceOrchestration";
 import { useAppShellOrchestration } from "@app/orchestration/useLayoutOrchestration";
 import { buildCodexArgsOptions } from "@threads/utils/codexArgsProfiles";
-import { clampThreadName } from "@threads/utils/threadNaming";
 import { normalizeCodexArgsInput } from "@/utils/codexArgsInput";
 import {
-  NO_THREAD_SCOPE_SUFFIX,
   resolveWorkspaceRuntimeCodexArgsBadgeLabel,
   resolveWorkspaceRuntimeCodexArgsOverride,
 } from "@threads/utils/threadCodexParamsSeed";
-import { generateRunMetadata, setWorkspaceRuntimeCodexArgs } from "@services/tauri";
-import { isLinuxPlatform } from "@utils/platformPaths";
+import { setWorkspaceRuntimeCodexArgs } from "@services/tauri";
 import { I18nProvider } from "@/i18n/provider";
-
-const MAX_THREAD_TITLE_PROMPT_CHARS = 1200;
-
-function cleanThreadTitlePrompt(text: string) {
-  const withoutImages = text.replace(/\[image(?: x\d+)?\]/gi, " ");
-  const withoutSkills = withoutImages.replace(/(^|\s)\$[A-Za-z0-9_-]+(?=\s|$)/g, " ");
-  const normalized = withoutSkills.replace(/\s+/g, " ").trim();
-  return normalized.length > MAX_THREAD_TITLE_PROMPT_CHARS
-    ? normalized.slice(0, MAX_THREAD_TITLE_PROMPT_CHARS)
-    : normalized;
-}
 
 const AboutView = lazy(() =>
   import("@/features/about/components/AboutView").then((module) => ({
@@ -204,27 +176,6 @@ const GitHubPanelData = lazy(() =>
     default: module.GitHubPanelData,
   })),
 );
-
-function normalizeThreadModelId(value: string | null | undefined): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-  const normalized = trimmed.toLowerCase();
-  if (
-    normalized === "unknown" ||
-    normalized === "default" ||
-    normalized === "auto" ||
-    normalized === "current" ||
-    normalized === "inherit"
-  ) {
-    return null;
-  }
-  return trimmed;
-}
 
 function MainApp() {
   const {
@@ -269,8 +220,6 @@ function MainApp() {
     "home" | "projects" | "codex" | "git" | "log"
   >("codex");
   const [mobileThreadRefreshLoading, setMobileThreadRefreshLoading] = useState(false);
-  const [lastCodexWorkspaceId, setLastCodexWorkspaceId] = useState<string | null>(null);
-  const [lastCodexThreadId, setLastCodexThreadId] = useState<string | null>(null);
   const tabletTab =
     activeTab === "projects" || activeTab === "home" ? "codex" : activeTab;
   const {
@@ -550,7 +499,7 @@ function MainApp() {
     ...composerShortcuts,
   });
 
-  const composerMenuActions = useComposerMenuActions({
+  useComposerMenuActions({
     models,
     selectedModelId,
     onSelectModel: handleSelectModel,
@@ -588,7 +537,9 @@ function MainApp() {
         return;
       }
       const modelId =
-        normalizeThreadModelId(metadata.modelId);
+        typeof metadata.modelId === "string" && metadata.modelId.trim().length > 0
+          ? metadata.modelId.trim()
+          : null;
       const effort =
         typeof metadata.effort === "string" && metadata.effort.trim().length > 0
           ? metadata.effort.trim().toLowerCase()
@@ -602,8 +553,7 @@ function MainApp() {
         modelId?: string | null;
         effort?: string | null;
       } = {};
-      const currentModelId = normalizeThreadModelId(current?.modelId);
-      if (modelId && !currentModelId) {
+      if (modelId && !current?.modelId) {
         patch.modelId = modelId;
       }
       if (effort && !current?.effort) {
@@ -669,7 +619,6 @@ function MainApp() {
     threadListCursorByWorkspace,
     activeTurnIdByThread,
     tokenUsageByThread,
-    tokenUsageThreadIdsByWorkspace,
     rateLimitsByWorkspace,
     accountByWorkspace,
     planByThread,
@@ -740,26 +689,8 @@ function MainApp() {
     customPrompts: prompts,
     onMessageActivity: handleThreadMessageActivity,
     threadSortKey: threadListSortKey,
-    enableBackgroundThreadMetadataHydration: true,
     onThreadCodexMetadataDetected: handleThreadCodexMetadataDetected,
   });
-
-  useEffect(() => {
-    if (!isPhone || !activeWorkspaceId) {
-      return;
-    }
-    setLastCodexWorkspaceId(activeWorkspaceId);
-  }, [activeWorkspaceId, isPhone]);
-
-  useEffect(() => {
-    if (!isPhone || !activeWorkspaceId || !activeThreadId) {
-      return;
-    }
-    const workspaceThreads = threadsByWorkspace[activeWorkspaceId] ?? [];
-    if (workspaceThreads.some((thread) => thread.id === activeThreadId)) {
-      setLastCodexThreadId(activeThreadId);
-    }
-  }, [activeThreadId, activeWorkspaceId, isPhone, threadsByWorkspace]);
   const { connectionState: remoteThreadConnectionState, reconnectLive } =
     useRemoteThreadLiveConnection({
       backendMode: appSettings.backendMode,
@@ -808,7 +739,6 @@ function MainApp() {
   const {
     updaterState,
     startUpdate,
-    checkForUpdates,
     dismissUpdate,
     postUpdateNotice,
     dismissPostUpdateNotice,
@@ -1437,164 +1367,6 @@ function MainApp() {
   const activeTokenUsage = activeThreadId
     ? tokenUsageByThread[activeThreadId] ?? null
     : null;
-  const fullTokenCountFormatter = useMemo(() => new Intl.NumberFormat(), []);
-  const formatFullTokenCount = useCallback((value: number) => {
-    if (!Number.isFinite(value) || value <= 0) {
-      return null;
-    }
-    return fullTokenCountFormatter.format(Math.round(value));
-  }, [fullTokenCountFormatter]);
-  const threadModelIdByWorkspace = useMemo(() => {
-    const byWorkspace: Record<string, Record<string, string>> = {};
-    Object.entries(threadsByWorkspace).forEach(([workspaceId, threads]) => {
-      const byThread: Record<string, string> = {};
-      threads.forEach((thread) => {
-        const modelId = thread.modelId?.trim();
-        if (modelId) {
-          byThread[thread.id] = modelId;
-        }
-      });
-      byWorkspace[workspaceId] = byThread;
-    });
-    return byWorkspace;
-  }, [threadsByWorkspace]);
-  const resolveThreadModelId = useCallback(
-    (workspaceId: string, threadId: string) => {
-      const fromList = normalizeThreadModelId(
-        threadModelIdByWorkspace[workspaceId]?.[threadId],
-      );
-      if (fromList) {
-        return fromList;
-      }
-      const storedModelId = normalizeThreadModelId(
-        getThreadCodexParams(workspaceId, threadId)?.modelId,
-      );
-      if (storedModelId) {
-        return storedModelId;
-      }
-      const workspaceDefaultModelId = normalizeThreadModelId(
-        getThreadCodexParams(workspaceId, NO_THREAD_SCOPE_SUFFIX)?.modelId,
-      );
-      if (workspaceDefaultModelId) {
-        return workspaceDefaultModelId;
-      }
-      return normalizeThreadModelId(appSettings.lastComposerModelId);
-    },
-    [appSettings.lastComposerModelId, getThreadCodexParams, threadModelIdByWorkspace],
-  );
-  const getDisplayThreadTokenUsageTotal = useCallback(
-    (usage: ThreadTokenUsage | null | undefined) => {
-      const totalTokens = usage?.total.totalTokens ?? 0;
-      if (!appSettings.threadTokenUsageExcludeCache) {
-        return totalTokens;
-      }
-      const cachedInputTokens = usage?.total.cachedInputTokens ?? 0;
-      return Math.max(0, totalTokens - cachedInputTokens);
-    },
-    [appSettings.threadTokenUsageExcludeCache],
-  );
-  const getThreadTokenUsageLabel = useCallback(
-    (_workspaceId: string, threadId: string) => {
-      if (!appSettings.showThreadTokenUsage) {
-        return null;
-      }
-      const totalTokens = getDisplayThreadTokenUsageTotal(tokenUsageByThread[threadId]);
-      const formattedTotal = appSettings.threadTokenUsageShowFull
-        ? formatFullTokenCount(totalTokens)
-        : formatCompactTokenCount(totalTokens);
-      if (!formattedTotal) {
-        return null;
-      }
-      const costSummary = estimateThreadUsageCost(
-        tokenUsageByThread[threadId],
-        resolveThreadModelId(_workspaceId, threadId),
-        { excludeCache: appSettings.threadTokenUsageExcludeCache },
-      );
-      const costLabel = formatUsageCostLabel(
-        costSummary,
-        !appSettings.threadTokenUsageShowFull,
-      );
-      return costLabel
-        ? `${formattedTotal} tokens · ${costLabel}`
-        : `${formattedTotal} tokens`;
-    },
-    [
-      appSettings.showThreadTokenUsage,
-      appSettings.threadTokenUsageExcludeCache,
-      appSettings.threadTokenUsageShowFull,
-      formatFullTokenCount,
-      getDisplayThreadTokenUsageTotal,
-      resolveThreadModelId,
-      tokenUsageByThread,
-    ],
-  );
-  const tokenUsageSummaryByWorkspace = useMemo(() => {
-    const totals: Record<string, { tokens: number; cost: UsageCostSummary }> = {};
-    const workspaceIds = new Set<string>([
-      ...Object.keys(threadsByWorkspace),
-      ...Object.keys(tokenUsageThreadIdsByWorkspace),
-    ]);
-    workspaceIds.forEach((workspaceId) => {
-      const threadIds = new Set<string>([
-        ...(tokenUsageThreadIdsByWorkspace[workspaceId] ?? []),
-        ...(threadsByWorkspace[workspaceId] ?? []).map((thread) => thread.id),
-      ]);
-      const threadIdList = Array.from(threadIds);
-      const total = threadIdList.reduce(
-        (sum, threadId) => sum + getDisplayThreadTokenUsageTotal(tokenUsageByThread[threadId]),
-        0,
-      );
-      const cost = mergeUsageCostSummaries(
-        threadIdList.map((threadId) =>
-          estimateThreadUsageCost(
-            tokenUsageByThread[threadId],
-            resolveThreadModelId(workspaceId, threadId),
-            { excludeCache: appSettings.threadTokenUsageExcludeCache },
-          ),
-        ),
-      );
-      totals[workspaceId] = {
-        tokens: total,
-        cost,
-      };
-    });
-    return totals;
-  }, [
-    appSettings.threadTokenUsageExcludeCache,
-    getDisplayThreadTokenUsageTotal,
-    resolveThreadModelId,
-    threadsByWorkspace,
-    tokenUsageByThread,
-    tokenUsageThreadIdsByWorkspace,
-  ]);
-  const getWorkspaceTokenUsageLabel = useCallback(
-    (workspaceId: string) => {
-      if (!appSettings.showThreadTokenUsage) {
-        return null;
-      }
-      const usageSummary = tokenUsageSummaryByWorkspace[workspaceId];
-      const totalTokens = usageSummary?.tokens ?? 0;
-      const formattedTotal = appSettings.threadTokenUsageShowFull
-        ? formatFullTokenCount(totalTokens)
-        : formatCompactTokenCount(totalTokens);
-      if (!formattedTotal) {
-        return null;
-      }
-      const costLabel = formatUsageCostLabel(
-        usageSummary?.cost ?? { knownUsd: 0, unknownTokens: 0, totalTokens: 0 },
-        !appSettings.threadTokenUsageShowFull,
-      );
-      return costLabel
-        ? `${formattedTotal} tokens · ${costLabel}`
-        : `${formattedTotal} tokens`;
-    },
-    [
-      appSettings.showThreadTokenUsage,
-      appSettings.threadTokenUsageShowFull,
-      formatFullTokenCount,
-      tokenUsageSummaryByWorkspace,
-    ],
-  );
   const activePlan = activeThreadId
     ? planByThread[activeThreadId] ?? null
     : null;
@@ -1746,16 +1518,6 @@ function MainApp() {
     onDraftChange: showWorkspaceHome ? setWorkspacePrompt : handleDraftChange,
     textareaRef: showWorkspaceHome ? workspaceHomeTextareaRef : composerInputRef,
   });
-  const { ghostText, acceptPrediction } = usePredictedResponse({
-    workspaceId: activeWorkspaceId,
-    threadId: activeThreadId,
-    composerText: activeDraft,
-    disabled: isReviewing || !appSettings.promptSuggestionsEnabled,
-    isProcessing,
-    items: activeItems,
-    models,
-  });
-
   const RECENT_THREAD_LIMIT = 8;
   const { recentThreadInstances, recentThreadsUpdatedAt } = useMemo(() => {
     if (!activeWorkspaceId) {
@@ -1784,65 +1546,6 @@ function MainApp() {
       recentThreadsUpdatedAt: updatedAt > 0 ? updatedAt : null,
     };
   }, [activeWorkspaceId, threadsByWorkspace]);
-  const activeThreadSummary = useMemo(() => {
-    if (!activeWorkspaceId || !activeThreadId) {
-      return null;
-    }
-    const threads = threadsByWorkspace[activeWorkspaceId] ?? [];
-    return threads.find((thread) => thread.id === activeThreadId) ?? null;
-  }, [activeThreadId, activeWorkspaceId, threadsByWorkspace]);
-  const activeThreadInfo = useMemo(() => {
-    if (!activeWorkspace || !activeThreadId) {
-      return null;
-    }
-    return {
-      threadId: activeThreadId,
-      name: activeThreadSummary?.name?.trim() || "Untitled thread",
-      projectDir: activeWorkspace.path,
-      branchName: gitStatus.branchName || "unknown",
-      createdAt: activeThreadSummary?.createdAt ?? null,
-      updatedAt: activeThreadSummary?.updatedAt ?? null,
-      modelId: activeThreadSummary?.modelId ?? null,
-      effort: activeThreadSummary?.effort ?? null,
-      tokenUsage: activeTokenUsage,
-    };
-  }, [
-    activeThreadId,
-    activeThreadSummary,
-    activeWorkspace,
-    activeTokenUsage,
-    gitStatus.branchName,
-  ]);
-  const handleHeaderRenameActiveThreadName = useCallback(
-    (name: string) => {
-      if (!activeWorkspaceId || !activeThreadId) {
-        return;
-      }
-      renameThread(activeWorkspaceId, activeThreadId, name);
-    },
-    [activeThreadId, activeWorkspaceId, renameThread],
-  );
-  const handleGenerateActiveThreadName = useCallback(async () => {
-    if (!activeWorkspaceId || !activeThreadId) {
-      return null;
-    }
-    let prompt = "";
-    for (const item of activeItems) {
-      if (item.kind !== "message" || item.role !== "user") {
-        continue;
-      }
-      const candidatePrompt = cleanThreadTitlePrompt(item.text);
-      if (candidatePrompt) {
-        prompt = candidatePrompt;
-        break;
-      }
-    }
-    if (!prompt) {
-      return null;
-    }
-    const metadata = await generateRunMetadata(activeWorkspaceId, prompt);
-    return clampThreadName(metadata.title ?? "");
-  }, [activeItems, activeThreadId, activeWorkspaceId]);
   const {
     content: agentMdContent,
     exists: agentMdExists,
@@ -2350,131 +2053,11 @@ function MainApp() {
     Boolean(activeWorkspace) &&
     isCompact &&
     ((isPhone && activeTab === "codex") || (isTablet && tabletTab === "codex"));
-  const showPhoneCodexNewChatAction =
-    Boolean(activeWorkspace) && isCompact && isPhone && activeTab === "codex";
   const showMobilePollingFetchStatus =
     showCompactCodexThreadActions &&
     Boolean(activeWorkspace?.connected) &&
     appSettings.backendMode === "remote" &&
     remoteThreadConnectionState === "polling";
-
-  const runDocumentEditCommand = useCallback((command: string) => {
-    if (typeof document === "undefined") {
-      return;
-    }
-    try {
-      document.execCommand(command);
-    } catch {
-      // Ignore unsupported browser command runtimes.
-    }
-  }, []);
-
-  const handleWindowMinimize = useCallback(() => {
-    try {
-      void getCurrentWindow().minimize();
-    } catch {
-      // Ignore non-Tauri/test runtimes.
-    }
-  }, []);
-
-  const handleWindowToggleMaximize = useCallback(() => {
-    try {
-      void getCurrentWindow().toggleMaximize();
-    } catch {
-      // Ignore non-Tauri/test runtimes.
-    }
-  }, []);
-
-  const handleWindowClose = useCallback(() => {
-    try {
-      void getCurrentWindow().close();
-    } catch {
-      // Ignore non-Tauri/test runtimes.
-    }
-  }, []);
-
-  const handleQuitApp = useCallback(() => {
-    void exitApp(0).catch(() => {
-      // Ignore non-Tauri/test runtimes.
-    });
-  }, []);
-
-  const canCycleAgentFromMenu = Boolean(
-    activeWorkspaceId && (threadsByWorkspace[activeWorkspaceId] ?? []).length > 1,
-  );
-  const canCycleWorkspaceFromMenu = workspaces.length > 1;
-
-  const isLinuxDesktopMenu = !isCompact && isLinuxPlatform();
-  const linuxSidebarMenuNode = isLinuxDesktopMenu ? (
-    <LinuxAppMenuBar
-      canAddWorkspaceAgent={Boolean(activeWorkspace)}
-      canAddDerivedAgent={Boolean(activeParentWorkspace ?? activeWorkspace)}
-      canCycleAgent={canCycleAgentFromMenu}
-      canCycleWorkspace={canCycleWorkspaceFromMenu}
-      sidebarCollapsed={sidebarCollapsed}
-      rightPanelCollapsed={rightPanelCollapsed}
-      onNewAgent={() => {
-        if (activeWorkspace) {
-          void handleAddAgent(activeWorkspace);
-        }
-      }}
-      onNewWorktreeAgent={() => {
-        const workspace = activeParentWorkspace ?? activeWorkspace;
-        if (workspace) {
-          void handleAddWorktreeAgent(workspace);
-        }
-      }}
-      onNewCloneAgent={() => {
-        const workspace = activeParentWorkspace ?? activeWorkspace;
-        if (workspace) {
-          void handleAddCloneAgent(workspace);
-        }
-      }}
-      onAddWorkspace={() => {
-        void handleAddWorkspace();
-      }}
-      onAddWorkspaceFromUrl={openWorkspaceFromUrlPrompt}
-      onOpenSettings={handleSidebarOpenSettings}
-      onCloseWindow={handleWindowClose}
-      onQuitApp={handleQuitApp}
-      onEditUndo={() => runDocumentEditCommand("undo")}
-      onEditRedo={() => runDocumentEditCommand("redo")}
-      onEditCut={() => runDocumentEditCommand("cut")}
-      onEditCopy={() => runDocumentEditCommand("copy")}
-      onEditPaste={() => runDocumentEditCommand("paste")}
-      onEditSelectAll={() => runDocumentEditCommand("selectAll")}
-      onComposerCycleModel={composerMenuActions.cycleModel}
-      onComposerCycleAccess={composerMenuActions.cycleAccessMode}
-      onComposerCycleReasoning={composerMenuActions.cycleReasoning}
-      onComposerCycleCollaboration={composerMenuActions.cycleCollaborationMode}
-      onToggleProjectsSidebar={() => {
-        if (sidebarCollapsed) {
-          expandSidebar();
-        } else {
-          collapseSidebar();
-        }
-      }}
-      onToggleGitSidebar={() => {
-        if (rightPanelCollapsed) {
-          expandRightPanel();
-        } else {
-          collapseRightPanel();
-        }
-      }}
-      onToggleDebugPanel={handleDebugClick}
-      onToggleTerminal={handleToggleTerminalWithFocus}
-      onNextAgent={() => handleCycleAgent("next")}
-      onPrevAgent={() => handleCycleAgent("prev")}
-      onNextWorkspace={() => handleCycleWorkspace("next")}
-      onPrevWorkspace={() => handleCycleWorkspace("prev")}
-      onWindowMinimize={handleWindowMinimize}
-      onWindowToggleMaximize={handleWindowToggleMaximize}
-      onHelpAbout={() => openSettings("about")}
-      onHelpCheckUpdates={() => {
-        void checkForUpdates({ announceNoUpdate: true });
-      }}
-    />
-  ) : null;
 
   const {
     sidebarNode,
@@ -2524,7 +2107,6 @@ function MainApp() {
     pollingIntervalMs: REMOTE_THREAD_POLL_INTERVAL_MS,
     activeRateLimits,
     usageShowRemaining: appSettings.usageShowRemaining,
-    showSubagentSessions: appSettings.showSubagentSessions,
     accountInfo: activeAccount,
     onSwitchAccount: handleSwitchAccount,
     onCancelSwitchAccount: handleCancelSwitchAccount,
@@ -2612,9 +2194,6 @@ function MainApp() {
       handleCheckoutPullRequest(pullRequest.number),
     onCreateBranch: handleCreateBranch,
     onCopyThread: handleCopyThread,
-    activeThreadInfo,
-    onRenameActiveThreadName: handleHeaderRenameActiveThreadName,
-    onGenerateActiveThreadName: handleGenerateActiveThreadName,
     onToggleTerminal: handleToggleTerminalWithFocus,
     showTerminalButton: !isCompact,
     showWorkspaceTools: !isCompact,
@@ -2631,22 +2210,6 @@ function MainApp() {
     launchScriptsState,
     mainHeaderActionsNode: (
       <>
-        {showPhoneCodexNewChatAction ? (
-          <button
-            type="button"
-            className="ghost main-header-action"
-            onClick={() => {
-              if (activeWorkspace) {
-                void handleAddAgent(activeWorkspace);
-              }
-            }}
-            data-tauri-drag-region="false"
-            aria-label="Start new chat in this workspace"
-            title="Start new chat in this workspace"
-          >
-            <Plus size={14} aria-hidden />
-          </button>
-        ) : null}
         {showCompactCodexThreadActions ? (
           <button
             type="button"
@@ -2690,18 +2253,6 @@ function MainApp() {
         clearDraftState();
         selectHome();
         return;
-      }
-      if (tab === "codex" && isPhone && !activeWorkspace && lastCodexWorkspaceId) {
-        const workspace = workspacesById.get(lastCodexWorkspaceId);
-        if (workspace) {
-          selectWorkspace(lastCodexWorkspaceId);
-          if (lastCodexThreadId) {
-            const workspaceThreads = threadsByWorkspace[lastCodexWorkspaceId] ?? [];
-            if (workspaceThreads.some((thread) => thread.id === lastCodexThreadId)) {
-              setActiveThreadId(lastCodexThreadId, lastCodexWorkspaceId);
-            }
-          }
-        }
       }
       setActiveTab(tab);
     },
@@ -2916,8 +2467,6 @@ function MainApp() {
     dictationHint,
     onDismissDictationHint: clearDictationHint,
     composerContextActions,
-    ghostText,
-    onAcceptGhostText: acceptPrediction,
     composerSendLabel,
     showComposer,
     plan: activePlan,
@@ -2962,10 +2511,7 @@ function MainApp() {
     onWorkspaceDragEnter: handleWorkspaceDragEnter,
     onWorkspaceDragLeave: handleWorkspaceDragLeave,
     onWorkspaceDrop: handleWorkspaceDrop,
-    sidebarTopNode: linuxSidebarMenuNode,
     getThreadArgsBadge,
-    getThreadTokenUsageLabel,
-    getWorkspaceTokenUsageLabel,
   });
 
   const gitRootOverride = activeWorkspace?.settings.gitRoot;
@@ -3092,8 +2638,8 @@ function MainApp() {
         ref={appRef}
       >
       <div className="drag-strip" id="titlebar" />
-      {!isCompact ? <TitlebarExpandControls {...sidebarToggleProps} /> : null}
-      {!isCompact ? <WindowCaptionControls /> : null}
+      <TitlebarExpandControls {...sidebarToggleProps} />
+      <WindowCaptionControls />
       {shouldLoadGitHubPanelData ? (
         <Suspense fallback={null}>
           <GitHubPanelData

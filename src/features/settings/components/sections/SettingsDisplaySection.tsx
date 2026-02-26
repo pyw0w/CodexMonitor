@@ -17,11 +17,6 @@ import {
   isChatScrollbackPreset,
 } from "@utils/chatScrollback";
 import { useI18n } from "@/i18n/useI18n";
-import {
-  SettingsSection,
-  SettingsToggleRow,
-  SettingsToggleSwitch,
-} from "@/features/design-system/components/settings/SettingsPrimitives";
 
 type SettingsDisplaySectionProps = {
   appSettings: AppSettings;
@@ -162,10 +157,9 @@ export function SettingsDisplaySection({
   };
 
   return (
-    <SettingsSection
-      title={t("settings.display.sectionTitle")}
-      subtitle={t("settings.display.sectionSubtitle")}
-    >
+    <section className="settings-section">
+      <div className="settings-section-title">{t("settings.display.sectionTitle")}</div>
+      <div className="settings-section-subtitle">{t("settings.display.sectionSubtitle")}</div>
       <div className="settings-subsection-title">{t("settings.display.subsectionDisplayTitle")}</div>
       <div className="settings-subsection-subtitle">
         {t("settings.display.subsectionDisplaySubtitle")}
@@ -208,100 +202,79 @@ export function SettingsDisplaySection({
         >
           <option value="system">{t("settings.display.uiLanguage.option.system")}</option>
           <option value="en">{t("settings.display.uiLanguage.option.en")}</option>
-          <option value="ru">{t("settings.display.uiLanguage.option.ru")}</option>
+          <option value="zh-CN">{t("settings.display.uiLanguage.option.zh-CN")}</option>
         </select>
         <div className="settings-help">{t("settings.display.uiLanguage.help")}</div>
       </div>
-      <SettingsToggleRow
-        title={t("settings.display.usageRemaining.title")}
-        subtitle={t("settings.display.usageRemaining.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.usageShowRemaining}
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.display.usageRemaining.title")}</div>
+          <div className="settings-toggle-subtitle">{t("settings.display.usageRemaining.subtitle")}</div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${appSettings.usageShowRemaining ? "on" : ""}`}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
               usageShowRemaining: !appSettings.usageShowRemaining,
             })
           }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title={t("settings.display.filePathInMessages.title")}
-        subtitle={t("settings.display.filePathInMessages.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.showMessageFilePath}
+          aria-pressed={appSettings.usageShowRemaining}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">
+            {t("settings.display.filePathInMessages.title")}
+          </div>
+          <div className="settings-toggle-subtitle">
+            {t("settings.display.filePathInMessages.subtitle")}
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${appSettings.showMessageFilePath ? "on" : ""}`}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
               showMessageFilePath: !appSettings.showMessageFilePath,
             })
           }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title="Show thread token usage & estimated costs"
-        subtitle="Display token totals & costs beneath each thread title. (both are estimates and can differ from the actual values)"
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.showThreadTokenUsage}
-          onClick={() =>
-            void onUpdateAppSettings({
-              ...appSettings,
-              showThreadTokenUsage: !appSettings.showThreadTokenUsage,
-            })
-          }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title="Show full thread token counts & costs"
-        subtitle="Display exact totals instead of compact abbreviations."
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.threadTokenUsageShowFull}
-          onClick={() =>
-            void onUpdateAppSettings({
-              ...appSettings,
-              threadTokenUsageShowFull: !appSettings.threadTokenUsageShowFull,
-            })
-          }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title="Exclude cache from thread token usage"
-        subtitle="Subtract cached input tokens from each thread total."
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.threadTokenUsageExcludeCache}
-          onClick={() =>
-            void onUpdateAppSettings({
-              ...appSettings,
-              threadTokenUsageExcludeCache: !appSettings.threadTokenUsageExcludeCache,
-            })
-          }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title={t("settings.display.splitChatDiff.title")}
-        subtitle={t("settings.display.splitChatDiff.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.splitChatDiffView}
+          aria-pressed={appSettings.showMessageFilePath}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.display.splitChatDiff.title")}</div>
+          <div className="settings-toggle-subtitle">{t("settings.display.splitChatDiff.subtitle")}</div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${appSettings.splitChatDiffView ? "on" : ""}`}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
               splitChatDiffView: !appSettings.splitChatDiffView,
             })
           }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title={t("settings.display.autoThreadTitle.title")}
-        subtitle={t("settings.display.autoThreadTitle.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.threadTitleAutogenerationEnabled}
+          aria-pressed={appSettings.splitChatDiffView}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.display.autoThreadTitle.title")}</div>
+          <div className="settings-toggle-subtitle">{t("settings.display.autoThreadTitle.subtitle")}</div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${appSettings.threadTitleAutogenerationEnabled ? "on" : ""}`}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
@@ -309,20 +282,32 @@ export function SettingsDisplaySection({
                 !appSettings.threadTitleAutogenerationEnabled,
             })
           }
-        />
-      </SettingsToggleRow>
+          aria-pressed={appSettings.threadTitleAutogenerationEnabled}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
       <div className="settings-subsection-title">{t("settings.display.subsectionChatTitle")}</div>
       <div className="settings-subsection-subtitle">{t("settings.display.subsectionChatSubtitle")}</div>
-      <SettingsToggleRow
-        title={t("settings.display.unlimitedChatHistory.title")}
-        subtitle={t("settings.display.unlimitedChatHistory.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={scrollbackUnlimited}
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">
+            {t("settings.display.unlimitedChatHistory.title")}
+          </div>
+          <div className="settings-toggle-subtitle">
+            {t("settings.display.unlimitedChatHistory.subtitle")}
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${scrollbackUnlimited ? "on" : ""}`}
           onClick={toggleUnlimitedScrollback}
           data-scrollback-control="true"
-        />
-      </SettingsToggleRow>
+          aria-pressed={scrollbackUnlimited}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
       <div className="settings-field">
         <label className="settings-field-label" htmlFor="chat-scrollback-preset">
           {t("settings.display.scrollbackPreset.label")}
@@ -399,20 +384,31 @@ export function SettingsDisplaySection({
           })}
         </div>
       </div>
-      <SettingsToggleRow
-        title={t("settings.display.reduceTransparency.title")}
-        subtitle={t("settings.display.reduceTransparency.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={reduceTransparency}
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">
+            {t("settings.display.reduceTransparency.title")}
+          </div>
+          <div className="settings-toggle-subtitle">
+            {t("settings.display.reduceTransparency.subtitle")}
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${reduceTransparency ? "on" : ""}`}
           onClick={() => onToggleTransparency(!reduceTransparency)}
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        className="settings-scale-row"
-        title={t("settings.display.interfaceScale.title")}
-        subtitle={<span title={scaleShortcutTitle}>{scaleShortcutText}</span>}
-      >
+          aria-pressed={reduceTransparency}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
+      <div className="settings-toggle-row settings-scale-row">
+        <div>
+          <div className="settings-toggle-title">{t("settings.display.interfaceScale.title")}</div>
+          <div className="settings-toggle-subtitle" title={scaleShortcutTitle}>
+            {scaleShortcutText}
+          </div>
+        </div>
         <div className="settings-scale-controls">
           <input
             id="ui-scale"
@@ -442,7 +438,7 @@ export function SettingsDisplaySection({
             {t("common.reset")}
           </button>
         </div>
-      </SettingsToggleRow>
+      </div>
       <div className="settings-field">
         <label className="settings-field-label" htmlFor="ui-font-family">
           {t("settings.display.uiFontFamily.label")}
@@ -556,40 +552,64 @@ export function SettingsDisplaySection({
       <div className="settings-subsection-subtitle">
         {t("settings.display.subsectionSoundsSubtitle")}
       </div>
-      <SettingsToggleRow
-        title={t("settings.display.notificationSounds.title")}
-        subtitle={t("settings.display.notificationSounds.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.notificationSoundsEnabled}
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">
+            {t("settings.display.notificationSounds.title")}
+          </div>
+          <div className="settings-toggle-subtitle">
+            {t("settings.display.notificationSounds.subtitle")}
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${appSettings.notificationSoundsEnabled ? "on" : ""}`}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
               notificationSoundsEnabled: !appSettings.notificationSoundsEnabled,
             })
           }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title={t("settings.display.systemNotifications.title")}
-        subtitle={t("settings.display.systemNotifications.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.systemNotificationsEnabled}
+          aria-pressed={appSettings.notificationSoundsEnabled}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">
+            {t("settings.display.systemNotifications.title")}
+          </div>
+          <div className="settings-toggle-subtitle">
+            {t("settings.display.systemNotifications.subtitle")}
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${appSettings.systemNotificationsEnabled ? "on" : ""}`}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
               systemNotificationsEnabled: !appSettings.systemNotificationsEnabled,
             })
           }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title={t("settings.display.subagentNotifications.title")}
-        subtitle={t("settings.display.subagentNotifications.subtitle")}
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.subagentSystemNotificationsEnabled}
+          aria-pressed={appSettings.systemNotificationsEnabled}
+        >
+          <span className="settings-toggle-knob" />
+        </button>
+      </div>
+      <div className="settings-toggle-row">
+        <div>
+          <div className="settings-toggle-title">
+            {t("settings.display.subagentNotifications.title")}
+          </div>
+          <div className="settings-toggle-subtitle">
+            {t("settings.display.subagentNotifications.subtitle")}
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`settings-toggle ${appSettings.subagentSystemNotificationsEnabled ? "on" : ""}`}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
@@ -597,44 +617,10 @@ export function SettingsDisplaySection({
                 !appSettings.subagentSystemNotificationsEnabled,
             })
           }
-        />
-      </SettingsToggleRow>
-      <SettingsToggleRow
-        title="Show sub-agent sessions in sidebar"
-        subtitle="Show or hide spawned sub-agent sessions beneath their parent thread."
-      >
-        <SettingsToggleSwitch
-          pressed={appSettings.showSubagentSessions}
-          onClick={() =>
-            void onUpdateAppSettings({
-              ...appSettings,
-              showSubagentSessions: !appSettings.showSubagentSessions,
-            })
-          }
-        />
-      </SettingsToggleRow>
-      <div className="settings-field">
-        <label className="settings-field-label" htmlFor="settings-sync-mode-select">
-          Settings sync mode
-        </label>
-        <select
-          id="settings-sync-mode-select"
-          className="settings-select"
-          value={appSettings.syncMode}
-          onChange={(event) =>
-            void onUpdateAppSettings({
-              ...appSettings,
-              syncMode: event.target.value as AppSettings["syncMode"],
-            })
-          }
+          aria-pressed={appSettings.subagentSystemNotificationsEnabled}
         >
-          <option value="app_authoritative">App authoritative</option>
-          <option value="bidirectional">Bidirectional</option>
-        </select>
-        <div className="settings-help">
-          App authoritative keeps CodexMonitor as the source of truth. Bidirectional preserves
-          direct file edits when possible and syncs changes both ways.
-        </div>
+          <span className="settings-toggle-knob" />
+        </button>
       </div>
       <div className="settings-sound-actions">
         <button
@@ -652,6 +638,6 @@ export function SettingsDisplaySection({
           {t("settings.display.testNotification")}
         </button>
       </div>
-    </SettingsSection>
+    </section>
   );
 }

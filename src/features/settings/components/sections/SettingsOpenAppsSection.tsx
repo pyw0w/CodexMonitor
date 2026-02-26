@@ -12,7 +12,6 @@ import {
 } from "@app/utils/openAppIcons";
 import type { OpenAppDraft } from "@settings/components/settingsTypes";
 import { useI18n } from "@/i18n/useI18n";
-import { SettingsSection } from "@/features/design-system/components/settings/SettingsPrimitives";
 
 type SettingsOpenAppsSectionProps = {
   openAppDrafts: OpenAppDraft[];
@@ -43,10 +42,9 @@ export function SettingsOpenAppsSection({
 }: SettingsOpenAppsSectionProps) {
   const { t } = useI18n();
   return (
-    <SettingsSection
-      title={t("settings.openApps.sectionTitle")}
-      subtitle={t("settings.openApps.sectionSubtitle")}
-    >
+    <section className="settings-section">
+      <div className="settings-section-title">{t("settings.openApps.sectionTitle")}</div>
+      <div className="settings-section-subtitle">{t("settings.openApps.sectionSubtitle")}</div>
       <div className="settings-open-apps">
         {openAppDrafts.map((target, index) => {
           const iconSrc =
@@ -230,6 +228,6 @@ export function SettingsOpenAppsSection({
             : t("settings.openApps.help.apps.other")}
         </div>
       </div>
-    </SettingsSection>
+    </section>
   );
 }

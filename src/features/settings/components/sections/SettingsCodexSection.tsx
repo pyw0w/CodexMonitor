@@ -7,10 +7,6 @@ import type {
   CodexUpdateResult,
   ModelOption,
 } from "@/types";
-import {
-  SettingsSection,
-  SettingsToggleRow,
-} from "@/features/design-system/components/settings/SettingsPrimitives";
 import { FileEditorCard } from "@/features/shared/components/FileEditorCard";
 import { useI18n } from "@/i18n/useI18n";
 
@@ -230,10 +226,9 @@ export function SettingsCodexSection({
   ]);
 
   return (
-    <SettingsSection
-      title={t("settings.codex.sectionTitle")}
-      subtitle={t("settings.codex.sectionSubtitle")}
-    >
+    <section className="settings-section">
+      <div className="settings-section-title">{t("settings.codex.sectionTitle")}</div>
+      <div className="settings-section-subtitle">{t("settings.codex.sectionSubtitle")}</div>
       <div className="settings-field">
         <label className="settings-field-label" htmlFor="codex-path">
           {t("settings.codex.path.label")}
@@ -415,22 +410,21 @@ export function SettingsCodexSection({
         {t("settings.codex.defaults.sectionTitle")}
       </div>
 
-      <SettingsToggleRow
-        title={
-          <label htmlFor="default-model">
+      <div className="settings-toggle-row">
+        <div>
+          <label className="settings-toggle-title" htmlFor="default-model">
             {t("settings.codex.defaults.model.label")}
           </label>
-        }
-        subtitle={
-          defaultModelsConnectedWorkspaceCount === 0
-            ? t("settings.codex.defaults.model.addWorkspace")
-            : defaultModelsLoading
-              ? t("settings.codex.defaults.model.loading")
-              : defaultModelsError
-                ? t("settings.codex.defaults.model.loadError", { error: defaultModelsError })
-                : t("settings.codex.defaults.model.help")
-        }
-      >
+          <div className="settings-toggle-subtitle">
+            {defaultModelsConnectedWorkspaceCount === 0
+              ? t("settings.codex.defaults.model.addWorkspace")
+              : defaultModelsLoading
+                ? t("settings.codex.defaults.model.loading")
+                : defaultModelsError
+                  ? t("settings.codex.defaults.model.loadError", { error: defaultModelsError })
+                  : t("settings.codex.defaults.model.help")}
+          </div>
+        </div>
         <div className="settings-field-row">
           <select
             id="default-model"
@@ -460,20 +454,19 @@ export function SettingsCodexSection({
             {t("settings.codex.defaults.model.refresh")}
           </button>
         </div>
-      </SettingsToggleRow>
+      </div>
 
-      <SettingsToggleRow
-        title={
-          <label htmlFor="default-effort">
+      <div className="settings-toggle-row">
+        <div>
+          <label className="settings-toggle-title" htmlFor="default-effort">
             {t("settings.codex.defaults.reasoning.label")}
           </label>
-        }
-        subtitle={
-          reasoningSupported
-            ? t("settings.codex.defaults.reasoning.supported")
-            : t("settings.codex.defaults.reasoning.unsupported")
-        }
-      >
+          <div className="settings-toggle-subtitle">
+            {reasoningSupported
+              ? t("settings.codex.defaults.reasoning.supported")
+              : t("settings.codex.defaults.reasoning.unsupported")}
+          </div>
+        </div>
         <select
           id="default-effort"
           className="settings-select"
@@ -496,16 +489,17 @@ export function SettingsCodexSection({
             </option>
           ))}
         </select>
-      </SettingsToggleRow>
+      </div>
 
-      <SettingsToggleRow
-        title={
-          <label htmlFor="default-access">
+      <div className="settings-toggle-row">
+        <div>
+          <label className="settings-toggle-title" htmlFor="default-access">
             {t("settings.codex.defaults.access.label")}
           </label>
-        }
-        subtitle={t("settings.codex.defaults.access.help")}
-      >
+          <div className="settings-toggle-subtitle">
+            {t("settings.codex.defaults.access.help")}
+          </div>
+        </div>
         <select
           id="default-access"
           className="settings-select"
@@ -521,7 +515,7 @@ export function SettingsCodexSection({
           <option value="current">{t("settings.codex.defaults.access.option.current")}</option>
           <option value="full-access">{t("settings.codex.defaults.access.option.fullAccess")}</option>
         </select>
-      </SettingsToggleRow>
+      </div>
       <div className="settings-field">
         <label className="settings-field-label" htmlFor="review-delivery">
           {t("settings.codex.review.label")}
@@ -612,6 +606,6 @@ export function SettingsCodexSection({
           help: "settings-help",
         }}
       />
-    </SettingsSection>
+    </section>
   );
 }
