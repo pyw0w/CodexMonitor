@@ -1,5 +1,10 @@
 import type { CodexFeature } from "@/types";
 import type { SettingsFeaturesSectionProps } from "@settings/hooks/useSettingsFeaturesSection";
+import {
+  SettingsSection,
+  SettingsToggleRow,
+  SettingsToggleSwitch,
+} from "@/features/design-system/components/settings/SettingsPrimitives";
 import { fileManagerName, openInFileManagerLabel } from "@utils/platformPaths";
 import { useI18n } from "@/i18n/useI18n";
 
@@ -173,34 +178,33 @@ export function SettingsFeaturesSection({
   const { locale, t } = useI18n();
   const zh = locale === "zh-CN";
   return (
-    <section className="settings-section">
-      <div className="settings-section-title">{t("settings.features.sectionTitle")}</div>
-      <div className="settings-section-subtitle">{t("settings.features.sectionSubtitle")}</div>
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.features.configFile.title")}</div>
-          <div className="settings-toggle-subtitle">
-            {t("settings.features.configFile.subtitle", {
-              fileManager: fileManagerName(),
-            })}
-          </div>
-        </div>
+    <SettingsSection
+      title={t("settings.features.sectionTitle")}
+      subtitle={t("settings.features.sectionSubtitle")}
+    >
+      <SettingsToggleRow
+        title={t("settings.features.configFile.title")}
+        subtitle={t("settings.features.configFile.subtitle", {
+          fileManager: fileManagerName(),
+        })}
+      >
         <button type="button" className="ghost" onClick={onOpenConfig}>
           {openInFileManagerLabel()}
         </button>
-      </div>
+      </SettingsToggleRow>
       {openConfigError && <div className="settings-help">{openConfigError}</div>}
       <div className="settings-subsection-title">{t("settings.features.stable.title")}</div>
       <div className="settings-subsection-subtitle">{t("settings.features.stable.subtitle")}</div>
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.features.personality.title")}</div>
-          <div className="settings-toggle-subtitle">
+      <SettingsToggleRow
+        title={t("settings.features.personality.title")}
+        subtitle={
+          <>
             {t("settings.features.personality.subtitle.before")}
             <code>personality</code>
             {t("settings.features.personality.subtitle.after")}
-          </div>
-        </div>
+          </>
+        }
+      >
         <select
           id="features-personality-select"
           className="settings-select"
@@ -216,15 +220,13 @@ export function SettingsFeaturesSection({
           <option value="friendly">{t("settings.features.personality.option.friendly")}</option>
           <option value="pragmatic">{t("settings.features.personality.option.pragmatic")}</option>
         </select>
-      </div>
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.features.pauseQueue.title")}</div>
-          <div className="settings-toggle-subtitle">{t("settings.features.pauseQueue.subtitle")}</div>
-        </div>
-        <button
-          type="button"
-          className={`settings-toggle ${appSettings.pauseQueuedMessagesWhenResponseRequired ? "on" : ""}`}
+      </SettingsToggleRow>
+      <SettingsToggleRow
+        title={t("settings.features.pauseQueue.title")}
+        subtitle={t("settings.features.pauseQueue.subtitle")}
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.pauseQueuedMessagesWhenResponseRequired}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
@@ -232,27 +234,20 @@ export function SettingsFeaturesSection({
                 !appSettings.pauseQueuedMessagesWhenResponseRequired,
             })
           }
-          aria-pressed={appSettings.pauseQueuedMessagesWhenResponseRequired}
-        >
-          <span className="settings-toggle-knob" />
-        </button>
-      </div>
+        />
+      </SettingsToggleRow>
       {stableFeatures.map((feature) => (
-        <div className="settings-toggle-row" key={feature.name}>
-          <div>
-            <div className="settings-toggle-title">{formatFeatureLabel(feature, zh)}</div>
-            <div className="settings-toggle-subtitle">{featureSubtitle(feature, zh, t)}</div>
-          </div>
-          <button
-            type="button"
-            className={`settings-toggle ${feature.enabled ? "on" : ""}`}
+        <SettingsToggleRow
+          key={feature.name}
+          title={formatFeatureLabel(feature, zh)}
+          subtitle={featureSubtitle(feature, zh, t)}
+        >
+          <SettingsToggleSwitch
+            pressed={feature.enabled}
             onClick={() => onToggleCodexFeature(feature)}
-            aria-pressed={feature.enabled}
             disabled={featureUpdatingKey === feature.name}
-          >
-            <span className="settings-toggle-knob" />
-          </button>
-        </div>
+          />
+        </SettingsToggleRow>
       ))}
       {hasFeatureWorkspace &&
         !featuresLoading &&
@@ -265,21 +260,17 @@ export function SettingsFeaturesSection({
         {t("settings.features.experimental.subtitle")}
       </div>
       {experimentalFeatures.map((feature) => (
-        <div className="settings-toggle-row" key={feature.name}>
-          <div>
-            <div className="settings-toggle-title">{formatFeatureLabel(feature, zh)}</div>
-            <div className="settings-toggle-subtitle">{featureSubtitle(feature, zh, t)}</div>
-          </div>
-          <button
-            type="button"
-            className={`settings-toggle ${feature.enabled ? "on" : ""}`}
+        <SettingsToggleRow
+          key={feature.name}
+          title={formatFeatureLabel(feature, zh)}
+          subtitle={featureSubtitle(feature, zh, t)}
+        >
+          <SettingsToggleSwitch
+            pressed={feature.enabled}
             onClick={() => onToggleCodexFeature(feature)}
-            aria-pressed={feature.enabled}
             disabled={featureUpdatingKey === feature.name}
-          >
-            <span className="settings-toggle-knob" />
-          </button>
-        </div>
+          />
+        </SettingsToggleRow>
       ))}
       {hasFeatureWorkspace &&
         !featuresLoading &&
@@ -297,6 +288,6 @@ export function SettingsFeaturesSection({
         <div className="settings-help">{t("settings.features.connectWorkspace")}</div>
       )}
       {featureError && <div className="settings-help">{featureError}</div>}
-    </section>
+    </SettingsSection>
   );
 }

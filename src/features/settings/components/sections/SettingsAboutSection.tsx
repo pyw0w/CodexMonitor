@@ -4,6 +4,7 @@ import {
   isMobileRuntime,
   type AppBuildType,
 } from "@services/tauri";
+import { SettingsSection } from "@/features/design-system/components/settings/SettingsPrimitives";
 import { useUpdater } from "@/features/update/hooks/useUpdater";
 import { useI18n } from "@/i18n/useI18n";
 
@@ -77,7 +78,7 @@ export function SettingsAboutSection() {
     : new Date(parsedBuildDate).toLocaleString();
 
   return (
-    <section className="settings-section">
+    <SettingsSection title={t("settings.nav.about")}>
       <div className="settings-field">
         <div className="settings-help">
           {t("settings.about.version")}: <code>{__APP_VERSION__}</code>
@@ -170,6 +171,6 @@ export function SettingsAboutSection() {
           )}
         </div>
       </div>
-    </section>
+    </SettingsSection>
   );
 }

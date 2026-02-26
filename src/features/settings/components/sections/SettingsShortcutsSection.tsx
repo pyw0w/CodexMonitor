@@ -1,4 +1,5 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
+import { SettingsSection } from "@/features/design-system/components/settings/SettingsPrimitives";
 import { formatShortcut, getDefaultInterruptShortcut } from "@utils/shortcuts";
 import { isMacPlatform } from "@utils/platformPaths";
 import { useI18n } from "@/i18n/useI18n";
@@ -233,9 +234,10 @@ export function SettingsShortcutsSection({
   }, [groups, normalizedSearchQuery]);
 
   return (
-    <section className="settings-section">
-      <div className="settings-section-title">{t("settings.shortcuts.sectionTitle")}</div>
-      <div className="settings-section-subtitle">{t("settings.shortcuts.sectionSubtitle")}</div>
+    <SettingsSection
+      title={t("settings.shortcuts.sectionTitle")}
+      subtitle={t("settings.shortcuts.sectionSubtitle")}
+    >
       <div className="settings-field settings-shortcuts-search">
         <label className="settings-field-label" htmlFor="settings-shortcuts-search">
           {t("settings.shortcuts.search.label")}
@@ -287,6 +289,6 @@ export function SettingsShortcutsSection({
           {t("settings.shortcuts.empty.suffix")}
         </div>
       )}
-    </section>
+    </SettingsSection>
   );
 }

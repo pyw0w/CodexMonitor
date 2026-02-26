@@ -8,6 +8,11 @@ import type {
   TcpDaemonStatus,
 } from "@/types";
 import { ModalShell } from "@/features/design-system/components/modal/ModalShell";
+import {
+  SettingsSection,
+  SettingsToggleRow,
+  SettingsToggleSwitch,
+} from "@/features/design-system/components/settings/SettingsPrimitives";
 import { useI18n } from "@/i18n/useI18n";
 
 type AddRemoteBackendDraft = {
@@ -184,13 +189,14 @@ export function SettingsServerSection({
   };
 
   return (
-    <section className="settings-section">
-      <div className="settings-section-title">{t("settings.server.sectionTitle")}</div>
-      <div className="settings-section-subtitle">
-        {isMobileSimplified
+    <SettingsSection
+      title={t("settings.server.sectionTitle")}
+      subtitle={
+        isMobileSimplified
           ? t("settings.server.sectionSubtitle.mobile")
-          : t("settings.server.sectionSubtitle.desktop")}
-      </div>
+          : t("settings.server.sectionSubtitle.desktop")
+      }
+    >
 
       {!isMobileSimplified && (
         <div className="settings-field">
@@ -348,27 +354,20 @@ export function SettingsServerSection({
         )}
 
         {!isMobileSimplified && (
-          <div className="settings-toggle-row">
-            <div>
-              <div className="settings-toggle-title">{t("settings.server.keepDaemon.title")}</div>
-              <div className="settings-toggle-subtitle">
-                {t("settings.server.keepDaemon.subtitle")}
-              </div>
-            </div>
-            <button
-              type="button"
-              className={`settings-toggle ${appSettings.keepDaemonRunningAfterAppClose ? "on" : ""}`}
+          <SettingsToggleRow
+            title={t("settings.server.keepDaemon.title")}
+            subtitle={t("settings.server.keepDaemon.subtitle")}
+          >
+            <SettingsToggleSwitch
+              pressed={appSettings.keepDaemonRunningAfterAppClose}
               onClick={() =>
                 void onUpdateAppSettings({
                   ...appSettings,
                   keepDaemonRunningAfterAppClose: !appSettings.keepDaemonRunningAfterAppClose,
                 })
               }
-              aria-pressed={appSettings.keepDaemonRunningAfterAppClose}
-            >
-              <span className="settings-toggle-knob" />
-            </button>
-          </div>
+            />
+          </SettingsToggleRow>
         )}
 
         <div className="settings-field">
@@ -704,6 +703,6 @@ export function SettingsServerSection({
           </div>
         </ModalShell>
       )}
-    </section>
+    </SettingsSection>
   );
 }

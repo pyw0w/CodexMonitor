@@ -1,5 +1,10 @@
 import type { AppSettings, ModelOption } from "@/types";
 import { useI18n } from "@/i18n/useI18n";
+import {
+  SettingsSection,
+  SettingsToggleRow,
+  SettingsToggleSwitch,
+} from "@/features/design-system/components/settings/SettingsPrimitives";
 
 type SettingsGitSectionProps = {
   appSettings: AppSettings;
@@ -26,53 +31,35 @@ export function SettingsGitSection({
 }: SettingsGitSectionProps) {
   const { t } = useI18n();
   return (
-    <section className="settings-section">
-      <div className="settings-section-title">Git</div>
-      <div className="settings-section-subtitle">
-        {t("settings.git.sectionSubtitle")}
-      </div>
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.git.preloadDiffs.title")}</div>
-          <div className="settings-toggle-subtitle">
-            {t("settings.git.preloadDiffs.subtitle")}
-          </div>
-        </div>
-        <button
-          type="button"
-          className={`settings-toggle ${appSettings.preloadGitDiffs ? "on" : ""}`}
+    <SettingsSection title="Git" subtitle={t("settings.git.sectionSubtitle")}>
+      <SettingsToggleRow
+        title={t("settings.git.preloadDiffs.title")}
+        subtitle={t("settings.git.preloadDiffs.subtitle")}
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.preloadGitDiffs}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
               preloadGitDiffs: !appSettings.preloadGitDiffs,
             })
           }
-          aria-pressed={appSettings.preloadGitDiffs}
-        >
-          <span className="settings-toggle-knob" />
-        </button>
-      </div>
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.git.ignoreWhitespace.title")}</div>
-          <div className="settings-toggle-subtitle">
-            {t("settings.git.ignoreWhitespace.subtitle")}
-          </div>
-        </div>
-        <button
-          type="button"
-          className={`settings-toggle ${appSettings.gitDiffIgnoreWhitespaceChanges ? "on" : ""}`}
+        />
+      </SettingsToggleRow>
+      <SettingsToggleRow
+        title={t("settings.git.ignoreWhitespace.title")}
+        subtitle={t("settings.git.ignoreWhitespace.subtitle")}
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.gitDiffIgnoreWhitespaceChanges}
           onClick={() =>
             void onUpdateAppSettings({
               ...appSettings,
               gitDiffIgnoreWhitespaceChanges: !appSettings.gitDiffIgnoreWhitespaceChanges,
             })
           }
-          aria-pressed={appSettings.gitDiffIgnoreWhitespaceChanges}
-        >
-          <span className="settings-toggle-knob" />
-        </button>
-      </div>
+        />
+      </SettingsToggleRow>
       <div className="settings-field">
         <div className="settings-field-label">{t("settings.git.commitPrompt.label")}</div>
         <div className="settings-help">
@@ -141,6 +128,6 @@ export function SettingsGitSection({
           </select>
         </div>
       )}
-    </section>
+    </SettingsSection>
   );
 }

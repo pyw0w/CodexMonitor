@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { ModelOption } from "@/types";
 import {
+  SettingsSection,
+  SettingsToggleRow,
+  SettingsToggleSwitch,
+} from "@/features/design-system/components/settings/SettingsPrimitives";
+import {
   MagicSparkleIcon,
   MagicSparkleLoaderIcon,
 } from "@/features/shared/components/MagicSparkleIcon";
@@ -351,9 +356,10 @@ export function SettingsAgentsSection({
   };
 
   return (
-    <section className="settings-section">
-      <div className="settings-section-title">{t("settings.agents.sectionTitle")}</div>
-      <div className="settings-section-subtitle">{t("settings.agents.sectionSubtitle")}</div>
+    <SettingsSection
+      title={t("settings.agents.sectionTitle")}
+      subtitle={t("settings.agents.sectionSubtitle")}
+    >
       <div className="settings-help settings-agents-builtins-help">
         {t("settings.agents.builtins.before")}
         <code>default</code>
@@ -364,13 +370,10 @@ export function SettingsAgentsSection({
         {t("settings.agents.builtins.after")}
       </div>
 
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.agents.configFile.title")}</div>
-          <div className="settings-toggle-subtitle">
-            {t("settings.agents.configFile.subtitle", { fileManager: fileManagerName() })}
-          </div>
-        </div>
+      <SettingsToggleRow
+        title={t("settings.agents.configFile.title")}
+        subtitle={t("settings.agents.configFile.subtitle", { fileManager: fileManagerName() })}
+      >
         <div className="settings-agents-actions">
           <button type="button" className="ghost" onClick={onRefresh} disabled={isLoading}>
             {t("settings.agents.refresh")}
@@ -384,35 +387,33 @@ export function SettingsAgentsSection({
             {openInFileManagerLabel()}
           </button>
         </div>
-      </div>
+      </SettingsToggleRow>
 
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.agents.multiAgent.title")}</div>
-          <div className="settings-toggle-subtitle">
+      <SettingsToggleRow
+        title={t("settings.agents.multiAgent.title")}
+        subtitle={
+          <>
             Writes <code>features.multi_agent</code> in config.toml.
-          </div>
-        </div>
-        <button
-          type="button"
-          className={`settings-toggle ${settings?.multiAgentEnabled ? "on" : ""}`}
+          </>
+        }
+      >
+        <SettingsToggleSwitch
+          pressed={settings?.multiAgentEnabled ?? false}
           onClick={() => void handleToggleMultiAgent()}
-          aria-pressed={settings?.multiAgentEnabled ?? false}
           disabled={!settings || isUpdatingCore}
-        >
-          <span className="settings-toggle-knob" />
-        </button>
-      </div>
+        />
+      </SettingsToggleRow>
 
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.agents.maxThreads.title")}</div>
-          <div className="settings-toggle-subtitle">
+      <SettingsToggleRow
+        title={t("settings.agents.maxThreads.title")}
+        subtitle={
+          <>
             {t("settings.agents.maxThreads.subtitle.before")}
             <code>1-12</code>
             {t("settings.agents.maxThreads.subtitle.after")}
-          </div>
-        </div>
+          </>
+        }
+      >
         <div
           className="settings-agents-stepper"
           role="group"
@@ -444,17 +445,18 @@ export function SettingsAgentsSection({
             ▲
           </button>
         </div>
-      </div>
+      </SettingsToggleRow>
 
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.agents.maxDepth.title")}</div>
-          <div className="settings-toggle-subtitle">
+      <SettingsToggleRow
+        title={t("settings.agents.maxDepth.title")}
+        subtitle={
+          <>
             {t("settings.agents.maxDepth.subtitle.before")}
             <code>1-4</code>
             {t("settings.agents.maxDepth.subtitle.after")}
-          </div>
-        </div>
+          </>
+        }
+      >
         <div
           className="settings-agents-stepper"
           role="group"
@@ -486,7 +488,7 @@ export function SettingsAgentsSection({
             ▲
           </button>
         </div>
-      </div>
+      </SettingsToggleRow>
 
       <div className="settings-subsection-title">{t("settings.agents.create.title")}</div>
       <div className="settings-subsection-subtitle">
@@ -893,6 +895,6 @@ export function SettingsAgentsSection({
       {isLoading && <div className="settings-help">{t("settings.agents.loading")}</div>}
       {openPathError && <div className="settings-agents-error">{openPathError}</div>}
       {error && <div className="settings-agents-error">{error}</div>}
-    </section>
+    </SettingsSection>
   );
 }

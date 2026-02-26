@@ -1,4 +1,9 @@
 import type { AppSettings, DictationModelStatus } from "@/types";
+import {
+  SettingsSection,
+  SettingsToggleRow,
+  SettingsToggleSwitch,
+} from "@/features/design-system/components/settings/SettingsPrimitives";
 import { formatDownloadSize } from "@utils/formatting";
 import { useI18n } from "@/i18n/useI18n";
 
@@ -40,19 +45,16 @@ export function SettingsDictationSection({
   const dictationProgress = dictationModelStatus?.progress ?? null;
 
   return (
-    <section className="settings-section">
-      <div className="settings-section-title">{t("settings.dictation.sectionTitle")}</div>
-      <div className="settings-section-subtitle">{t("settings.dictation.sectionSubtitle")}</div>
-      <div className="settings-toggle-row">
-        <div>
-          <div className="settings-toggle-title">{t("settings.dictation.enable.title")}</div>
-          <div className="settings-toggle-subtitle">
-            {t("settings.dictation.enable.subtitle")}
-          </div>
-        </div>
-        <button
-          type="button"
-          className={`settings-toggle ${appSettings.dictationEnabled ? "on" : ""}`}
+    <SettingsSection
+      title={t("settings.dictation.sectionTitle")}
+      subtitle={t("settings.dictation.sectionSubtitle")}
+    >
+      <SettingsToggleRow
+        title={t("settings.dictation.enable.title")}
+        subtitle={t("settings.dictation.enable.subtitle")}
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.dictationEnabled}
           onClick={() => {
             const nextEnabled = !appSettings.dictationEnabled;
             void onUpdateAppSettings({
@@ -74,11 +76,8 @@ export function SettingsDictationSection({
               onDownloadDictationModel();
             }
           }}
-          aria-pressed={appSettings.dictationEnabled}
-        >
-          <span className="settings-toggle-knob" />
-        </button>
-      </div>
+        />
+      </SettingsToggleRow>
       <div className="settings-field">
         <label className="settings-field-label" htmlFor="dictation-model">
           {t("settings.dictation.model.label")}
@@ -236,6 +235,6 @@ export function SettingsDictationSection({
           </div>
         </div>
       )}
-    </section>
+    </SettingsSection>
   );
 }

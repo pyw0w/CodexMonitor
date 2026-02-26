@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { WorkspaceInfo } from "@/types";
 import { pushErrorToast } from "@services/toasts";
 import { useI18n } from "@/i18n/useI18n";
+import { SettingsSection } from "@/features/design-system/components/settings/SettingsPrimitives";
 
 type SettingsEnvironmentsSectionProps = {
   mainWorkspaces: WorkspaceInfo[];
@@ -30,11 +31,10 @@ export function SettingsEnvironmentsSection({
 }: SettingsEnvironmentsSectionProps) {
   const { t } = useI18n();
   return (
-    <section className="settings-section">
-      <div className="settings-section-title">{t("settings.environments.sectionTitle")}</div>
-      <div className="settings-section-subtitle">
-        {t("settings.environments.sectionSubtitle")}
-      </div>
+    <SettingsSection
+      title={t("settings.environments.sectionTitle")}
+      subtitle={t("settings.environments.sectionSubtitle")}
+    >
       {mainWorkspaces.length === 0 ? (
         <div className="settings-empty">{t("settings.environments.emptyNoProjects")}</div>
       ) : (
@@ -126,6 +126,6 @@ export function SettingsEnvironmentsSection({
           </div>
         </>
       )}
-    </section>
+    </SettingsSection>
   );
 }
