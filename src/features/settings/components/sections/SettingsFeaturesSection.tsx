@@ -136,17 +136,17 @@ function featureSubtitle(
   zh: boolean,
   t: (key: string, params?: Record<string, string>) => string,
 ): string {
-  if (zh) {
-    const translatedFallback = FEATURE_DESCRIPTION_FALLBACKS_ZH[feature.name];
-    if (translatedFallback) {
-      return translatedFallback;
-    }
-  }
   if (feature.description?.trim()) {
     return feature.description;
   }
   if (feature.announcement?.trim()) {
     return feature.announcement;
+  }
+  if (zh) {
+    const translatedFallback = FEATURE_DESCRIPTION_FALLBACKS_ZH[feature.name];
+    if (translatedFallback) {
+      return translatedFallback;
+    }
   }
   const fallbackDescription = FEATURE_DESCRIPTION_FALLBACKS[feature.name];
   if (fallbackDescription) {
