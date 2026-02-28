@@ -189,6 +189,7 @@ export type LayoutNodesOptions = {
   onWorkspaceDragEnter: (event: DragEvent<HTMLElement>) => void;
   onWorkspaceDragLeave: (event: DragEvent<HTMLElement>) => void;
   onWorkspaceDrop: (event: DragEvent<HTMLElement>) => void;
+  sidebarTopNode?: ReactNode;
   updaterState: UpdateState;
   onUpdate: () => void;
   onDismissUpdate: () => void;

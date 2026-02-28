@@ -91,6 +91,7 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       onWorkspaceDragEnter={options.onWorkspaceDragEnter}
       onWorkspaceDragLeave={options.onWorkspaceDragLeave}
       onWorkspaceDrop={options.onWorkspaceDrop}
+      headerTopNode={options.sidebarTopNode}
     />
   );
 

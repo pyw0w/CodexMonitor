@@ -9,7 +9,7 @@ import type {
 } from "../../../types";
 import { createPortal } from "react-dom";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import type { MouseEvent, RefObject } from "react";
+import type { MouseEvent, ReactNode, RefObject } from "react";
 import { FolderOpen } from "lucide-react";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import GitBranch from "lucide-react/dist/esm/icons/git-branch";
@@ -115,6 +115,7 @@ type SidebarProps = {
   onWorkspaceDragEnter: (event: React.DragEvent<HTMLElement>) => void;
   onWorkspaceDragLeave: (event: React.DragEvent<HTMLElement>) => void;
   onWorkspaceDrop: (event: React.DragEvent<HTMLElement>) => void;
+  headerTopNode?: ReactNode;
 };
 
 export const Sidebar = memo(function Sidebar({
@@ -176,6 +177,7 @@ export const Sidebar = memo(function Sidebar({
   onWorkspaceDragEnter,
   onWorkspaceDragLeave,
   onWorkspaceDrop,
+  headerTopNode,
 }: SidebarProps) {
   const [expandedWorkspaces, setExpandedWorkspaces] = useState(
     new Set<string>(),
@@ -796,6 +798,7 @@ export const Sidebar = memo(function Sidebar({
     >
       <div className="sidebar-drag-strip" />
       <SidebarHeader
+        topNode={headerTopNode}
         onSelectHome={onSelectHome}
         onAddWorkspace={onAddWorkspace}
         onToggleSearch={() => setIsSearchOpen((prev) => !prev)}

@@ -1,6 +1,6 @@
 import { useMemo, type CSSProperties } from "react";
 import type { AppSettings } from "@/types";
-import { isWindowsPlatform } from "@utils/platformPaths";
+import { isLinuxPlatform, isWindowsPlatform } from "@utils/platformPaths";
 
 type UseAppShellOrchestrationOptions = {
   isCompact: boolean;
@@ -44,6 +44,8 @@ export function useAppShellOrchestration({
   appSettings,
 }: UseAppShellOrchestrationOptions) {
   const isWindows = isWindowsPlatform();
+  const isLinux = isLinuxPlatform();
+  const hasCustomCaptionControls = isWindows || isLinux;
   const showGitDetail = Boolean(selectedDiffPath) && isPhone && centerMode === "diff";
   const isThreadOpen = Boolean(activeThreadId && showComposer);
 
@@ -53,7 +55,7 @@ export function useAppShellOrchestration({
     shouldReduceTransparency ? " reduced-transparency" : ""
   }${!isCompact && sidebarCollapsed ? " sidebar-collapsed" : ""}${
     !isCompact && rightPanelCollapsed ? " right-panel-collapsed" : ""
-  }${isWindows ? " is-windows" : ""}`;
+  }${isWindows ? " is-windows" : ""}${isLinux ? " is-linux" : ""}`;
 
   const appStyle = useMemo<CSSProperties>(
     () => ({
@@ -68,20 +70,27 @@ export function useAppShellOrchestration({
       "--ui-font-family": appSettings.uiFontFamily,
       "--code-font-family": appSettings.codeFontFamily,
       "--code-font-size": `${appSettings.codeFontSize}px`,
-      "--sidebar-top-padding": isWindows ? "10px" : "36px",
-      "--right-panel-top-padding": isWindows
+      "--sidebar-top-padding": isWindows ? "10px" : isLinux ? "8px" : "36px",
+      "--right-panel-top-padding": hasCustomCaptionControls
         ? "calc(var(--main-topbar-height, 44px) + 6px)"
         : "12px",
-      "--home-scroll-offset": isWindows ? "var(--main-topbar-height, 44px)" : "0px",
-      "--window-caption-width": isWindows ? "138px" : "0px",
-      "--window-caption-gap": isWindows ? "10px" : "0px",
+      "--home-scroll-offset": hasCustomCaptionControls
+        ? "var(--main-topbar-height, 44px)"
+        : "0px",
+      "--window-caption-width": hasCustomCaptionControls ? "138px" : "0px",
+      "--window-caption-gap": hasCustomCaptionControls ? "10px" : "0px",
+      ...(hasCustomCaptionControls
+        ? {
+            // Keep custom drag handling, but do not let overlay strips consume clicks.
+            "--window-drag-strip-pointer-events": "none",
+          }
+        : {}),
       ...(isWindows
         ? {
             "--titlebar-height": "8px",
             "--titlebar-drag-strip-z-index": "5",
             "--side-panel-drag-strip-height": "56px",
             "--window-drag-hit-height": "44px",
-            "--window-drag-strip-pointer-events": "none",
             "--titlebar-inset-left": "0px",
             "--titlebar-collapsed-left-extra": "0px",
             "--titlebar-toggle-size": "32px",
@@ -97,7 +106,9 @@ export function useAppShellOrchestration({
       appSettings.uiFontFamily,
       chatDiffSplitPositionPercent,
       debugPanelHeight,
+      hasCustomCaptionControls,
       isWindows,
+      isLinux,
       isCompact,
       planPanelHeight,
       rightPanelCollapsed,

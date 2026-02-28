@@ -12,6 +12,7 @@ import "./styles/sidebar.css";
 import "./styles/home.css";
 import "./styles/workspace-home.css";
 import "./styles/main.css";
+import "./styles/linux-menu.css";
 import "./styles/messages.css";
 import "./styles/approval-toasts.css";
 import "./styles/error-toasts.css";
@@ -76,11 +77,14 @@ import { useRenameWorktreePrompt } from "@/features/workspaces/hooks/useRenameWo
 import { useLayoutController } from "@app/hooks/useLayoutController";
 import { useWindowLabel } from "@/features/layout/hooks/useWindowLabel";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { exit as exitApp } from "@tauri-apps/plugin-process";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   SidebarCollapseButton,
   TitlebarExpandControls,
 } from "@/features/layout/components/SidebarToggleControls";
 import { WindowCaptionControls } from "@/features/layout/components/WindowCaptionControls";
+import { LinuxAppMenuBar } from "@/features/layout/components/LinuxAppMenuBar";
 import { useUpdaterController } from "@app/hooks/useUpdaterController";
 import { useResponseRequiredNotificationsController } from "@app/hooks/useResponseRequiredNotificationsController";
 import { useErrorToasts } from "@/features/notifications/hooks/useErrorToasts";
@@ -157,6 +161,7 @@ import {
   resolveWorkspaceRuntimeCodexArgsOverride,
 } from "@threads/utils/threadCodexParamsSeed";
 import { setWorkspaceRuntimeCodexArgs } from "@services/tauri";
+import { isLinuxPlatform } from "@utils/platformPaths";
 
 const AboutView = lazy(() =>
   import("@/features/about/components/AboutView").then((module) => ({
@@ -498,7 +503,7 @@ function MainApp() {
     ...composerShortcuts,
   });
 
-  useComposerMenuActions({
+  const composerMenuActions = useComposerMenuActions({
     models,
     selectedModelId,
     onSelectModel: handleSelectModel,
@@ -738,6 +743,7 @@ function MainApp() {
   const {
     updaterState,
     startUpdate,
+    checkForUpdates,
     dismissUpdate,
     postUpdateNotice,
     dismissPostUpdateNotice,
@@ -2058,6 +2064,124 @@ function MainApp() {
     appSettings.backendMode === "remote" &&
     remoteThreadConnectionState === "polling";
 
+  const runDocumentEditCommand = useCallback((command: string) => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    try {
+      document.execCommand(command);
+    } catch {
+      // Ignore unsupported browser command runtimes.
+    }
+  }, []);
+
+  const handleWindowMinimize = useCallback(() => {
+    try {
+      void getCurrentWindow().minimize();
+    } catch {
+      // Ignore non-Tauri/test runtimes.
+    }
+  }, []);
+
+  const handleWindowToggleMaximize = useCallback(() => {
+    try {
+      void getCurrentWindow().toggleMaximize();
+    } catch {
+      // Ignore non-Tauri/test runtimes.
+    }
+  }, []);
+
+  const handleWindowClose = useCallback(() => {
+    try {
+      void getCurrentWindow().close();
+    } catch {
+      // Ignore non-Tauri/test runtimes.
+    }
+  }, []);
+
+  const handleQuitApp = useCallback(() => {
+    void exitApp(0).catch(() => {
+      // Ignore non-Tauri/test runtimes.
+    });
+  }, []);
+
+  const canCycleAgentFromMenu = Boolean(
+    activeWorkspaceId && (threadsByWorkspace[activeWorkspaceId] ?? []).length > 1,
+  );
+  const canCycleWorkspaceFromMenu = workspaces.length > 1;
+
+  const isLinuxDesktopMenu = !isCompact && isLinuxPlatform();
+  const linuxSidebarMenuNode = isLinuxDesktopMenu ? (
+    <LinuxAppMenuBar
+      canAddWorkspaceAgent={Boolean(activeWorkspace)}
+      canAddDerivedAgent={Boolean(activeParentWorkspace ?? activeWorkspace)}
+      canCycleAgent={canCycleAgentFromMenu}
+      canCycleWorkspace={canCycleWorkspaceFromMenu}
+      sidebarCollapsed={sidebarCollapsed}
+      rightPanelCollapsed={rightPanelCollapsed}
+      onNewAgent={() => {
+        if (activeWorkspace) {
+          void handleAddAgent(activeWorkspace);
+        }
+      }}
+      onNewWorktreeAgent={() => {
+        const workspace = activeParentWorkspace ?? activeWorkspace;
+        if (workspace) {
+          void handleAddWorktreeAgent(workspace);
+        }
+      }}
+      onNewCloneAgent={() => {
+        const workspace = activeParentWorkspace ?? activeWorkspace;
+        if (workspace) {
+          void handleAddCloneAgent(workspace);
+        }
+      }}
+      onAddWorkspace={() => {
+        void handleAddWorkspace();
+      }}
+      onAddWorkspaceFromUrl={openWorkspaceFromUrlPrompt}
+      onOpenSettings={handleSidebarOpenSettings}
+      onCloseWindow={handleWindowClose}
+      onQuitApp={handleQuitApp}
+      onEditUndo={() => runDocumentEditCommand("undo")}
+      onEditRedo={() => runDocumentEditCommand("redo")}
+      onEditCut={() => runDocumentEditCommand("cut")}
+      onEditCopy={() => runDocumentEditCommand("copy")}
+      onEditPaste={() => runDocumentEditCommand("paste")}
+      onEditSelectAll={() => runDocumentEditCommand("selectAll")}
+      onComposerCycleModel={composerMenuActions.cycleModel}
+      onComposerCycleAccess={composerMenuActions.cycleAccessMode}
+      onComposerCycleReasoning={composerMenuActions.cycleReasoning}
+      onComposerCycleCollaboration={composerMenuActions.cycleCollaborationMode}
+      onToggleProjectsSidebar={() => {
+        if (sidebarCollapsed) {
+          expandSidebar();
+        } else {
+          collapseSidebar();
+        }
+      }}
+      onToggleGitSidebar={() => {
+        if (rightPanelCollapsed) {
+          expandRightPanel();
+        } else {
+          collapseRightPanel();
+        }
+      }}
+      onToggleDebugPanel={handleDebugClick}
+      onToggleTerminal={handleToggleTerminalWithFocus}
+      onNextAgent={() => handleCycleAgent("next")}
+      onPrevAgent={() => handleCycleAgent("prev")}
+      onNextWorkspace={() => handleCycleWorkspace("next")}
+      onPrevWorkspace={() => handleCycleWorkspace("prev")}
+      onWindowMinimize={handleWindowMinimize}
+      onWindowToggleMaximize={handleWindowToggleMaximize}
+      onHelpAbout={() => openSettings("about")}
+      onHelpCheckUpdates={() => {
+        void checkForUpdates({ announceNoUpdate: true });
+      }}
+    />
+  ) : null;
+
   const {
     sidebarNode,
     messagesNode,
@@ -2510,6 +2634,7 @@ function MainApp() {
     onWorkspaceDragEnter: handleWorkspaceDragEnter,
     onWorkspaceDragLeave: handleWorkspaceDragLeave,
     onWorkspaceDrop: handleWorkspaceDrop,
+    sidebarTopNode: linuxSidebarMenuNode,
     getThreadArgsBadge,
   });
 

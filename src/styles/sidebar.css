@@ -11,6 +11,8 @@
   min-height: 0;
   overflow: hidden;
   position: relative;
+  container-type: inline-size;
+  container-name: sidebar;
   transition: opacity 200ms ease, transform 200ms ease, padding-top 180ms ease;
 }
 
@@ -99,6 +101,8 @@
   align-items: center;
   gap: 10px;
   min-height: 32px;
+  min-width: 0;
+  overflow: visible;
   padding: 0;
   margin-bottom: 0;
   -webkit-app-region: no-drag;
@@ -107,6 +111,7 @@
 .sidebar-header-title {
   display: inline-flex;
   align-items: center;
+  flex: 1 1 auto;
   gap: 6px;
   min-width: 0;
 }
@@ -114,15 +119,30 @@
 .sidebar-title-group {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  flex: 1 1 auto;
+  gap: 8px;
   min-width: 0;
+  overflow: visible;
+}
+
+.sidebar-title-menu {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  overflow: visible;
+  -webkit-app-region: no-drag;
 }
 
 .sidebar-title-button {
+  flex: 1 1 auto;
   min-width: 0;
-  margin-left: -6px;
+  margin-left: 0;
+  max-width: 100%;
   padding: 4px 6px;
   border-radius: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: background-color 120ms ease, color 120ms ease;
 }
 
@@ -169,7 +189,25 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  flex: 0 0 auto;
+  margin-left: 8px;
+}
+
+@container sidebar (max-width: 280px) {
+  .sidebar-header {
+    gap: 6px;
+  }
+
+  .sidebar-header-actions {
+    gap: 4px;
+    margin-left: 4px;
+  }
+
+  .sidebar-title-button {
+    max-width: 88px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
 }
 
 .sidebar-sort-menu {

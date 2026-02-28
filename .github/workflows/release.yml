@@ -167,7 +167,7 @@ jobs:
             release-artifacts/CodexMonitor.app.tar.gz.sig
 
   build_linux:
-    name: linux bundles (${{ matrix.arch }})
+    name: linux bundles (AppImage + RPM, ${{ matrix.arch }})
     runs-on: ${{ matrix.platform }}
     environment: release
     env:
@@ -212,7 +212,7 @@ jobs:
           mkdir -p "$HOME/.tauri"
           echo "$TAURI_SIGNING_PRIVATE_KEY_B64" | base64 --decode > "$HOME/.tauri/codexmonitor.key"
 
-      - name: build AppImage and RPM
+      - name: Build Linux AppImage and Fedora-compatible RPM
         run: |
           set -euo pipefail
           export TAURI_SIGNING_PRIVATE_KEY
@@ -229,9 +229,23 @@ jobs:
             exit 1
           fi
           if [ ${#rpms[@]} -eq 0 ]; then
-            echo "No RPM output found"
+            echo "No RPM output found (Fedora package validation cannot continue)"
             exit 1
           fi
+
+      - name: Validate RPM metadata (Fedora readiness)
+        run: |
+          set -euo pipefail
+          mapfile -t rpms < <(find src-tauri/target/release/bundle/rpm -type f -name '*.rpm' | sort)
+          if [ ${#rpms[@]} -eq 0 ]; then
+            echo "No RPM outputs found for Fedora metadata validation"
+            exit 1
+          fi
+          for rpm_file in "${rpms[@]}"; do
+            echo "Inspecting ${rpm_file}"
+            rpm -qip "$rpm_file"
+            rpm -qp --requires "$rpm_file"
+          done
 
       - name: Upload Linux bundles
         uses: actions/upload-artifact@v4
@@ -358,7 +372,7 @@ jobs:
             mv "$artifact" "$target"
           done < <(find release-artifacts -type f -name '* *' -print0)
 
-      - name: Validate RPM artifacts
+      - name: Validate RPM artifacts (Linux/Fedora)
         run: |
           set -euo pipefail
           sudo apt-get update
@@ -430,6 +444,7 @@ jobs:
           notes = "\n".join(output).strip()
           if not notes:
               notes = "- No user-facing changes."
+          notes += "\n\n- Linux: Fedora-compatible RPM bundles are available; updates are manual via package download/upgrade."
 
           Path("release-artifacts/release-notes.md").write_text(notes + "\n")
           PY

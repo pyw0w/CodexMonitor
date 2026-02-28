@@ -219,6 +219,63 @@ npm run tauri:build
 
 Artifacts will be in `src-tauri/target/release/bundle/` (platform-specific subfolders).
 
+### Linux
+
+Linux builds use `src-tauri/tauri.linux.conf.json` for a custom in-app window caption (`minimize/maximize/close`) with a non-transparent window.
+
+Linux close behavior:
+
+- Closing the main window hides the app to background.
+- Restore the main window from the tray icon menu (`Show / Hide`).
+- Use tray menu `Quit` to fully exit the app.
+
+```bash
+npm run tauri:dev:linux
+```
+
+The release workflow publishes Linux AppImage and RPM artifacts.
+
+### Fedora (native RPM)
+
+Build a Fedora-oriented RPM bundle locally:
+
+```bash
+npm run tauri:build:fedora
+```
+
+Artifacts will be in:
+
+- `src-tauri/target/release/bundle/rpm/` (`.rpm`)
+
+This Fedora build profile disables updater artifacts, so a local signing key (`TAURI_SIGNING_PRIVATE_KEY`) is not required for RPM generation.
+
+Fedora dependencies (example for Fedora 40+):
+
+```bash
+sudo dnf install -y \
+  webkit2gtk4.1 gtk3 libappindicator-gtk3 librsvg2 \
+  alsa-lib openssl-libs
+```
+
+Fedora build dependencies (for local source builds):
+
+```bash
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y \
+  cmake pkgconf-pkg-config clang \
+  webkit2gtk4.1-devel gtk3-devel libappindicator-gtk3-devel \
+  librsvg2-devel openssl-devel alsa-lib-devel
+```
+
+Install or upgrade manually with `dnf`:
+
+```bash
+sudo dnf install -y ./src-tauri/target/release/bundle/rpm/*.rpm
+sudo dnf upgrade -y codex-monitor
+```
+
+Note: Fedora/RPM distribution currently uses manual package updates (not in-app updater `latest.json`).
+
 ### Windows (opt-in)
 
 Windows builds are opt-in and use a separate Tauri config file to avoid macOS-only window effects.

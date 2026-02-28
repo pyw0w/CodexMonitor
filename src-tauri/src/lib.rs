@@ -1,9 +1,13 @@
 #[cfg(desktop)]
 use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(all(desktop, target_os = "linux"))]
+use tauri::menu::{Menu, MenuItemBuilder, PredefinedMenuItem};
 use tauri::Manager;
 #[cfg(desktop)]
 use tauri::RunEvent;
-#[cfg(target_os = "macos")]
+#[cfg(all(desktop, target_os = "linux"))]
+use tauri::tray::TrayIconBuilder;
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 use tauri::WindowEvent;
 
 mod backend;
@@ -60,6 +64,67 @@ async fn stop_managed_daemons_for_exit(app_handle: tauri::AppHandle) {
     let _ = tailscale::tailscale_daemon_stop(state).await;
 }
 
+#[cfg(all(desktop, target_os = "linux"))]
+const TRAY_TOGGLE_WINDOW_ID: &str = "tray_toggle_window";
+#[cfg(all(desktop, target_os = "linux"))]
+const TRAY_QUIT_ID: &str = "tray_quit";
+
+#[cfg(all(desktop, target_os = "linux"))]
+fn show_main_window(app_handle: &tauri::AppHandle<tauri::Wry>) {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
+#[cfg(all(desktop, target_os = "linux"))]
+fn hide_main_window(app_handle: &tauri::AppHandle<tauri::Wry>) {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let _ = window.hide();
+    }
+}
+
+#[cfg(all(desktop, target_os = "linux"))]
+fn toggle_main_window(app_handle: &tauri::AppHandle<tauri::Wry>) {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        match window.is_visible() {
+            Ok(true) => hide_main_window(app_handle),
+            Ok(false) => show_main_window(app_handle),
+            Err(_) => show_main_window(app_handle),
+        }
+    }
+}
+
+#[cfg(all(desktop, target_os = "linux"))]
+fn build_linux_tray_icon(app_handle: &tauri::AppHandle<tauri::Wry>) -> tauri::Result<()> {
+    let toggle_item = MenuItemBuilder::with_id(TRAY_TOGGLE_WINDOW_ID, "Show / Hide").build(app_handle)?;
+    let quit_item = MenuItemBuilder::with_id(TRAY_QUIT_ID, "Quit").build(app_handle)?;
+    let tray_menu = Menu::with_items(
+        app_handle,
+        &[
+            &toggle_item,
+            &PredefinedMenuItem::separator(app_handle)?,
+            &quit_item,
+        ],
+    )?;
+
+    let mut tray_builder = TrayIconBuilder::with_id("main-tray")
+        .menu(&tray_menu)
+        .tooltip("Codex Monitor");
+    if let Some(icon) = app_handle.default_window_icon() {
+        tray_builder = tray_builder.icon(icon.clone());
+    }
+
+    let _ = tray_builder
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            TRAY_TOGGLE_WINDOW_ID => toggle_main_window(app),
+            TRAY_QUIT_ID => app.exit(0),
+            _ => {}
+        })
+        .build(app_handle)?;
+    Ok(())
+}
+
 #[tauri::command]
 fn is_mobile_runtime() -> bool {
     cfg!(any(target_os = "ios", target_os = "android"))
@@ -69,9 +134,11 @@ fn is_mobile_runtime() -> bool {
 pub fn run() {
     #[cfg(target_os = "linux")]
     {
+        let mut applied_env_flags: Vec<&'static str> = Vec::new();
         // Avoid WebKit compositing issues on NVIDIA Linux setups (GBM buffer errors).
         if std::env::var_os("__NV_PRIME_RENDER_OFFLOAD").is_none() {
             std::env::set_var("__NV_PRIME_RENDER_OFFLOAD", "1");
+            applied_env_flags.push("__NV_PRIME_RENDER_OFFLOAD=1");
         }
         let is_wayland = std::env::var("XDG_SESSION_TYPE")
             .map(|session| session.eq_ignore_ascii_case("wayland"))
@@ -81,21 +148,38 @@ pub fn run() {
         if is_wayland && has_nvidia && std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none()
         {
             std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+            applied_env_flags.push("WEBKIT_DISABLE_DMABUF_RENDERER=1");
         }
         let is_x11 = !is_wayland && std::env::var_os("DISPLAY").is_some();
         // Work around sporadic blank WebKitGTK renders on X11 by disabling compositing mode.
         // Keep Wayland untouched because this can interfere with input behavior on some setups.
         if is_x11 && std::env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_none() {
             std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+            applied_env_flags.push("WEBKIT_DISABLE_COMPOSITING_MODE=1");
         }
+
+        let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_else(|_| "unknown".into());
+        let applied = if applied_env_flags.is_empty() {
+            "none".to_string()
+        } else {
+            applied_env_flags.join(", ")
+        };
+        eprintln!(
+            "[codex-monitor/linux-startup] session={session_type} wayland={is_wayland} x11={is_x11} nvidia={has_nvidia} applied_env={applied}"
+        );
     }
 
-    #[cfg(desktop)]
+    #[cfg(all(desktop, not(target_os = "linux")))]
     let builder = tauri::Builder::default()
         .manage(menu::MenuItemRegistry::<tauri::Wry>::default())
         .on_menu_event(menu::handle_menu_event)
         .enable_macos_default_menu(false)
         .menu(menu::build_menu);
+
+    #[cfg(all(desktop, target_os = "linux"))]
+    let builder = tauri::Builder::default()
+        .manage(menu::MenuItemRegistry::<tauri::Wry>::default())
+        .enable_macos_default_menu(false);
 
     #[cfg(not(desktop))]
     let builder = tauri::Builder::default();
@@ -106,6 +190,11 @@ pub fn run() {
                 return;
             }
             #[cfg(target_os = "macos")]
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+            #[cfg(target_os = "linux")]
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
                 let _ = window.hide();
@@ -121,6 +210,17 @@ pub fn run() {
                     // Keep menu accelerators wired while suppressing a visible native menu bar.
                     let _ = main_window.hide_menu();
                 }
+            }
+            #[cfg(target_os = "linux")]
+            {
+                if let Some(main_window) = app.get_webview_window("main") {
+                    let _ = main_window.set_decorations(false);
+                    // Keep menu accelerators wired while suppressing a visible native menu bar.
+                    let _ = main_window.hide_menu();
+                }
+                // Ensure app-wide menu bar is hidden for windows using the shared app menu.
+                let _ = app.hide_menu();
+                build_linux_tray_icon(&app.handle())?;
             }
             #[cfg(desktop)]
             {
@@ -300,6 +400,14 @@ pub fn run() {
         .expect("error while running tauri application");
 
     app.run(|app_handle, event| {
+        #[cfg(target_os = "linux")]
+        if let RunEvent::Ready = event {
+            let _ = app_handle.hide_menu();
+            if let Some(window) = app_handle.get_webview_window("main") {
+                let _ = window.hide_menu();
+            }
+        }
+
         #[cfg(desktop)]
         if let RunEvent::ExitRequested { api, .. } = event {
             if !EXIT_CLEANUP_IN_PROGRESS.load(Ordering::SeqCst)

@@ -360,6 +360,14 @@
   transition: padding-left 180ms ease, padding-right 180ms ease;
 }
 
+.app.is-linux .main-topbar {
+  padding-right: calc(
+    var(--main-panel-padding)
+    + var(--window-caption-width, 0px)
+    + var(--window-caption-gap, 0px)
+  );
+}
+
 .app.sidebar-collapsed .main-topbar {
   padding-left: calc(
     var(--main-panel-padding)
