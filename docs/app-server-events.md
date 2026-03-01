@@ -1,10 +1,14 @@
-# App-Server Events Reference (Codex `6a673e7339161cf5aa6711324bfe873846234b6b`)
+# App-Server Events Reference (Codex `0aeb55bf0858a15e2456f246f0e56dcea8432740`)
 
 This document helps agents quickly answer:
 - Which app-server events CodexMonitor supports right now.
 - Which app-server requests CodexMonitor sends right now.
 - Where to look in CodexMonitor to add support.
 - Where to look in `../Codex` to compare event lists and find emitters.
+
+Protocol baseline for this document is Codex app-server protocol v2 from
+`../Codex/codex-rs/app-server-protocol/src/protocol/common.rs`.
+Official docs reference: https://developers.openai.com/codex/app-server
 
 When updating this document:
 1. Update the Codex hash in the title using `git -C ../Codex rev-parse HEAD`.
@@ -55,6 +59,9 @@ These are the app-server methods currently supported in
 `src/utils/appServerEvents.ts` (`SUPPORTED_APP_SERVER_METHODS`) and then either
 routed in `useAppServerEvents.ts` or handled in feature-specific subscriptions.
 
+CodexMonitor also handles a few non-v2/bespoke notifications that are not part
+of the v2 `Notification` enum in `common.rs`; these are called out below.
+
 - `app/list/updated`
 - `codex/connected`
 - `*requestApproval` methods (matched via
@@ -88,6 +95,15 @@ routed in `useAppServerEvents.ts` or handled in feature-specific subscriptions.
 - `item/fileChange/outputDelta`
 - `codex/event/skills_update_available` (handled via
   `isSkillsUpdateAvailableEvent(...)` in `useSkills.ts`)
+
+### Supported Non-v2/Bespoke Notifications
+
+These are intentionally tracked in CodexMonitor but are not part of the
+canonical v2 notification set in protocol `common.rs`:
+
+- `codex/connected`
+- `codex/backgroundThread`
+- `codex/event/skills_update_available`
 
 ## Conversation Compaction Signals (Codex v2)
 
