@@ -266,6 +266,7 @@ export type AppSettings = {
   pauseQueuedMessagesWhenResponseRequired: boolean;
   unifiedExecEnabled: boolean;
   experimentalAppsEnabled: boolean;
+  promptSuggestionsEnabled: boolean;
   personality: PersonalityPreference;
   dictationEnabled: boolean;
   dictationModelId: string;
