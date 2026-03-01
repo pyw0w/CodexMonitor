@@ -7,6 +7,7 @@ import { ThreadRow } from "./ThreadRow";
 type PinnedThreadRow = {
   thread: ThreadSummary;
   depth: number;
+  hasChildren: boolean;
   workspaceId: string;
 };
 
@@ -19,6 +20,7 @@ type PinnedThreadListProps = {
   getWorkspaceLabel?: (workspaceId: string) => string | null;
   getThreadTime: (thread: ThreadSummary) => string | null;
   getThreadArgsBadge?: (workspaceId: string, threadId: string) => string | null;
+  getThreadTokenUsageLabel?: (workspaceId: string, threadId: string) => string | null;
   isThreadPinned: (workspaceId: string, threadId: string) => boolean;
   onSelectThread: (workspaceId: string, threadId: string) => void;
   onShowThreadMenu: (
@@ -27,6 +29,8 @@ type PinnedThreadListProps = {
     threadId: string,
     canPin: boolean,
   ) => void;
+  collapsedThreadIdsByWorkspace?: Record<string, ReadonlySet<string>>;
+  onToggleThreadChildren?: (workspaceId: string, threadId: string) => void;
 };
 
 export function PinnedThreadList({
@@ -38,18 +42,22 @@ export function PinnedThreadList({
   getWorkspaceLabel,
   getThreadTime,
   getThreadArgsBadge,
+  getThreadTokenUsageLabel,
   isThreadPinned,
   onSelectThread,
   onShowThreadMenu,
+  collapsedThreadIdsByWorkspace,
+  onToggleThreadChildren,
 }: PinnedThreadListProps) {
   return (
     <div className="thread-list pinned-thread-list">
-      {rows.map(({ thread, depth, workspaceId }) => {
+      {rows.map(({ thread, depth, hasChildren, workspaceId }) => {
         return (
           <ThreadRow
             key={`${workspaceId}:${thread.id}`}
             thread={thread}
             depth={depth}
+            hasChildren={hasChildren}
             workspaceId={workspaceId}
             indentUnit={14}
             activeWorkspaceId={activeWorkspaceId}
@@ -59,9 +67,12 @@ export function PinnedThreadList({
             workspaceLabel={getWorkspaceLabel?.(workspaceId) ?? null}
             getThreadTime={getThreadTime}
             getThreadArgsBadge={getThreadArgsBadge}
+            getThreadTokenUsageLabel={getThreadTokenUsageLabel}
             isThreadPinned={isThreadPinned}
             onSelectThread={onSelectThread}
             onShowThreadMenu={onShowThreadMenu}
+            isCollapsed={Boolean(collapsedThreadIdsByWorkspace?.[workspaceId]?.has(thread.id))}
+            onToggleThreadChildren={onToggleThreadChildren}
           />
         );
       })}

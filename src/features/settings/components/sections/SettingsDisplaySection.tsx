@@ -241,6 +241,48 @@ export function SettingsDisplaySection({
         />
       </SettingsToggleRow>
       <SettingsToggleRow
+        title="Show thread token usage & estimated costs"
+        subtitle="Display token totals & costs beneath each thread title. (both are estimates and can differ from the actual values)"
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.showThreadTokenUsage}
+          onClick={() =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              showThreadTokenUsage: !appSettings.showThreadTokenUsage,
+            })
+          }
+        />
+      </SettingsToggleRow>
+      <SettingsToggleRow
+        title="Show full thread token counts & costs"
+        subtitle="Display exact totals instead of compact abbreviations."
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.threadTokenUsageShowFull}
+          onClick={() =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              threadTokenUsageShowFull: !appSettings.threadTokenUsageShowFull,
+            })
+          }
+        />
+      </SettingsToggleRow>
+      <SettingsToggleRow
+        title="Exclude cache from thread token usage"
+        subtitle="Subtract cached input tokens from each thread total."
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.threadTokenUsageExcludeCache}
+          onClick={() =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              threadTokenUsageExcludeCache: !appSettings.threadTokenUsageExcludeCache,
+            })
+          }
+        />
+      </SettingsToggleRow>
+      <SettingsToggleRow
         title={t("settings.display.splitChatDiff.title")}
         subtitle={t("settings.display.splitChatDiff.subtitle")}
       >
@@ -557,6 +599,43 @@ export function SettingsDisplaySection({
           }
         />
       </SettingsToggleRow>
+      <SettingsToggleRow
+        title="Show sub-agent sessions in sidebar"
+        subtitle="Show or hide spawned sub-agent sessions beneath their parent thread."
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.showSubagentSessions}
+          onClick={() =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              showSubagentSessions: !appSettings.showSubagentSessions,
+            })
+          }
+        />
+      </SettingsToggleRow>
+      <div className="settings-field">
+        <label className="settings-field-label" htmlFor="settings-sync-mode-select">
+          Settings sync mode
+        </label>
+        <select
+          id="settings-sync-mode-select"
+          className="settings-select"
+          value={appSettings.syncMode}
+          onChange={(event) =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              syncMode: event.target.value as AppSettings["syncMode"],
+            })
+          }
+        >
+          <option value="app_authoritative">App authoritative</option>
+          <option value="bidirectional">Bidirectional</option>
+        </select>
+        <div className="settings-help">
+          App authoritative keeps CodexMonitor as the source of truth. Bidirectional preserves
+          direct file edits when possible and syncs changes both ways.
+        </div>
+      </div>
       <div className="settings-sound-actions">
         <button
           type="button"

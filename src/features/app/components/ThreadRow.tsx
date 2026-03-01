@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEvent } from "react";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 
 import type { ThreadSummary } from "../../../types";
 import { getThreadStatusClass, type ThreadStatusById } from "../../../utils/threadStatus";
@@ -6,6 +7,8 @@ import { getThreadStatusClass, type ThreadStatusById } from "../../../utils/thre
 type ThreadRowProps = {
   thread: ThreadSummary;
   depth: number;
+  hasChildren?: boolean;
+  isCollapsed?: boolean;
   workspaceId: string;
   indentUnit: number;
   activeWorkspaceId: string | null;
@@ -15,6 +18,7 @@ type ThreadRowProps = {
   workspaceLabel?: string | null;
   getThreadTime: (thread: ThreadSummary) => string | null;
   getThreadArgsBadge?: (workspaceId: string, threadId: string) => string | null;
+  getThreadTokenUsageLabel?: (workspaceId: string, threadId: string) => string | null;
   isThreadPinned: (workspaceId: string, threadId: string) => boolean;
   onSelectThread: (workspaceId: string, threadId: string) => void;
   onShowThreadMenu: (
@@ -23,11 +27,14 @@ type ThreadRowProps = {
     threadId: string,
     canPin: boolean,
   ) => void;
+  onToggleThreadChildren?: (workspaceId: string, threadId: string) => void;
 };
 
 export function ThreadRow({
   thread,
   depth,
+  hasChildren = false,
+  isCollapsed = false,
   workspaceId,
   indentUnit,
   activeWorkspaceId,
@@ -37,18 +44,14 @@ export function ThreadRow({
   workspaceLabel,
   getThreadTime,
   getThreadArgsBadge,
+  getThreadTokenUsageLabel,
   isThreadPinned,
   onSelectThread,
   onShowThreadMenu,
+  onToggleThreadChildren,
 }: ThreadRowProps) {
   const relativeTime = getThreadTime(thread);
   const badge = getThreadArgsBadge?.(workspaceId, thread.id) ?? null;
-  const modelBadge =
-    thread.modelId && thread.modelId.trim().length > 0
-      ? thread.effort && thread.effort.trim().length > 0
-        ? `${thread.modelId} · ${thread.effort}`
-        : thread.modelId
-      : null;
   const indentStyle =
     depth > 0
       ? ({ "--thread-indent": `${depth * indentUnit}px` } as CSSProperties)
@@ -62,6 +65,13 @@ export function ThreadRow({
   );
   const canPin = depth === 0;
   const isPinned = canPin && isThreadPinned(workspaceId, thread.id);
+  const tokenUsageLabel = getThreadTokenUsageLabel?.(workspaceId, thread.id) ?? null;
+  const modelBadge =
+    thread.modelId && thread.modelId.trim().length > 0
+      ? thread.effort && thread.effort.trim().length > 0
+        ? `${thread.modelId} · ${thread.effort}`
+        : thread.modelId
+      : null;
 
   return (
     <div
@@ -82,9 +92,29 @@ export function ThreadRow({
         }
       }}
     >
+      {hasChildren && (
+        <button
+          type="button"
+          className={`thread-collapse-toggle${isCollapsed ? " collapsed" : ""}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleThreadChildren?.(workspaceId, thread.id);
+          }}
+          aria-label={isCollapsed ? "Expand sub-agent sessions" : "Collapse sub-agent sessions"}
+          aria-expanded={!isCollapsed}
+          data-tauri-drag-region="false"
+        >
+          <ChevronRight size={12} aria-hidden />
+        </button>
+      )}
       <span className={`thread-status ${statusClass}`} aria-hidden />
       {isPinned && <span className="thread-pin-icon" aria-label="Pinned">📌</span>}
-      <span className="thread-name">{thread.name}</span>
+      <div className="thread-text">
+        <span className="thread-name">{thread.name}</span>
+        {tokenUsageLabel && (
+          <span className="thread-token-usage">{tokenUsageLabel}</span>
+        )}
+      </div>
       <div className="thread-meta">
         {workspaceLabel && <span className="thread-workspace-label">{workspaceLabel}</span>}
         {modelBadge && (

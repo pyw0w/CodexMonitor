@@ -7,6 +7,7 @@ import { ThreadRow } from "./ThreadRow";
 type ThreadListRow = {
   thread: ThreadSummary;
   depth: number;
+  hasChildren: boolean;
 };
 
 type ThreadListProps = {
@@ -25,6 +26,7 @@ type ThreadListProps = {
   pendingUserInputKeys?: Set<string>;
   getThreadTime: (thread: ThreadSummary) => string | null;
   getThreadArgsBadge?: (workspaceId: string, threadId: string) => string | null;
+  getThreadTokenUsageLabel?: (workspaceId: string, threadId: string) => string | null;
   isThreadPinned: (workspaceId: string, threadId: string) => boolean;
   onToggleExpanded: (workspaceId: string) => void;
   onLoadOlderThreads: (workspaceId: string) => void;
@@ -35,6 +37,8 @@ type ThreadListProps = {
     threadId: string,
     canPin: boolean,
   ) => void;
+  collapsedThreadIds?: ReadonlySet<string>;
+  onToggleThreadChildren?: (workspaceId: string, threadId: string) => void;
 };
 
 export function ThreadList({
@@ -53,21 +57,25 @@ export function ThreadList({
   pendingUserInputKeys,
   getThreadTime,
   getThreadArgsBadge,
+  getThreadTokenUsageLabel,
   isThreadPinned,
   onToggleExpanded,
   onLoadOlderThreads,
   onSelectThread,
   onShowThreadMenu,
+  collapsedThreadIds,
+  onToggleThreadChildren,
 }: ThreadListProps) {
   const indentUnit = nested ? 10 : 14;
 
   return (
     <div className={`thread-list${nested ? " thread-list-nested" : ""}`}>
-      {pinnedRows.map(({ thread, depth }) => (
+      {pinnedRows.map(({ thread, depth, hasChildren }) => (
         <ThreadRow
           key={thread.id}
           thread={thread}
           depth={depth}
+          hasChildren={hasChildren}
           workspaceId={workspaceId}
           indentUnit={indentUnit}
           activeWorkspaceId={activeWorkspaceId}
@@ -76,19 +84,23 @@ export function ThreadList({
           pendingUserInputKeys={pendingUserInputKeys}
           getThreadTime={getThreadTime}
           getThreadArgsBadge={getThreadArgsBadge}
+          getThreadTokenUsageLabel={getThreadTokenUsageLabel}
           isThreadPinned={isThreadPinned}
           onSelectThread={onSelectThread}
           onShowThreadMenu={onShowThreadMenu}
+          isCollapsed={Boolean(collapsedThreadIds?.has(thread.id))}
+          onToggleThreadChildren={onToggleThreadChildren}
         />
       ))}
       {pinnedRows.length > 0 && unpinnedRows.length > 0 && (
         <div className="thread-list-separator" aria-hidden="true" />
       )}
-      {unpinnedRows.map(({ thread, depth }) => (
+      {unpinnedRows.map(({ thread, depth, hasChildren }) => (
         <ThreadRow
           key={thread.id}
           thread={thread}
           depth={depth}
+          hasChildren={hasChildren}
           workspaceId={workspaceId}
           indentUnit={indentUnit}
           activeWorkspaceId={activeWorkspaceId}
@@ -97,9 +109,12 @@ export function ThreadList({
           pendingUserInputKeys={pendingUserInputKeys}
           getThreadTime={getThreadTime}
           getThreadArgsBadge={getThreadArgsBadge}
+          getThreadTokenUsageLabel={getThreadTokenUsageLabel}
           isThreadPinned={isThreadPinned}
           onSelectThread={onSelectThread}
           onShowThreadMenu={onShowThreadMenu}
+          isCollapsed={Boolean(collapsedThreadIds?.has(thread.id))}
+          onToggleThreadChildren={onToggleThreadChildren}
         />
       ))}
       {totalThreadRoots > 3 && (

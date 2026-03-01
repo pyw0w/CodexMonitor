@@ -175,6 +175,7 @@ export type RemoteBackendTarget = {
 export type ThemePreference = "system" | "light" | "dark" | "dim";
 export type UiLanguagePreference = "system" | "en" | "ru";
 export type PersonalityPreference = "friendly" | "pragmatic";
+export type SettingsSyncMode = "app_authoritative" | "bidirectional";
 export type FollowUpMessageBehavior = "queue" | "steer";
 export type ComposerSendIntent = "default" | "queue" | "steer";
 export type SendMessageResult = {
@@ -239,6 +240,9 @@ export type AppSettings = {
   theme: ThemePreference;
   uiLanguage: UiLanguagePreference;
   usageShowRemaining: boolean;
+  showThreadTokenUsage: boolean;
+  threadTokenUsageShowFull: boolean;
+  threadTokenUsageExcludeCache: boolean;
   showMessageFilePath: boolean;
   chatHistoryScrollbackItems: number | null;
   threadTitleAutogenerationEnabled: boolean;
@@ -248,6 +252,8 @@ export type AppSettings = {
   notificationSoundsEnabled: boolean;
   systemNotificationsEnabled: boolean;
   subagentSystemNotificationsEnabled: boolean;
+  showSubagentSessions: boolean;
+  syncMode: SettingsSyncMode;
   splitChatDiffView: boolean;
   preloadGitDiffs: boolean;
   gitDiffIgnoreWhitespaceChanges: boolean;
@@ -260,6 +266,7 @@ export type AppSettings = {
   pauseQueuedMessagesWhenResponseRequired: boolean;
   unifiedExecEnabled: boolean;
   experimentalAppsEnabled: boolean;
+  promptSuggestionsEnabled: boolean;
   personality: PersonalityPreference;
   dictationEnabled: boolean;
   dictationModelId: string;
@@ -503,6 +510,11 @@ export type ThreadTokenUsage = {
   total: TokenUsageBreakdown;
   last: TokenUsageBreakdown;
   modelContextWindow: number | null;
+};
+
+export type LocalThreadUsageSnapshot = {
+  updatedAt: number;
+  usageByThread: Record<string, ThreadTokenUsage>;
 };
 
 export type LocalUsageDay = {

@@ -56,6 +56,7 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       userInputRequests={options.userInputRequests}
       accountRateLimits={options.activeRateLimits}
       usageShowRemaining={options.usageShowRemaining}
+      showSubagentSessions={options.showSubagentSessions}
       accountInfo={options.accountInfo}
       onSwitchAccount={options.onSwitchAccount}
       onCancelSwitchAccount={options.onCancelSwitchAccount}
@@ -79,6 +80,8 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       isThreadPinned={options.isThreadPinned}
       getPinTimestamp={options.getPinTimestamp}
       getThreadArgsBadge={options.getThreadArgsBadge}
+      getThreadTokenUsageLabel={options.getThreadTokenUsageLabel}
+      getWorkspaceTokenUsageLabel={options.getWorkspaceTokenUsageLabel}
       onRenameThread={options.onRenameThread}
       onDeleteWorkspace={options.onDeleteWorkspace}
       onDeleteWorktree={options.onDeleteWorktree}
@@ -189,6 +192,8 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       dictationHint={options.dictationHint}
       onDismissDictationHint={options.onDismissDictationHint}
       contextActions={options.composerContextActions}
+      ghostText={options.ghostText}
+      onAcceptGhostText={options.onAcceptGhostText}
       reviewPrompt={options.reviewPrompt}
       onReviewPromptClose={options.onReviewPromptClose}
       onReviewPromptShowPreset={options.onReviewPromptShowPreset}
@@ -272,6 +277,9 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       onCreateBranch={options.onCreateBranch}
       canCopyThread={options.activeItems.length > 0}
       onCopyThread={options.onCopyThread}
+      activeThreadInfo={options.activeThreadInfo}
+      onRenameActiveThreadName={options.onRenameActiveThreadName}
+      onGenerateActiveThreadName={options.onGenerateActiveThreadName}
       onToggleTerminal={options.onToggleTerminal}
       isTerminalOpen={options.terminalOpen}
       showTerminalButton={options.showTerminalButton}

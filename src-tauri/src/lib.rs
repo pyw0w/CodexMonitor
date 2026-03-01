@@ -15,6 +15,7 @@ mod files;
 mod git;
 mod git_utils;
 mod local_usage;
+mod local_thread_usage;
 #[cfg(desktop)]
 mod menu;
 #[cfg(not(desktop))]
@@ -243,6 +244,7 @@ pub fn run() {
             codex::generate_commit_message,
             codex::generate_run_metadata,
             codex::generate_agent_description,
+            codex::predict_response,
             codex::resume_thread,
             codex::thread_live_subscribe,
             codex::thread_live_unsubscribe,
@@ -320,6 +322,7 @@ pub fn run() {
             dictation::dictation_stop,
             dictation::dictation_cancel,
             local_usage::local_usage_snapshot,
+            local_thread_usage::local_thread_usage_snapshot,
             notifications::is_macos_debug_build,
             notifications::app_build_type,
             notifications::send_notification_fallback,

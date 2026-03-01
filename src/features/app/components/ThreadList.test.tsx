@@ -24,7 +24,7 @@ const statusMap = {
 const baseProps = {
   workspaceId: "ws-1",
   pinnedRows: [],
-  unpinnedRows: [{ thread, depth: 0 }],
+  unpinnedRows: [{ thread, depth: 0, hasChildren: false }],
   totalThreadRoots: 1,
   isExpanded: false,
   nextCursor: null,
@@ -111,8 +111,8 @@ describe("ThreadList", () => {
         {...baseProps}
         nested
         unpinnedRows={[
-          { thread, depth: 0 },
-          { thread: nestedThread, depth: 1 },
+          { thread, depth: 0, hasChildren: true },
+          { thread: nestedThread, depth: 1, hasChildren: false },
         ]}
         onShowThreadMenu={onShowThreadMenu}
       />,
@@ -151,5 +151,16 @@ describe("ThreadList", () => {
     expect(row?.querySelector(".thread-name")?.textContent).toBe("Alpha");
     expect(row?.querySelector(".thread-status")?.className).toContain("unread");
     expect(row?.querySelector(".thread-status")?.className).not.toContain("processing");
+  });
+
+  it("renders a token usage label when provided", () => {
+    render(
+      <ThreadList
+        {...baseProps}
+        getThreadTokenUsageLabel={() => "1.2k tokens"}
+      />,
+    );
+
+    expect(screen.getByText("1.2k tokens")).toBeTruthy();
   });
 });

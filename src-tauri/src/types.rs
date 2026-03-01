@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct GitFileStatus {
@@ -185,6 +186,32 @@ pub(crate) struct LocalUsageSnapshot {
     pub(crate) totals: LocalUsageTotals,
     #[serde(default)]
     pub(crate) top_models: Vec<LocalUsageModel>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ThreadTokenUsageBreakdown {
+    pub(crate) total_tokens: i64,
+    pub(crate) input_tokens: i64,
+    pub(crate) cached_input_tokens: i64,
+    pub(crate) output_tokens: i64,
+    pub(crate) reasoning_output_tokens: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ThreadTokenUsageSnapshot {
+    pub(crate) total: ThreadTokenUsageBreakdown,
+    pub(crate) last: ThreadTokenUsageBreakdown,
+    pub(crate) model_context_window: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct LocalThreadUsageSnapshot {
+    pub(crate) updated_at: i64,
+    #[serde(default)]
+    pub(crate) usage_by_thread: HashMap<String, ThreadTokenUsageSnapshot>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -495,6 +522,21 @@ pub(crate) struct AppSettings {
     )]
     pub(crate) usage_show_remaining: bool,
     #[serde(
+        default = "default_show_thread_token_usage",
+        rename = "showThreadTokenUsage"
+    )]
+    pub(crate) show_thread_token_usage: bool,
+    #[serde(
+        default = "default_thread_token_usage_show_full",
+        rename = "threadTokenUsageShowFull"
+    )]
+    pub(crate) thread_token_usage_show_full: bool,
+    #[serde(
+        default = "default_thread_token_usage_exclude_cache",
+        rename = "threadTokenUsageExcludeCache"
+    )]
+    pub(crate) thread_token_usage_exclude_cache: bool,
+    #[serde(
         default = "default_show_message_file_path",
         rename = "showMessageFilePath"
     )]
@@ -544,6 +586,13 @@ pub(crate) struct AppSettings {
     )]
     pub(crate) subagent_system_notifications_enabled: bool,
     #[serde(
+        default = "default_show_subagent_sessions",
+        rename = "showSubagentSessions"
+    )]
+    pub(crate) show_subagent_sessions: bool,
+    #[serde(default = "default_settings_sync_mode", rename = "syncMode")]
+    pub(crate) sync_mode: SettingsSyncMode,
+    #[serde(
         default = "default_collaboration_modes_enabled",
         rename = "collaborationModesEnabled"
     )]
@@ -580,6 +629,11 @@ pub(crate) struct AppSettings {
         rename = "experimentalAppsEnabled"
     )]
     pub(crate) experimental_apps_enabled: bool,
+    #[serde(
+        default = "default_prompt_suggestions_enabled",
+        rename = "promptSuggestionsEnabled"
+    )]
+    pub(crate) prompt_suggestions_enabled: bool,
     #[serde(default = "default_personality", rename = "personality")]
     pub(crate) personality: String,
     #[serde(default = "default_dictation_enabled", rename = "dictationEnabled")]
@@ -657,6 +711,19 @@ impl Default for BackendMode {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum SettingsSyncMode {
+    AppAuthoritative,
+    Bidirectional,
+}
+
+impl Default for SettingsSyncMode {
+    fn default() -> Self {
+        SettingsSyncMode::AppAuthoritative
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub(crate) enum RemoteBackendProvider {
     Tcp,
@@ -706,6 +773,18 @@ fn default_ui_language() -> String {
 
 fn default_usage_show_remaining() -> bool {
     false
+}
+
+fn default_show_thread_token_usage() -> bool {
+    true
+}
+
+fn default_thread_token_usage_show_full() -> bool {
+    true
+}
+
+fn default_thread_token_usage_exclude_cache() -> bool {
+    true
 }
 
 fn default_show_message_file_path() -> bool {
@@ -888,6 +967,14 @@ fn default_subagent_system_notifications_enabled() -> bool {
     true
 }
 
+fn default_show_subagent_sessions() -> bool {
+    true
+}
+
+fn default_settings_sync_mode() -> SettingsSyncMode {
+    SettingsSyncMode::AppAuthoritative
+}
+
 fn default_split_chat_diff_view() -> bool {
     false
 }
@@ -934,6 +1021,10 @@ fn default_unified_exec_enabled() -> bool {
 }
 
 fn default_experimental_apps_enabled() -> bool {
+    false
+}
+
+fn default_prompt_suggestions_enabled() -> bool {
     false
 }
 
@@ -1150,6 +1241,9 @@ impl Default for AppSettings {
             theme: default_theme(),
             ui_language: default_ui_language(),
             usage_show_remaining: default_usage_show_remaining(),
+            show_thread_token_usage: default_show_thread_token_usage(),
+            thread_token_usage_show_full: default_thread_token_usage_show_full(),
+            thread_token_usage_exclude_cache: default_thread_token_usage_exclude_cache(),
             show_message_file_path: default_show_message_file_path(),
             chat_history_scrollback_items: default_chat_history_scrollback_items(),
             thread_title_autogeneration_enabled: false,
@@ -1159,6 +1253,8 @@ impl Default for AppSettings {
             notification_sounds_enabled: true,
             system_notifications_enabled: true,
             subagent_system_notifications_enabled: true,
+            show_subagent_sessions: true,
+            sync_mode: SettingsSyncMode::AppAuthoritative,
             split_chat_diff_view: default_split_chat_diff_view(),
             preload_git_diffs: default_preload_git_diffs(),
             git_diff_ignore_whitespace_changes: default_git_diff_ignore_whitespace_changes(),
@@ -1172,6 +1268,7 @@ impl Default for AppSettings {
                 default_pause_queued_messages_when_response_required(),
             unified_exec_enabled: true,
             experimental_apps_enabled: false,
+            prompt_suggestions_enabled: false,
             personality: default_personality(),
             dictation_enabled: false,
             dictation_model_id: default_dictation_model_id(),
@@ -1315,6 +1412,9 @@ mod tests {
         assert_eq!(settings.theme, "system");
         assert_eq!(settings.ui_language, "system");
         assert!(!settings.usage_show_remaining);
+        assert!(settings.show_thread_token_usage);
+        assert!(settings.thread_token_usage_show_full);
+        assert!(settings.thread_token_usage_exclude_cache);
         assert!(settings.show_message_file_path);
         assert_eq!(settings.chat_history_scrollback_items, Some(200));
         assert!(!settings.thread_title_autogeneration_enabled);
@@ -1335,6 +1435,7 @@ mod tests {
         assert!(settings.pause_queued_messages_when_response_required);
         assert!(settings.unified_exec_enabled);
         assert!(!settings.experimental_apps_enabled);
+        assert!(!settings.prompt_suggestions_enabled);
         assert_eq!(settings.personality, "friendly");
         assert!(!settings.dictation_enabled);
         assert_eq!(settings.dictation_model_id, "base");

@@ -7,6 +7,7 @@ import type {
   CodexDoctorResult,
   DictationModelStatus,
   DictationSessionState,
+  LocalThreadUsageSnapshot,
   LocalUsageSnapshot,
   TcpDaemonStatus,
   TailscaleDaemonCommandPreview,
@@ -709,6 +710,19 @@ export async function localUsageSnapshot(
   return invoke("local_usage_snapshot", payload);
 }
 
+export async function localThreadUsageSnapshot(
+  threadIds: string[],
+  workspacePath?: string | null,
+): Promise<LocalThreadUsageSnapshot> {
+  const payload: { threadIds: string[]; workspacePath?: string } = {
+    threadIds,
+  };
+  if (workspacePath) {
+    payload.workspacePath = workspacePath;
+  }
+  return invoke("local_thread_usage_snapshot", payload);
+}
+
 export async function getModelList(workspaceId: string) {
   return invoke<any>("model_list", { workspaceId });
 }
@@ -1086,6 +1100,14 @@ export type AppBuildType = "debug" | "release";
 
 export async function getAppBuildType(): Promise<AppBuildType> {
   return invoke<AppBuildType>("app_build_type");
+}
+
+export async function predictResponse(
+  workspaceId: string,
+  context: string,
+  model?: string,
+): Promise<string> {
+  return invoke<string>("predict_response", { workspaceId, context, model });
 }
 
 export async function sendNotification(

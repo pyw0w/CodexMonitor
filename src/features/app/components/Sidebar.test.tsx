@@ -34,6 +34,7 @@ const baseProps = {
   activeThreadId: null,
   accountRateLimits: null,
   usageShowRemaining: false,
+  showSubagentSessions: true,
   accountInfo: null,
   onSwitchAccount: vi.fn(),
   onCancelSwitchAccount: vi.fn(),
@@ -559,5 +560,98 @@ describe("Sidebar", () => {
 
     const indicator = screen.queryByTitle("Streaming updates in progress");
     expect(indicator).toBeNull();
+  });
+
+  it("can hide sub-agent sessions from the sidebar", () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        showSubagentSessions={false}
+        workspaces={[
+          {
+            id: "ws-1",
+            name: "Workspace",
+            path: "/tmp/workspace",
+            connected: true,
+            settings: { sidebarCollapsed: false },
+          },
+        ]}
+        groupedWorkspaces={[
+          {
+            id: null,
+            name: "Workspaces",
+            workspaces: [
+              {
+                id: "ws-1",
+                name: "Workspace",
+                path: "/tmp/workspace",
+                connected: true,
+                settings: { sidebarCollapsed: false },
+              },
+            ],
+          },
+        ]}
+        threadsByWorkspace={{
+          "ws-1": [
+            { id: "thread-parent", name: "Parent", updatedAt: 2 },
+            { id: "thread-child", name: "Child", updatedAt: 1 },
+          ],
+        }}
+        threadParentById={{ "thread-child": "thread-parent" }}
+      />,
+    );
+
+    expect(screen.getByText("Parent")).toBeTruthy();
+    expect(screen.queryByText("Child")).toBeNull();
+  });
+
+  it("renders per-project token usage labels for workspace and worktree cards", () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        workspaces={[
+          {
+            id: "ws-1",
+            name: "Workspace",
+            path: "/tmp/workspace",
+            connected: true,
+            kind: "main",
+            settings: { sidebarCollapsed: false },
+          },
+          {
+            id: "wt-1",
+            name: "Worktree A",
+            path: "/tmp/workspace-worktree-a",
+            connected: true,
+            kind: "worktree",
+            parentId: "ws-1",
+            worktree: { branch: "feature/worktree-a" },
+            settings: { sidebarCollapsed: false },
+          },
+        ]}
+        groupedWorkspaces={[
+          {
+            id: null,
+            name: "Workspaces",
+            workspaces: [
+              {
+                id: "ws-1",
+                name: "Workspace",
+                path: "/tmp/workspace",
+                connected: true,
+                kind: "main",
+                settings: { sidebarCollapsed: false },
+              },
+            ],
+          },
+        ]}
+        getWorkspaceTokenUsageLabel={(workspaceId) =>
+          workspaceId === "ws-1" ? "12.4K tokens" : "3.1K tokens"
+        }
+      />,
+    );
+
+    expect(screen.getByText("12.4K tokens")).toBeTruthy();
+    expect(screen.getByText("3.1K tokens")).toBeTruthy();
   });
 });

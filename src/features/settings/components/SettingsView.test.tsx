@@ -103,6 +103,9 @@ const baseSettings: AppSettings = {
   theme: "system",
   uiLanguage: "system",
   usageShowRemaining: false,
+  showThreadTokenUsage: true,
+  threadTokenUsageShowFull: true,
+  threadTokenUsageExcludeCache: false,
   showMessageFilePath: true,
   chatHistoryScrollbackItems: 200,
   threadTitleAutogenerationEnabled: false,
@@ -114,6 +117,8 @@ const baseSettings: AppSettings = {
   notificationSoundsEnabled: true,
   systemNotificationsEnabled: true,
   subagentSystemNotificationsEnabled: true,
+  showSubagentSessions: true,
+  syncMode: "app_authoritative",
   splitChatDiffView: false,
   preloadGitDiffs: true,
   gitDiffIgnoreWhitespaceChanges: false,
@@ -126,6 +131,7 @@ const baseSettings: AppSettings = {
   pauseQueuedMessagesWhenResponseRequired: true,
   unifiedExecEnabled: true,
   experimentalAppsEnabled: false,
+  promptSuggestionsEnabled: false,
   personality: "friendly",
   dictationEnabled: false,
   dictationModelId: "base",
@@ -494,6 +500,31 @@ describe("SettingsView Display", () => {
     });
   });
 
+  it("toggles excluding cache from thread token usage", async () => {
+    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
+    renderDisplaySection({ onUpdateAppSettings });
+
+    const row = screen
+      .getByText("Exclude cache from thread token usage")
+      .closest(".settings-toggle-row") as HTMLElement | null;
+    if (!row) {
+      throw new Error("Expected exclude cache row");
+    }
+    const toggle = row.querySelector(
+      "button.settings-toggle",
+    ) as HTMLButtonElement | null;
+    if (!toggle) {
+      throw new Error("Expected exclude cache toggle");
+    }
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      expect(onUpdateAppSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ threadTokenUsageExcludeCache: true }),
+      );
+    });
+  });
+
   it("toggles split chat and diff center panes", async () => {
     const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
     renderDisplaySection({ onUpdateAppSettings });
@@ -668,6 +699,45 @@ describe("SettingsView Display", () => {
     await waitFor(() => {
       expect(onUpdateAppSettings).toHaveBeenCalledWith(
         expect.objectContaining({ subagentSystemNotificationsEnabled: true }),
+      );
+    });
+  });
+
+  it("toggles sub-agent session visibility in sidebar", async () => {
+    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
+    renderDisplaySection({
+      onUpdateAppSettings,
+      appSettings: { showSubagentSessions: false },
+    });
+
+    const row = screen
+      .getByText("Show sub-agent sessions in sidebar")
+      .closest(".settings-toggle-row") as HTMLElement | null;
+    if (!row) {
+      throw new Error("Expected sub-agent session visibility row");
+    }
+    fireEvent.click(within(row).getByRole("button"));
+
+    await waitFor(() => {
+      expect(onUpdateAppSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ showSubagentSessions: true }),
+      );
+    });
+  });
+
+  it("updates settings sync mode", async () => {
+    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
+    renderDisplaySection({
+      onUpdateAppSettings,
+      appSettings: { syncMode: "app_authoritative" },
+    });
+
+    const select = screen.getByLabelText("Settings sync mode");
+    fireEvent.change(select, { target: { value: "bidirectional" } });
+
+    await waitFor(() => {
+      expect(onUpdateAppSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ syncMode: "bidirectional" }),
       );
     });
   });
@@ -1424,6 +1494,29 @@ describe("SettingsView Features", () => {
     await waitFor(() => {
       expect(onUpdateAppSettings).toHaveBeenCalledWith(
         expect.objectContaining({ unifiedExecEnabled: false }),
+      );
+    });
+  });
+
+  it("toggles prompt suggestions in experimental features", async () => {
+    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
+    renderFeaturesSection({
+      onUpdateAppSettings,
+      appSettings: { promptSuggestionsEnabled: false },
+    });
+
+    const promptSuggestionsTitle = screen.getByText(
+      "Prompt suggestions after agent turns",
+    );
+    const promptSuggestionsRow = promptSuggestionsTitle.closest(".settings-toggle-row");
+    expect(promptSuggestionsRow).not.toBeNull();
+
+    const toggle = within(promptSuggestionsRow as HTMLElement).getByRole("button");
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      expect(onUpdateAppSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ promptSuggestionsEnabled: true }),
       );
     });
   });

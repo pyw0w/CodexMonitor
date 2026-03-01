@@ -53,8 +53,10 @@ describe("useAppSettings", () => {
     expect(result.current.settings.codeFontFamily).toContain("ui-monospace");
     expect(result.current.settings.codeFontSize).toBe(16);
     expect(result.current.settings.personality).toBe("friendly");
+    expect(result.current.settings.syncMode).toBe("app_authoritative");
     expect(result.current.settings.backendMode).toBe("remote");
     expect(result.current.settings.remoteBackendHost).toBe("example:1234");
+    expect(result.current.settings.threadTokenUsageExcludeCache).toBe(true);
   });
 
   it("keeps defaults when getAppSettings fails", async () => {
@@ -69,8 +71,10 @@ describe("useAppSettings", () => {
     expect(result.current.settings.uiFontFamily).toContain("system-ui");
     expect(result.current.settings.codeFontFamily).toContain("ui-monospace");
     expect(result.current.settings.backendMode).toBe("local");
+    expect(result.current.settings.showSubagentSessions).toBe(true);
     expect(result.current.settings.dictationModelId).toBe("base");
     expect(result.current.settings.interruptShortcut).toBeTruthy();
+    expect(result.current.settings.promptSuggestionsEnabled).toBe(false);
   });
 
   it("persists settings via updateAppSettings and updates local state", async () => {

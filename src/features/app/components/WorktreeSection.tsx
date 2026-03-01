@@ -8,8 +8,8 @@ import { ThreadLoading } from "./ThreadLoading";
 import { WorktreeCard } from "./WorktreeCard";
 
 type ThreadRowsResult = {
-  pinnedRows: Array<{ thread: ThreadSummary; depth: number }>;
-  unpinnedRows: Array<{ thread: ThreadSummary; depth: number }>;
+  pinnedRows: Array<{ thread: ThreadSummary; depth: number; hasChildren: boolean }>;
+  unpinnedRows: Array<{ thread: ThreadSummary; depth: number; hasChildren: boolean }>;
   totalRoots: number;
   hasMoreRoots: boolean;
 };
@@ -32,9 +32,15 @@ type WorktreeSectionProps = {
     workspaceId: string,
     getPinTimestamp: (workspaceId: string, threadId: string) => number | null,
     pinVersion?: number,
+    options?: {
+      showSubagentSessions?: boolean;
+      collapsedParentThreadIds?: ReadonlySet<string>;
+    },
   ) => ThreadRowsResult;
   getThreadTime: (thread: ThreadSummary) => string | null;
   getThreadArgsBadge?: (workspaceId: string, threadId: string) => string | null;
+  getThreadTokenUsageLabel?: (workspaceId: string, threadId: string) => string | null;
+  getWorkspaceTokenUsageLabel?: (workspaceId: string) => string | null;
   isThreadPinned: (workspaceId: string, threadId: string) => boolean;
   getPinTimestamp: (workspaceId: string, threadId: string) => number | null;
   pinnedThreadsVersion: number;
@@ -51,6 +57,9 @@ type WorktreeSectionProps = {
   onShowWorktreeMenu: (event: MouseEvent, worktree: WorkspaceInfo) => void;
   onToggleExpanded: (workspaceId: string) => void;
   onLoadOlderThreads: (workspaceId: string) => void;
+  showSubagentSessions: boolean;
+  collapsedThreadIdsByWorkspace?: Record<string, ReadonlySet<string>>;
+  onToggleThreadChildren?: (workspaceId: string, threadId: string) => void;
   sectionLabel?: string;
   sectionIcon?: ReactNode;
   className?: string;
@@ -71,6 +80,8 @@ export function WorktreeSection({
   getThreadRows,
   getThreadTime,
   getThreadArgsBadge,
+  getThreadTokenUsageLabel,
+  getWorkspaceTokenUsageLabel,
   isThreadPinned,
   getPinTimestamp,
   pinnedThreadsVersion,
@@ -82,6 +93,9 @@ export function WorktreeSection({
   onShowWorktreeMenu,
   onToggleExpanded,
   onLoadOlderThreads,
+  showSubagentSessions,
+  collapsedThreadIdsByWorkspace,
+  onToggleThreadChildren,
   sectionLabel = "Worktrees",
   sectionIcon,
   className,
@@ -119,6 +133,10 @@ export function WorktreeSection({
             worktree.id,
             getPinTimestamp,
             pinnedThreadsVersion,
+            {
+              showSubagentSessions,
+              collapsedParentThreadIds: collapsedThreadIdsByWorkspace?.[worktree.id],
+            },
           );
 
           return (
@@ -127,6 +145,7 @@ export function WorktreeSection({
               worktree={worktree}
               isActive={worktree.id === activeWorkspaceId}
               isDeleting={deletingWorktreeIds.has(worktree.id)}
+              worktreeTokenUsageLabel={getWorkspaceTokenUsageLabel?.(worktree.id) ?? null}
               onSelectWorkspace={onSelectWorkspace}
               onShowWorktreeMenu={onShowWorktreeMenu}
               onToggleWorkspaceCollapse={onToggleWorkspaceCollapse}
@@ -149,7 +168,10 @@ export function WorktreeSection({
                   pendingUserInputKeys={pendingUserInputKeys}
                   getThreadTime={getThreadTime}
                   getThreadArgsBadge={getThreadArgsBadge}
+                  getThreadTokenUsageLabel={getThreadTokenUsageLabel}
                   isThreadPinned={isThreadPinned}
+                  collapsedThreadIds={collapsedThreadIdsByWorkspace?.[worktree.id]}
+                  onToggleThreadChildren={onToggleThreadChildren}
                   onToggleExpanded={onToggleExpanded}
                   onLoadOlderThreads={onLoadOlderThreads}
                   onSelectThread={onSelectThread}
