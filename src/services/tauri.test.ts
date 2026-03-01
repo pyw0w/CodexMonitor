@@ -11,6 +11,7 @@ import {
   forkThread,
   getAppsList,
   getAgentsSettings,
+  getMcpSettings,
   getExperimentalFeatureList,
   getGitHubIssues,
   getGitLog,
@@ -32,6 +33,9 @@ import {
   sendNotification,
   setCodexFeatureFlag,
   setAgentsCoreSettings,
+  createMcpServer,
+  updateMcpServer,
+  deleteMcpServer,
   startReview,
   setThreadName,
   tailscaleDaemonStart,
@@ -499,6 +503,85 @@ describe("tauri invoke wrappers", () => {
     await getAgentsSettings();
 
     expect(invokeMock).toHaveBeenCalledWith("get_agents_settings");
+  });
+
+  it("reads MCP settings", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockResolvedValueOnce({
+      configPath: "/Users/me/.codex/config.toml",
+      servers: [],
+    });
+
+    await getMcpSettings();
+
+    expect(invokeMock).toHaveBeenCalledWith("get_mcp_settings");
+  });
+
+  it("creates an MCP server", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockResolvedValueOnce({});
+
+    await createMcpServer({
+      name: "github",
+      enabled: true,
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-github"],
+      env: { GITHUB_TOKEN: "secret" },
+      additionalToml: "startup_timeout_sec = 20",
+    });
+
+    expect(invokeMock).toHaveBeenCalledWith("create_mcp_server", {
+      input: {
+        name: "github",
+        enabled: true,
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-github"],
+        env: { GITHUB_TOKEN: "secret" },
+        additionalToml: "startup_timeout_sec = 20",
+      },
+    });
+  });
+
+  it("updates an MCP server", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockResolvedValueOnce({});
+
+    await updateMcpServer({
+      originalName: "github",
+      name: "github",
+      enabled: true,
+      command: "docker",
+      args: ["run", "--rm", "gh-mcp"],
+      env: {},
+      url: null,
+      headers: {},
+      additionalToml: "",
+    });
+
+    expect(invokeMock).toHaveBeenCalledWith("update_mcp_server", {
+      input: {
+        originalName: "github",
+        name: "github",
+        enabled: true,
+        command: "docker",
+        args: ["run", "--rm", "gh-mcp"],
+        env: {},
+        url: null,
+        headers: {},
+        additionalToml: "",
+      },
+    });
+  });
+
+  it("deletes an MCP server", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockResolvedValueOnce({});
+
+    await deleteMcpServer({ name: "github" });
+
+    expect(invokeMock).toHaveBeenCalledWith("delete_mcp_server", {
+      input: { name: "github" },
+    });
   });
 
   it("updates core agents settings", async () => {

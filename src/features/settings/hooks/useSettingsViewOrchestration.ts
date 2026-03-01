@@ -16,6 +16,7 @@ import { useSettingsEnvironmentsSection } from "./useSettingsEnvironmentsSection
 import { useSettingsFeaturesSection } from "./useSettingsFeaturesSection";
 import { useSettingsGitSection } from "./useSettingsGitSection";
 import { useSettingsAgentsSection } from "./useSettingsAgentsSection";
+import { useSettingsMcpSection } from "./useSettingsMcpSection";
 import { useSettingsProjectsSection } from "./useSettingsProjectsSection";
 import { useSettingsServerSection } from "./useSettingsServerSection";
 import type { GroupedWorkspaces } from "./settingsSectionTypes";
@@ -209,6 +210,9 @@ export function useSettingsViewOrchestration({
   });
 
   const agentsSectionProps = useSettingsAgentsSection({ projects });
+  const mcpSectionProps = useSettingsMcpSection({
+    statusWorkspaceId: featureWorkspaceId,
+  });
 
   return {
     projectsSectionProps,
@@ -263,6 +267,7 @@ export function useSettingsViewOrchestration({
     },
     gitSectionProps,
     serverSectionProps,
+    mcpSectionProps,
     agentsSectionProps,
     codexSectionProps,
     featuresSectionProps,

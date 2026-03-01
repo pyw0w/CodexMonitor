@@ -134,6 +134,49 @@ export type AgentsSettings = {
   agents: AgentSummary[];
 };
 
+export type McpServerConfig = {
+  name: string;
+  enabled: boolean | null;
+  command: string | null;
+  args: string[];
+  env: Record<string, string>;
+  url: string | null;
+  headers: Record<string, string>;
+  additionalToml: string;
+};
+
+export type McpSettings = {
+  configPath: string;
+  servers: McpServerConfig[];
+};
+
+export type CreateMcpServerInput = {
+  name: string;
+  enabled?: boolean | null;
+  command?: string | null;
+  args?: string[];
+  env?: Record<string, string>;
+  url?: string | null;
+  headers?: Record<string, string>;
+  additionalToml?: string | null;
+};
+
+export type UpdateMcpServerInput = {
+  originalName: string;
+  name: string;
+  enabled?: boolean | null;
+  command?: string | null;
+  args?: string[];
+  env?: Record<string, string>;
+  url?: string | null;
+  headers?: Record<string, string>;
+  additionalToml?: string | null;
+};
+
+export type DeleteMcpServerInput = {
+  name: string;
+};
+
 export type SetAgentsCoreInput = {
   multiAgentEnabled: boolean;
   maxThreads: number;
@@ -204,6 +247,28 @@ export async function writeGlobalCodexConfigToml(content: string): Promise<void>
 
 export async function getAgentsSettings(): Promise<AgentsSettings> {
   return invoke<AgentsSettings>("get_agents_settings");
+}
+
+export async function getMcpSettings(): Promise<McpSettings> {
+  return invoke<McpSettings>("get_mcp_settings");
+}
+
+export async function createMcpServer(
+  input: CreateMcpServerInput,
+): Promise<McpSettings> {
+  return invoke<McpSettings>("create_mcp_server", { input });
+}
+
+export async function updateMcpServer(
+  input: UpdateMcpServerInput,
+): Promise<McpSettings> {
+  return invoke<McpSettings>("update_mcp_server", { input });
+}
+
+export async function deleteMcpServer(
+  input: DeleteMcpServerInput,
+): Promise<McpSettings> {
+  return invoke<McpSettings>("delete_mcp_server", { input });
 }
 
 export async function setAgentsCoreSettings(

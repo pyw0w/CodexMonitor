@@ -82,7 +82,8 @@ use shared::process_core::kill_child_process_tree;
 use shared::prompts_core::{self, CustomPromptEntry};
 use shared::{
     agents_config_core, codex_aux_core, codex_core, files_core, git_core, git_ui_core,
-    local_usage_core, settings_core, thread_usage_core, workspaces_core, worktree_core,
+    local_usage_core, mcp_config_core, settings_core, thread_usage_core, workspaces_core,
+    worktree_core,
 };
 use storage::{read_settings, read_workspaces};
 use types::{
@@ -598,6 +599,31 @@ impl DaemonState {
 
     async fn get_agents_settings(&self) -> Result<agents_config_core::AgentsSettingsDto, String> {
         agents_config_core::get_agents_settings_core()
+    }
+
+    async fn get_mcp_settings(&self) -> Result<mcp_config_core::McpSettingsDto, String> {
+        mcp_config_core::get_mcp_settings_core()
+    }
+
+    async fn create_mcp_server(
+        &self,
+        input: mcp_config_core::CreateMcpServerInput,
+    ) -> Result<mcp_config_core::McpSettingsDto, String> {
+        mcp_config_core::create_mcp_server_core(input)
+    }
+
+    async fn update_mcp_server(
+        &self,
+        input: mcp_config_core::UpdateMcpServerInput,
+    ) -> Result<mcp_config_core::McpSettingsDto, String> {
+        mcp_config_core::update_mcp_server_core(input)
+    }
+
+    async fn delete_mcp_server(
+        &self,
+        input: mcp_config_core::DeleteMcpServerInput,
+    ) -> Result<mcp_config_core::McpSettingsDto, String> {
+        mcp_config_core::delete_mcp_server_core(input)
     }
 
     async fn set_agents_core_settings(

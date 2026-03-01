@@ -11,6 +11,7 @@ import { SettingsServerSection } from "./SettingsServerSection";
 import { SettingsShortcutsSection } from "./SettingsShortcutsSection";
 import { SettingsAgentsSection } from "./SettingsAgentsSection";
 import { SettingsAboutSection } from "./SettingsAboutSection";
+import { SettingsMcpSection } from "./SettingsMcpSection";
 import type { CodexSection } from "@settings/components/settingsTypes";
 import type { SettingsViewOrchestration } from "@settings/hooks/useSettingsViewOrchestration";
 
@@ -52,6 +53,9 @@ export function SettingsSectionContainers({
   }
   if (activeSection === "server") {
     return <SettingsServerSection {...orchestration.serverSectionProps} />;
+  }
+  if (activeSection === "mcp") {
+    return <SettingsMcpSection {...orchestration.mcpSectionProps} />;
   }
   if (activeSection === "agents") {
     return <SettingsAgentsSection {...orchestration.agentsSectionProps} />;

@@ -435,6 +435,48 @@ const renderEnvironmentsSection = (
   return { onUpdateWorkspaceSettings };
 };
 
+describe("SettingsView navigation", () => {
+  it("renders all sidebar sections including Features and About", async () => {
+    const { container } = render(
+      <SettingsView
+        workspaceGroups={[]}
+        groupedWorkspaces={[]}
+        ungroupedLabel="Ungrouped"
+        onClose={vi.fn()}
+        onMoveWorkspace={vi.fn()}
+        onDeleteWorkspace={vi.fn()}
+        onCreateWorkspaceGroup={vi.fn().mockResolvedValue(null)}
+        onRenameWorkspaceGroup={vi.fn().mockResolvedValue(null)}
+        onMoveWorkspaceGroup={vi.fn().mockResolvedValue(null)}
+        onDeleteWorkspaceGroup={vi.fn().mockResolvedValue(null)}
+        onAssignWorkspaceGroup={vi.fn().mockResolvedValue(null)}
+        reduceTransparency={false}
+        onToggleTransparency={vi.fn()}
+        appSettings={baseSettings}
+        openAppIconById={{}}
+        onUpdateAppSettings={vi.fn().mockResolvedValue(undefined)}
+        onRunDoctor={vi.fn().mockResolvedValue(createDoctorResult())}
+        onUpdateWorkspaceSettings={vi.fn().mockResolvedValue(undefined)}
+        scaleShortcutTitle="Scale shortcut"
+        scaleShortcutText="Use Command +/-"
+        onTestNotificationSound={vi.fn()}
+        onTestSystemNotification={vi.fn()}
+        dictationModelStatus={null}
+        onDownloadDictationModel={vi.fn()}
+        onCancelDictationDownload={vi.fn()}
+        onRemoveDictationModel={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".settings-sidebar")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "MCP Servers" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Features" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "About" })).toBeTruthy();
+    });
+  });
+});
+
 describe("SettingsView Display", () => {
   it("updates the theme selection", async () => {
     const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);

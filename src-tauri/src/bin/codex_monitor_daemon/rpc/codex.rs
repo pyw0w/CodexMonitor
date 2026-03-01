@@ -296,6 +296,48 @@ pub(super) async fn try_handle(
                 .await
                 .and_then(|value| serde_json::to_value(value).map_err(|err| err.to_string())),
         ),
+        "get_mcp_settings" => Some(
+            state
+                .get_mcp_settings()
+                .await
+                .and_then(|value| serde_json::to_value(value).map_err(|err| err.to_string())),
+        ),
+        "create_mcp_server" => {
+            let input = match parse_input::<mcp_config_core::CreateMcpServerInput>(params) {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            Some(
+                state
+                    .create_mcp_server(input)
+                    .await
+                    .and_then(|value| serde_json::to_value(value).map_err(|err| err.to_string())),
+            )
+        }
+        "update_mcp_server" => {
+            let input = match parse_input::<mcp_config_core::UpdateMcpServerInput>(params) {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            Some(
+                state
+                    .update_mcp_server(input)
+                    .await
+                    .and_then(|value| serde_json::to_value(value).map_err(|err| err.to_string())),
+            )
+        }
+        "delete_mcp_server" => {
+            let input = match parse_input::<mcp_config_core::DeleteMcpServerInput>(params) {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            Some(
+                state
+                    .delete_mcp_server(input)
+                    .await
+                    .and_then(|value| serde_json::to_value(value).map_err(|err| err.to_string())),
+            )
+        }
         "set_agents_core_settings" => {
             let input = match parse_input::<agents_config_core::SetAgentsCoreInput>(params) {
                 Ok(value) => value,

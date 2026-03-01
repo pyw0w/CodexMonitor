@@ -11,6 +11,7 @@ type SettingsSection =
   | "open-apps"
   | "git"
   | "server"
+  | "mcp"
   | "agents";
 
 export type CodexSection = SettingsSection | "codex" | "features";

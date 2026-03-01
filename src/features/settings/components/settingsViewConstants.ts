@@ -84,6 +84,7 @@ export const SETTINGS_SECTION_LABELS: Record<CodexSection, string> = {
   "open-apps": "openApps",
   git: "git",
   server: "server",
+  mcp: "mcp",
   agents: "agents",
   codex: "codex",
   features: "features",

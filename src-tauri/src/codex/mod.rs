@@ -15,6 +15,7 @@ use crate::event_sink::TauriEventSink;
 use crate::remote_backend;
 use crate::shared::agents_config_core;
 use crate::shared::codex_core;
+use crate::shared::mcp_config_core;
 use crate::state::AppState;
 use crate::types::WorkspaceEntry;
 
@@ -568,6 +569,67 @@ pub(crate) async fn get_agents_settings(
     }
 
     agents_config_core::get_agents_settings_core()
+}
+
+#[tauri::command]
+pub(crate) async fn get_mcp_settings(
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<mcp_config_core::McpSettingsDto, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        let response = remote_backend::call_remote(&*state, app, "get_mcp_settings", json!({})).await?;
+        return serde_json::from_value(response).map_err(|err| err.to_string());
+    }
+
+    mcp_config_core::get_mcp_settings_core()
+}
+
+#[tauri::command]
+pub(crate) async fn create_mcp_server(
+    input: mcp_config_core::CreateMcpServerInput,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<mcp_config_core::McpSettingsDto, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        let response =
+            remote_backend::call_remote(&*state, app, "create_mcp_server", json!({ "input": input }))
+                .await?;
+        return serde_json::from_value(response).map_err(|err| err.to_string());
+    }
+
+    mcp_config_core::create_mcp_server_core(input)
+}
+
+#[tauri::command]
+pub(crate) async fn update_mcp_server(
+    input: mcp_config_core::UpdateMcpServerInput,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<mcp_config_core::McpSettingsDto, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        let response =
+            remote_backend::call_remote(&*state, app, "update_mcp_server", json!({ "input": input }))
+                .await?;
+        return serde_json::from_value(response).map_err(|err| err.to_string());
+    }
+
+    mcp_config_core::update_mcp_server_core(input)
+}
+
+#[tauri::command]
+pub(crate) async fn delete_mcp_server(
+    input: mcp_config_core::DeleteMcpServerInput,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<mcp_config_core::McpSettingsDto, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        let response =
+            remote_backend::call_remote(&*state, app, "delete_mcp_server", json!({ "input": input }))
+                .await?;
+        return serde_json::from_value(response).map_err(|err| err.to_string());
+    }
+
+    mcp_config_core::delete_mcp_server_core(input)
 }
 
 #[tauri::command]
