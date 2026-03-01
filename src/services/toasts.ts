@@ -2,6 +2,7 @@ export type ErrorToast = {
   id: string;
   title: string;
   message: string;
+  details?: string | null;
   durationMs?: number;
 };
 
@@ -22,6 +23,7 @@ export function pushErrorToast(input: ErrorToastInput) {
     id: input.id ?? makeToastId(),
     title: input.title,
     message: input.message,
+    details: input.details,
     durationMs: input.durationMs,
   };
 
@@ -42,4 +44,3 @@ export function subscribeErrorToasts(listener: ErrorToastListener) {
     errorToastListeners.delete(listener);
   };
 }
-

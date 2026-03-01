@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "@/i18n/useI18n";
+import type { TranslationParams } from "@/i18n/types";
 import type {
   LaunchScriptEntry,
   LaunchScriptIconId,
@@ -61,12 +63,15 @@ export type WorkspaceLaunchScriptsState = {
   onCreateNew: () => Promise<void>;
 };
 
-function buildLaunchTitle(entry: LaunchScriptEntry) {
+function buildLaunchTitle(
+  entry: LaunchScriptEntry,
+  t: (key: string, params?: TranslationParams) => string,
+) {
   const label = entry.label?.trim();
   if (label) {
-    return `Launch: ${label}`;
+    return t("workspace.launch.title.label", { label });
   }
-  return `Launch: ${getLaunchScriptIconLabel(entry.icon)}`;
+  return t("workspace.launch.title.icon", { icon: getLaunchScriptIconLabel(entry.icon) });
 }
 
 export function useWorkspaceLaunchScripts({
@@ -78,6 +83,7 @@ export function useWorkspaceLaunchScripts({
   terminalState,
   activeTerminalId,
 }: UseWorkspaceLaunchScriptsOptions): WorkspaceLaunchScriptsState {
+  const { t } = useI18n();
   const [editorOpenId, setEditorOpenId] = useState<string | null>(null);
   const [draftScript, setDraftScript] = useState("");
   const [draftIcon, setDraftIcon] = useState<LaunchScriptIconId>(DEFAULT_LAUNCH_SCRIPT_ICON);
@@ -180,7 +186,7 @@ export function useWorkspaceLaunchScripts({
     }
     const trimmed = newDraftScript.trim();
     if (!trimmed) {
-      setNewError("Script cannot be empty.");
+      setNewError(t("workspace.launch.validation.scriptRequired"));
       return;
     }
     setIsSaving(true);
@@ -211,6 +217,7 @@ export function useWorkspaceLaunchScripts({
     newDraftIcon,
     newDraftLabel,
     newDraftScript,
+    t,
     updateWorkspaceSettings,
   ]);
 
@@ -298,7 +305,7 @@ export function useWorkspaceLaunchScripts({
       }
       setError(null);
       setErrorById((prev) => ({ ...prev, [id]: null }));
-      const title = buildLaunchTitle(entry);
+      const title = buildLaunchTitle(entry, t);
       const terminalId = ensureLaunchTerminal(activeWorkspace.id, entry, title);
       pendingRunRef.current = {
         workspaceId: activeWorkspace.id,
@@ -321,6 +328,7 @@ export function useWorkspaceLaunchScripts({
       onOpenEditor,
       openTerminal,
       restartLaunchSession,
+      t,
     ],
   );
 
@@ -340,16 +348,17 @@ export function useWorkspaceLaunchScripts({
     pendingRunRef.current = null;
     writeTerminalSession(pending.workspaceId, pending.terminalId, `${pending.script}\n`).catch(
       (err) => {
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message);
-        setErrorById((prev) => ({ ...prev, [pending.entryId]: message }));
+        const details = err instanceof Error ? err.message : String(err);
+        setError(details);
+        setErrorById((prev) => ({ ...prev, [pending.entryId]: details }));
         pushErrorToast({
-          title: "Launch script error",
-          message,
+          title: t("errors.launchScript.title"),
+          message: t("errors.launchScript.message"),
+          details,
         });
       },
     );
-  }, [activeTerminalId, activeWorkspace?.id, terminalState?.readyKey]);
+  }, [activeTerminalId, activeWorkspace?.id, t, terminalState?.readyKey]);
 
   return {
     launchScripts,

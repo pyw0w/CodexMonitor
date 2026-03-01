@@ -208,7 +208,7 @@ export function SettingsDisplaySection({
         >
           <option value="system">{t("settings.display.uiLanguage.option.system")}</option>
           <option value="en">{t("settings.display.uiLanguage.option.en")}</option>
-          <option value="zh-CN">{t("settings.display.uiLanguage.option.zh-CN")}</option>
+          <option value="ru">{t("settings.display.uiLanguage.option.ru")}</option>
         </select>
         <div className="settings-help">{t("settings.display.uiLanguage.help")}</div>
       </div>
