@@ -238,8 +238,9 @@ export const Sidebar = memo(function Sidebar({
     sessionResetLabel,
     weeklyResetLabel,
     creditsLabel,
+    subscriptionLabel,
     showWeekly,
-  } = getUsageLabels(accountRateLimits, usageShowRemaining);
+  } = getUsageLabels(accountRateLimits, usageShowRemaining, accountInfo?.planType);
   const debouncedQuery = useDebouncedValue(searchQuery, 150);
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
   const pendingUserInputKeys = useMemo(
@@ -1260,6 +1261,7 @@ export const Sidebar = memo(function Sidebar({
         sessionResetLabel={sessionResetLabel}
         weeklyResetLabel={weeklyResetLabel}
         creditsLabel={creditsLabel}
+        subscriptionLabel={subscriptionLabel}
         showWeekly={showWeekly}
       />
       <SidebarCornerActions

@@ -4,6 +4,7 @@ type SidebarFooterProps = {
   sessionResetLabel: string | null;
   weeklyResetLabel: string | null;
   creditsLabel: string | null;
+  subscriptionLabel: string | null;
   showWeekly: boolean;
 };
 
@@ -13,6 +14,7 @@ export function SidebarFooter({
   sessionResetLabel,
   weeklyResetLabel,
   creditsLabel,
+  subscriptionLabel,
   showWeekly,
 }: SidebarFooterProps) {
   return (
@@ -60,6 +62,7 @@ export function SidebarFooter({
         )}
       </div>
       {creditsLabel && <div className="usage-meta">{creditsLabel}</div>}
+      {subscriptionLabel && <div className="usage-meta">{subscriptionLabel}</div>}
     </div>
   );
 }

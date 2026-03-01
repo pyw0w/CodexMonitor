@@ -562,6 +562,77 @@ describe("Sidebar", () => {
     expect(indicator).toBeNull();
   });
 
+  it("renders subscription from account plan type", () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        accountInfo={{
+          type: "chatgpt",
+          email: null,
+          planType: "pro",
+          requiresOpenaiAuth: null,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Plan: Pro")).toBeTruthy();
+  });
+
+  it("falls back to rate limits plan type when account plan type is missing", () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        accountInfo={{
+          type: "chatgpt",
+          email: null,
+          planType: null,
+          requiresOpenaiAuth: null,
+        }}
+        accountRateLimits={{
+          primary: null,
+          secondary: null,
+          credits: null,
+          planType: "plus",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Plan: Plus")).toBeTruthy();
+  });
+
+  it("hides subscription label when no plan type is available", () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        accountInfo={{
+          type: "chatgpt",
+          email: null,
+          planType: null,
+          requiresOpenaiAuth: null,
+        }}
+        accountRateLimits={null}
+      />,
+    );
+
+    expect(screen.queryByText(/Plan:/)).toBeNull();
+  });
+
+  it("normalizes mixed-case and spaced account plan values", () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        accountInfo={{
+          type: "chatgpt",
+          email: null,
+          planType: "  PLUS  ",
+          requiresOpenaiAuth: null,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Plan: Plus")).toBeTruthy();
+  });
+
   it("can hide sub-agent sessions from the sidebar", () => {
     render(
       <Sidebar

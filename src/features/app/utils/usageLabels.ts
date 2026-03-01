@@ -7,6 +7,7 @@ type UsageLabels = {
   sessionResetLabel: string | null;
   weeklyResetLabel: string | null;
   creditsLabel: string | null;
+  subscriptionLabel: string | null;
   showWeekly: boolean;
 };
 
@@ -46,9 +47,52 @@ function formatCreditsLabel(accountRateLimits: RateLimitSnapshot | null) {
   return null;
 }
 
+function formatPlanType(planType: string): string {
+  const normalized = planType.trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  if (normalized === "pro") {
+    return "Pro";
+  }
+  if (normalized === "plus") {
+    return "Plus";
+  }
+  if (normalized === "team") {
+    return "Team";
+  }
+  if (normalized === "enterprise") {
+    return "Enterprise";
+  }
+  if (normalized === "free") {
+    return "Free";
+  }
+  return normalized
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatSubscriptionLabel(
+  accountPlanType: string | null | undefined,
+  accountRateLimits: RateLimitSnapshot | null,
+): string | null {
+  const rawPlanType = accountPlanType?.trim() || accountRateLimits?.planType?.trim() || "";
+  if (!rawPlanType) {
+    return null;
+  }
+  const readablePlan = formatPlanType(rawPlanType);
+  if (!readablePlan) {
+    return null;
+  }
+  return `Plan: ${readablePlan}`;
+}
+
 export function getUsageLabels(
   accountRateLimits: RateLimitSnapshot | null,
   showRemaining: boolean,
+  accountPlanType?: string | null,
 ): UsageLabels {
   const usagePercent = accountRateLimits?.primary?.usedPercent;
   const globalUsagePercent = accountRateLimits?.secondary?.usedPercent;
@@ -71,6 +115,7 @@ export function getUsageLabels(
     sessionResetLabel: formatResetLabel(accountRateLimits?.primary?.resetsAt),
     weeklyResetLabel: formatResetLabel(accountRateLimits?.secondary?.resetsAt),
     creditsLabel: formatCreditsLabel(accountRateLimits),
+    subscriptionLabel: formatSubscriptionLabel(accountPlanType, accountRateLimits),
     showWeekly: Boolean(accountRateLimits?.secondary),
   };
 }
