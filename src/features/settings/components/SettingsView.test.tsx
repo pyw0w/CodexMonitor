@@ -542,28 +542,11 @@ describe("SettingsView Display", () => {
     });
   });
 
-  it("toggles excluding cache from thread token usage", async () => {
-    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
-    renderDisplaySection({ onUpdateAppSettings });
-
-    const row = screen
-      .getByText("Exclude cache from thread token usage")
-      .closest(".settings-toggle-row") as HTMLElement | null;
-    if (!row) {
-      throw new Error("Expected exclude cache row");
-    }
-    const toggle = row.querySelector(
-      "button.settings-toggle",
-    ) as HTMLButtonElement | null;
-    if (!toggle) {
-      throw new Error("Expected exclude cache toggle");
-    }
-    fireEvent.click(toggle);
+  it("does not render legacy thread token cache toggle in display settings", async () => {
+    renderDisplaySection();
 
     await waitFor(() => {
-      expect(onUpdateAppSettings).toHaveBeenCalledWith(
-        expect.objectContaining({ threadTokenUsageExcludeCache: true }),
-      );
+      expect(screen.queryByText("Exclude cache from thread token usage")).toBeNull();
     });
   });
 
@@ -745,42 +728,23 @@ describe("SettingsView Display", () => {
     });
   });
 
-  it("toggles sub-agent session visibility in sidebar", async () => {
-    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
+  it("does not render legacy sub-agent session visibility control in display settings", async () => {
     renderDisplaySection({
-      onUpdateAppSettings,
       appSettings: { showSubagentSessions: false },
     });
 
-    const row = screen
-      .getByText("Show sub-agent sessions in sidebar")
-      .closest(".settings-toggle-row") as HTMLElement | null;
-    if (!row) {
-      throw new Error("Expected sub-agent session visibility row");
-    }
-    fireEvent.click(within(row).getByRole("button"));
-
     await waitFor(() => {
-      expect(onUpdateAppSettings).toHaveBeenCalledWith(
-        expect.objectContaining({ showSubagentSessions: true }),
-      );
+      expect(screen.queryByText("Show sub-agent sessions in sidebar")).toBeNull();
     });
   });
 
-  it("updates settings sync mode", async () => {
-    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
+  it("does not render legacy settings sync mode control in display settings", async () => {
     renderDisplaySection({
-      onUpdateAppSettings,
       appSettings: { syncMode: "app_authoritative" },
     });
 
-    const select = screen.getByLabelText("Settings sync mode");
-    fireEvent.change(select, { target: { value: "bidirectional" } });
-
     await waitFor(() => {
-      expect(onUpdateAppSettings).toHaveBeenCalledWith(
-        expect.objectContaining({ syncMode: "bidirectional" }),
-      );
+      expect(screen.queryByLabelText("Settings sync mode")).toBeNull();
     });
   });
 });
@@ -1540,26 +1504,13 @@ describe("SettingsView Features", () => {
     });
   });
 
-  it("toggles prompt suggestions in experimental features", async () => {
-    const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
+  it("does not render legacy prompt suggestions toggle in features settings", async () => {
     renderFeaturesSection({
-      onUpdateAppSettings,
       appSettings: { promptSuggestionsEnabled: false },
     });
 
-    const promptSuggestionsTitle = screen.getByText(
-      "Prompt suggestions after agent turns",
-    );
-    const promptSuggestionsRow = promptSuggestionsTitle.closest(".settings-toggle-row");
-    expect(promptSuggestionsRow).not.toBeNull();
-
-    const toggle = within(promptSuggestionsRow as HTMLElement).getByRole("button");
-    fireEvent.click(toggle);
-
     await waitFor(() => {
-      expect(onUpdateAppSettings).toHaveBeenCalledWith(
-        expect.objectContaining({ promptSuggestionsEnabled: true }),
-      );
+      expect(screen.queryByText("Prompt suggestions after agent turns")).toBeNull();
     });
   });
 

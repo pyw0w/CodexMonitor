@@ -16,6 +16,7 @@ export const ru: TranslationDictionary = {
   "settings.nav.openApps": "Открыть через",
   "settings.nav.git": "Гит",
   "settings.nav.server": "Сервер",
+  "settings.nav.mcp": "MCP серверы",
   "settings.nav.agents": "Агенты",
   "settings.nav.codex": "Кодекс",
   "settings.nav.features": "Функции",

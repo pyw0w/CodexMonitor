@@ -16,6 +16,7 @@ export const en: TranslationDictionary = {
   "settings.nav.openApps": "Open in",
   "settings.nav.git": "Git",
   "settings.nav.server": "Server",
+  "settings.nav.mcp": "MCP Servers",
   "settings.nav.agents": "Agents",
   "settings.nav.codex": "Codex",
   "settings.nav.features": "Features",

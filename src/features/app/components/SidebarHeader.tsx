@@ -8,6 +8,7 @@ import ListTree from "lucide-react/dist/esm/icons/list-tree";
 import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
 import Search from "lucide-react/dist/esm/icons/search";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useI18n } from "@/i18n/useI18n";
 import type { ThreadListOrganizeMode, ThreadListSortKey } from "../../../types";
 import {
@@ -18,6 +19,7 @@ import {
 import { useMenuController } from "../hooks/useMenuController";
 
 type SidebarHeaderProps = {
+  topNode?: ReactNode;
   onSelectHome: () => void;
   onAddWorkspace: () => void;
   onToggleSearch: () => void;
@@ -32,6 +34,7 @@ type SidebarHeaderProps = {
 };
 
 export function SidebarHeader({
+  topNode,
   onSelectHome,
   onAddWorkspace,
   onToggleSearch,
@@ -125,6 +128,7 @@ export function SidebarHeader({
 
   return (
     <div className="sidebar-header">
+      {topNode}
       <div className="sidebar-header-title">
         <div className="sidebar-title-group">
           <button

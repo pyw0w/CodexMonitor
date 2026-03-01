@@ -57,7 +57,7 @@ describe("LinuxAppMenuBar", () => {
     render(<LinuxAppMenuBar {...props} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open application menu" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Add Workspace..." }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Add Workspace\.\.\./ }));
 
     expect(props.onAddWorkspace).toHaveBeenCalledTimes(1);
   });
@@ -67,7 +67,7 @@ describe("LinuxAppMenuBar", () => {
     render(<LinuxAppMenuBar {...props} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open application menu" }));
-    const newAgentButton = screen.getByRole("menuitem", { name: "New Agent" });
+    const newAgentButton = screen.getByRole("menuitem", { name: /New Agent/ });
     expect((newAgentButton as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(newAgentButton);
 

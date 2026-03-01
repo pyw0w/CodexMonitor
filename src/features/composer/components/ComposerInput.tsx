@@ -37,6 +37,7 @@ import { getFileTypeIconUrl } from "../../../utils/fileTypeIcons";
 
 type ComposerInputProps = {
   text: string;
+  ghostText?: string | null;
   disabled: boolean;
   sendLabel: string;
   canStop: boolean;
