@@ -241,6 +241,48 @@ export function SettingsDisplaySection({
         />
       </SettingsToggleRow>
       <SettingsToggleRow
+        title="Show thread token usage & estimated costs"
+        subtitle="Display token totals & costs beneath each thread title. (both are estimates and can differ from the actual values)"
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.showThreadTokenUsage}
+          onClick={() =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              showThreadTokenUsage: !appSettings.showThreadTokenUsage,
+            })
+          }
+        />
+      </SettingsToggleRow>
+      <SettingsToggleRow
+        title="Show full thread token counts & costs"
+        subtitle="Display exact totals instead of compact abbreviations."
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.threadTokenUsageShowFull}
+          onClick={() =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              threadTokenUsageShowFull: !appSettings.threadTokenUsageShowFull,
+            })
+          }
+        />
+      </SettingsToggleRow>
+      <SettingsToggleRow
+        title="Exclude cache from thread token usage"
+        subtitle="Subtract cached input tokens from each thread total."
+      >
+        <SettingsToggleSwitch
+          pressed={appSettings.threadTokenUsageExcludeCache}
+          onClick={() =>
+            void onUpdateAppSettings({
+              ...appSettings,
+              threadTokenUsageExcludeCache: !appSettings.threadTokenUsageExcludeCache,
+            })
+          }
+        />
+      </SettingsToggleRow>
+      <SettingsToggleRow
         title={t("settings.display.splitChatDiff.title")}
         subtitle={t("settings.display.splitChatDiff.subtitle")}
       >

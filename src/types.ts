@@ -240,6 +240,9 @@ export type AppSettings = {
   theme: ThemePreference;
   uiLanguage: UiLanguagePreference;
   usageShowRemaining: boolean;
+  showThreadTokenUsage: boolean;
+  threadTokenUsageShowFull: boolean;
+  threadTokenUsageExcludeCache: boolean;
   showMessageFilePath: boolean;
   chatHistoryScrollbackItems: number | null;
   threadTitleAutogenerationEnabled: boolean;
@@ -506,6 +509,11 @@ export type ThreadTokenUsage = {
   total: TokenUsageBreakdown;
   last: TokenUsageBreakdown;
   modelContextWindow: number | null;
+};
+
+export type LocalThreadUsageSnapshot = {
+  updatedAt: number;
+  usageByThread: Record<string, ThreadTokenUsage>;
 };
 
 export type LocalUsageDay = {

@@ -171,6 +171,9 @@ function buildDefaultSettings(): AppSettings {
     theme: "system",
     uiLanguage: "system",
     usageShowRemaining: false,
+    showThreadTokenUsage: true,
+    threadTokenUsageShowFull: true,
+    threadTokenUsageExcludeCache: true,
     showMessageFilePath: true,
     chatHistoryScrollbackItems: CHAT_SCROLLBACK_DEFAULT,
     threadTitleAutogenerationEnabled: false,
@@ -253,6 +256,9 @@ function normalizeAppSettings(settings: AppSettings): AppSettings {
     uiLanguage: allowedUiLanguages.has(settings.uiLanguage)
       ? settings.uiLanguage
       : "system",
+    showThreadTokenUsage: settings.showThreadTokenUsage !== false,
+    threadTokenUsageShowFull: settings.threadTokenUsageShowFull !== false,
+    threadTokenUsageExcludeCache: settings.threadTokenUsageExcludeCache !== false,
     uiFontFamily: normalizeFontFamily(
       settings.uiFontFamily,
       DEFAULT_UI_FONT_FAMILY,
