@@ -180,7 +180,7 @@ export function LinuxAppMenuBar({
       const itemPaddingX =
         (itemSampleStyles
           ? Number.parseFloat(itemSampleStyles.paddingLeft || "0") +
-            Number.parseFloat(itemSampleStyles.paddingRight || "0")
+          Number.parseFloat(itemSampleStyles.paddingRight || "0")
           : 16) || 16;
       const rowGap = 12;
       let maxRowContent = 0;
@@ -298,6 +298,7 @@ export function LinuxAppMenuBar({
             id: "file-new-agent",
             label: "New Agent",
             disabled: !canAddWorkspaceAgent,
+            shortcut: "Ctrl+N",
             onSelect: onNewAgent,
           },
           {
@@ -305,6 +306,7 @@ export function LinuxAppMenuBar({
             id: "file-new-worktree-agent",
             label: "New Worktree Agent",
             disabled: !canAddDerivedAgent,
+            shortcut: "Ctrl+Shift+N",
             onSelect: onNewWorktreeAgent,
           },
           {
@@ -319,12 +321,14 @@ export function LinuxAppMenuBar({
             type: "action",
             id: "file-add-workspace",
             label: "Add Workspace...",
+            shortcut: "Ctrl+O",
             onSelect: onAddWorkspace,
           },
           {
             type: "action",
             id: "file-add-workspace-url",
             label: "Add Workspace from URL...",
+            shortcut: "Ctrl+Shift+O",
             onSelect: onAddWorkspaceFromUrl,
           },
           { type: "separator", id: "file-sep-2" },
@@ -443,12 +447,14 @@ export function LinuxAppMenuBar({
             type: "action",
             id: "view-toggle-projects",
             label: sidebarCollapsed ? "Show Projects Sidebar" : "Hide Projects Sidebar",
+            shortcut: "Ctrl+B",
             onSelect: onToggleProjectsSidebar,
           },
           {
             type: "action",
             id: "view-toggle-git",
             label: rightPanelCollapsed ? "Show Git Sidebar" : "Hide Git Sidebar",
+            shortcut: "Ctrl+J",
             onSelect: onToggleGitSidebar,
           },
           { type: "separator", id: "view-sep-1" },
@@ -472,6 +478,7 @@ export function LinuxAppMenuBar({
             id: "view-next-agent",
             label: "Next Agent",
             disabled: !canCycleAgent,
+            shortcut: "Ctrl+PgDown",
             onSelect: onNextAgent,
           },
           {
@@ -479,6 +486,7 @@ export function LinuxAppMenuBar({
             id: "view-prev-agent",
             label: "Previous Agent",
             disabled: !canCycleAgent,
+            shortcut: "Ctrl+PgUp",
             onSelect: onPrevAgent,
           },
           {
@@ -486,6 +494,7 @@ export function LinuxAppMenuBar({
             id: "view-next-workspace",
             label: "Next Workspace",
             disabled: !canCycleWorkspace,
+            shortcut: "Ctrl+Tab",
             onSelect: onNextWorkspace,
           },
           {
@@ -493,6 +502,7 @@ export function LinuxAppMenuBar({
             id: "view-prev-workspace",
             label: "Previous Workspace",
             disabled: !canCycleWorkspace,
+            shortcut: "Ctrl+Shift+Tab",
             onSelect: onPrevWorkspace,
           },
         ],
@@ -592,57 +602,57 @@ export function LinuxAppMenuBar({
   const portalMenu =
     isOpen && typeof document !== "undefined"
       ? createPortal(
-          <PopoverSurface
-            className="linux-app-menu-dropdown linux-app-menu-dropdown-single linux-app-menu-dropdown-portal"
-            role="menu"
-            ref={popoverRef}
-            style={{
-              top: `${menuPosition.top}px`,
-              left: `${menuPosition.left}px`,
-              width: menuWidth ? `${menuWidth}px` : undefined,
-            }}
-            data-tauri-drag-region="false"
-          >
-            {menus.map((menu) => (
-              <section
-                key={menu.key}
-                className="linux-app-menu-section"
-                aria-label={`${menu.label} menu section`}
-              >
-                <h3 className="linux-app-menu-section-title sidebar-sort-section-label">{menu.label}</h3>
-                {menu.items.map((item) => {
-                  if (item.type === "separator") {
-                    return (
-                      <div
-                        key={item.id}
-                        className="linux-app-menu-separator sidebar-sort-divider"
-                        role="separator"
-                      />
-                    );
-                  }
+        <PopoverSurface
+          className="linux-app-menu-dropdown linux-app-menu-dropdown-single linux-app-menu-dropdown-portal"
+          role="menu"
+          ref={popoverRef}
+          style={{
+            top: `${menuPosition.top}px`,
+            left: `${menuPosition.left}px`,
+            width: menuWidth ? `${menuWidth}px` : undefined,
+          }}
+          data-tauri-drag-region="false"
+        >
+          {menus.map((menu) => (
+            <section
+              key={menu.key}
+              className="linux-app-menu-section"
+              aria-label={`${menu.label} menu section`}
+            >
+              <h3 className="linux-app-menu-section-title sidebar-sort-section-label">{menu.label}</h3>
+              {menu.items.map((item) => {
+                if (item.type === "separator") {
                   return (
-                    <PopoverMenuItem
+                    <div
                       key={item.id}
-                      className="linux-app-menu-item"
-                      role="menuitem"
-                      disabled={item.disabled}
-                      onClick={() => handleSelectItem(item)}
-                      data-tauri-drag-region="false"
-                    >
-                      <span className="linux-app-menu-item-row">
-                        <span className="linux-app-menu-item-label">{item.label}</span>
-                        {item.shortcut ? (
-                          <span className="linux-app-menu-item-shortcut">{item.shortcut}</span>
-                        ) : null}
-                      </span>
-                    </PopoverMenuItem>
+                      className="linux-app-menu-separator sidebar-sort-divider"
+                      role="separator"
+                    />
                   );
-                })}
-              </section>
-            ))}
-          </PopoverSurface>,
-          document.body,
-        )
+                }
+                return (
+                  <PopoverMenuItem
+                    key={item.id}
+                    className="linux-app-menu-item"
+                    role="menuitem"
+                    disabled={item.disabled}
+                    onClick={() => handleSelectItem(item)}
+                    data-tauri-drag-region="false"
+                  >
+                    <span className="linux-app-menu-item-row">
+                      <span className="linux-app-menu-item-label">{item.label}</span>
+                      {item.shortcut ? (
+                        <span className="linux-app-menu-item-shortcut">{item.shortcut}</span>
+                      ) : null}
+                    </span>
+                  </PopoverMenuItem>
+                );
+              })}
+            </section>
+          ))}
+        </PopoverSurface>,
+        document.body,
+      )
       : null;
 
   return (

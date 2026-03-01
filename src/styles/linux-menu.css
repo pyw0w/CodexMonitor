@@ -48,12 +48,17 @@
 
 .linux-app-menu-dropdown-single {
   width: auto;
-  min-width: 220px;
+  min-width: 240px;
   max-width: min(520px, calc(100vw - 24px));
   max-height: min(70vh, 720px);
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 6px;
+  padding: 8px;
+  background: var(--surface-popover);
+  backdrop-filter: blur(24px) saturate(1.1);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
   -webkit-app-region: no-drag;
 }
 
@@ -63,37 +68,46 @@
 }
 
 .linux-app-menu-section {
-  margin: 0 0 6px;
+  margin: 0 0 10px;
   padding: 0;
+}
+
+.linux-app-menu-section:last-child {
+  margin-bottom: 0;
 }
 
 .linux-app-menu-section-title {
   margin: 0;
-  padding: 4px 8px 2px;
+  padding: 6px 12px 4px;
   text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  opacity: 0.8;
 }
 
 .linux-app-menu-item {
-  min-height: 30px;
+  min-height: 32px;
   font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin: 1px 0;
   -webkit-app-region: no-drag;
 }
 
-.linux-app-menu-item .ds-popover-item-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  max-width: 100%;
+.linux-app-menu-item:hover:not(:disabled),
+.linux-app-menu-item.is-active {
+  background: var(--surface-hover);
+  color: var(--text-strong);
 }
 
 .linux-app-menu-item-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
-  max-width: 100%;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
 }
 
 .linux-app-menu-item-label {
@@ -101,16 +115,35 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
 }
 
 .linux-app-menu-item-shortcut {
-  color: var(--text-subtle);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-muted);
+  font-family: var(--code-font-family);
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  margin-left: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--surface-control) 60%, transparent);
+  border: 1px solid var(--border-muted);
+  border-radius: 5px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  transition: all 120ms ease;
+}
+
+.linux-app-menu-item:hover .linux-app-menu-item-shortcut {
+  background: color-mix(in srgb, var(--surface-control) 80%, transparent);
+  border-color: var(--border-strong);
+  color: var(--text-emphasis);
 }
 
 .linux-app-menu-separator {
-  margin: 4px 6px;
+  margin: 6px 8px;
+  height: 1px;
+  background: var(--border-muted);
 }

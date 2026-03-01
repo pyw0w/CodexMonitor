@@ -18,10 +18,11 @@
 
 .main-header {
   width: 100%;
+  height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: 12px;
+  align-items: stretch;
+  column-gap: 0;
   min-width: 0;
   overflow: hidden;
   -webkit-app-region: drag;
@@ -51,6 +52,7 @@
   min-width: 0;
   flex: 1;
   overflow: hidden;
+  height: 100%;
 }
 
 .main-header-actions {
@@ -58,10 +60,14 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  padding-left: 12px;
+  margin-left: 4px;
+  border-left: 1px solid var(--border-subtle);
   -webkit-app-region: no-drag;
   flex-shrink: 0;
   justify-self: end;
   min-width: 0;
+  height: 100%;
 }
 
 .diff-view-toggle {
@@ -83,7 +89,7 @@
   justify-content: center;
 }
 
-.diff-view-toggle-button + .diff-view-toggle-button {
+.diff-view-toggle-button+.diff-view-toggle-button {
   border-left: 1px solid var(--border-subtle);
 }
 
@@ -387,47 +393,23 @@
 }
 
 .app.is-linux .main-topbar {
-  padding-right: calc(
-    var(--main-panel-padding)
-    + var(--window-caption-width, 0px)
-    + var(--window-caption-gap, 0px)
-  );
+  padding-right: calc(var(--main-panel-padding) + var(--window-caption-width, 0px) + var(--window-caption-gap, 0px));
 }
 
 .app.sidebar-collapsed .main-topbar {
-  padding-left: calc(
-    var(--main-panel-padding)
-    + var(--titlebar-inset-left, 0px)
-    + var(--titlebar-collapsed-left-extra, 0px)
-    + var(--titlebar-toggle-size, 28px)
-    + var(--titlebar-toggle-title-offset, -6px)
-  );
+  padding-left: calc(var(--main-panel-padding) + var(--titlebar-inset-left, 0px) + var(--titlebar-collapsed-left-extra, 0px) + var(--titlebar-toggle-size, 28px) + var(--titlebar-toggle-title-offset, -6px));
 }
 
 .app.layout-compact.sidebar-collapsed .main-topbar {
-  padding-left: calc(
-    var(--topbar-compact-padding, 16px)
-    + var(--titlebar-inset-left, 0px)
-    + var(--titlebar-collapsed-left-extra, 0px)
-    + var(--titlebar-toggle-size, 28px)
-    + var(--titlebar-toggle-title-offset, -6px)
-  );
+  padding-left: calc(var(--topbar-compact-padding, 16px) + var(--titlebar-inset-left, 0px) + var(--titlebar-collapsed-left-extra, 0px) + var(--titlebar-toggle-size, 28px) + var(--titlebar-toggle-title-offset, -6px));
 }
 
 .app.layout-compact.right-panel-collapsed .main-topbar {
-  padding-right: calc(
-    var(--topbar-compact-padding, 16px)
-    + var(--window-caption-width, 0px)
-    + var(--window-caption-gap, 0px)
-  );
+  padding-right: calc(var(--topbar-compact-padding, 16px) + var(--window-caption-width, 0px) + var(--window-caption-gap, 0px));
 }
 
 .app.right-panel-collapsed .main-topbar {
-  padding-right: calc(
-    var(--main-panel-padding)
-    + var(--window-caption-width, 0px)
-    + var(--window-caption-gap, 0px)
-  );
+  padding-right: calc(var(--main-panel-padding) + var(--window-caption-width, 0px) + var(--window-caption-gap, 0px));
 }
 
 .app.reduced-transparency .main-topbar {
@@ -437,20 +419,22 @@
 
 .main-topbar-left {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 16px;
   min-width: 0;
   flex: 1;
+  height: 100%;
   overflow: hidden;
   -webkit-app-region: no-drag;
 }
 
 .topbar-leading {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
   min-width: 0;
   flex: 1;
+  height: 100%;
 }
 
 .main-topbar-left .icon-button {
