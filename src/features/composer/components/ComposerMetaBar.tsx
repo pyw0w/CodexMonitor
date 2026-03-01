@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { BrainCog, SlidersHorizontal } from "lucide-react";
+import { useI18n } from "@/i18n/useI18n";
 import type { AccessMode, ThreadTokenUsage } from "../../../types";
 import type { CodexArgsOption } from "../../threads/utils/codexArgsProfiles";
 
@@ -42,6 +43,7 @@ export function ComposerMetaBar({
   onSelectCodexArgsOverride,
   contextUsage = null,
 }: ComposerMetaBarProps) {
+  const { t } = useI18n();
   const contextWindow = contextUsage?.modelContextWindow ?? null;
   const lastTokens = contextUsage?.last.totalTokens ?? 0;
   const totalTokens = contextUsage?.total.totalTokens ?? 0;
@@ -64,6 +66,12 @@ export function ComposerMetaBar({
       (mode) => mode.id === "default" || mode.id === "plan",
     );
   const planSelected = selectedCollaborationModeId === (planMode?.id ?? "");
+  const contextFreeLabel =
+    contextFreePercent === null
+      ? t("composer.meta.context.free.empty")
+      : t("composer.meta.context.free.percent", {
+          percent: Math.round(contextFreePercent),
+        });
 
   return (
     <div className="composer-bar">
@@ -71,7 +79,10 @@ export function ComposerMetaBar({
         {collaborationModes.length > 0 && (
           canUsePlanToggle ? (
             <div className="composer-select-wrap composer-plan-toggle-wrap">
-              <label className="composer-plan-toggle" aria-label="Plan mode">
+              <label
+                className="composer-plan-toggle"
+                aria-label={t("composer.meta.planMode.ariaLabel")}
+              >
                 <input
                   className="composer-plan-toggle-input"
                   type="checkbox"
@@ -97,7 +108,7 @@ export function ComposerMetaBar({
                   </svg>
                 </span>
                 <span className="composer-plan-toggle-label">
-                  {planMode?.label || "Plan"}
+                  {planMode?.label || t("composer.meta.planMode.defaultLabel")}
                 </span>
               </label>
             </div>
@@ -116,7 +127,7 @@ export function ComposerMetaBar({
             </span>
               <select
                 className="composer-select composer-select--model composer-select--collab"
-                aria-label="Collaboration mode"
+                aria-label={t("composer.meta.collaborationMode.ariaLabel")}
                 value={selectedCollaborationModeId ?? ""}
                 onChange={(event) =>
                   onSelectCollaborationMode(event.target.value || null)
@@ -165,12 +176,14 @@ export function ComposerMetaBar({
           </span>
           <select
             className="composer-select composer-select--model"
-            aria-label="Model"
+            aria-label={t("composer.meta.model.ariaLabel")}
             value={selectedModelId ?? ""}
             onChange={(event) => onSelectModel(event.target.value)}
             disabled={disabled}
           >
-            {models.length === 0 && <option value="">No models</option>}
+            {models.length === 0 && (
+              <option value="">{t("composer.meta.model.noModels")}</option>
+            )}
             {models.map((model) => (
               <option key={model.id} value={model.id}>
                 {model.displayName || model.model}
@@ -184,12 +197,16 @@ export function ComposerMetaBar({
           </span>
           <select
             className="composer-select composer-select--effort"
-            aria-label="Thinking mode"
+            aria-label={t("composer.meta.reasoningMode.ariaLabel")}
             value={selectedEffort ?? ""}
             onChange={(event) => onSelectEffort(event.target.value)}
             disabled={disabled || !reasoningSupported}
           >
-            {reasoningOptions.length === 0 && <option value="">Default</option>}
+            {reasoningOptions.length === 0 && (
+              <option value="">
+                {t("composer.meta.reasoningMode.defaultOption")}
+              </option>
+            )}
             {reasoningOptions.map((effort) => (
               <option key={effort} value={effort}>
                 {effort}
@@ -204,7 +221,7 @@ export function ComposerMetaBar({
             </span>
             <select
               className="composer-select composer-select--approval"
-              aria-label="Codex args profile"
+              aria-label={t("composer.meta.codexArgsProfile.ariaLabel")}
               disabled={disabled}
               value={selectedCodexArgsOverride ?? ""}
               onChange={(event) =>
@@ -239,32 +256,30 @@ export function ComposerMetaBar({
           </span>
           <select
             className="composer-select composer-select--approval"
-            aria-label="Agent access"
+            aria-label={t("composer.meta.agentAccess.ariaLabel")}
             disabled={disabled}
             value={accessMode}
             onChange={(event) =>
               onSelectAccessMode(event.target.value as AccessMode)
             }
           >
-            <option value="read-only">Read only</option>
-            <option value="current">On-Request</option>
-            <option value="full-access">Full access</option>
+            <option value="read-only">
+              {t("composer.meta.agentAccess.option.readOnly")}
+            </option>
+            <option value="current">
+              {t("composer.meta.agentAccess.option.current")}
+            </option>
+            <option value="full-access">
+              {t("composer.meta.agentAccess.option.fullAccess")}
+            </option>
           </select>
         </div>
       </div>
       <div className="composer-context">
         <div
           className="composer-context-ring"
-          data-tooltip={
-            contextFreePercent === null
-              ? "Context free --"
-              : `Context free ${Math.round(contextFreePercent)}%`
-          }
-          aria-label={
-            contextFreePercent === null
-              ? "Context free --"
-              : `Context free ${Math.round(contextFreePercent)}%`
-          }
+          data-tooltip={contextFreeLabel}
+          aria-label={contextFreeLabel}
           style={
             {
               "--context-free": contextFreePercent ?? 0,

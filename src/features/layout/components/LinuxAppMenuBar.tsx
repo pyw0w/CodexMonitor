@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import appIconUrl from "@/assets/app-icon.png";
+import { useI18n } from "@/i18n/useI18n";
 import {
   MenuTrigger,
   PopoverMenuItem,
@@ -106,6 +107,7 @@ export function LinuxAppMenuBar({
   onHelpAbout,
   onHelpCheckUpdates,
 }: LinuxAppMenuBarProps) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 12, left: 12 });
   const [menuWidth, setMenuWidth] = useState<number | null>(null);
@@ -291,12 +293,12 @@ export function LinuxAppMenuBar({
     () => [
       {
         key: "file",
-        label: "File",
+        label: t("linuxMenu.menu.file"),
         items: [
           {
             type: "action",
             id: "file-new-agent",
-            label: "New Agent",
+            label: t("linuxMenu.file.newAgent"),
             disabled: !canAddWorkspaceAgent,
             shortcut: "Ctrl+N",
             onSelect: onNewAgent,
@@ -304,7 +306,7 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "file-new-worktree-agent",
-            label: "New Worktree Agent",
+            label: t("linuxMenu.file.newWorktreeAgent"),
             disabled: !canAddDerivedAgent,
             shortcut: "Ctrl+Shift+N",
             onSelect: onNewWorktreeAgent,
@@ -312,7 +314,7 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "file-new-clone-agent",
-            label: "New Clone Agent",
+            label: t("linuxMenu.file.newCloneAgent"),
             disabled: !canAddDerivedAgent,
             onSelect: onNewCloneAgent,
           },
@@ -320,14 +322,14 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "file-add-workspace",
-            label: "Add Workspace...",
+            label: t("linuxMenu.file.addWorkspace"),
             shortcut: "Ctrl+O",
             onSelect: onAddWorkspace,
           },
           {
             type: "action",
             id: "file-add-workspace-url",
-            label: "Add Workspace from URL...",
+            label: t("linuxMenu.file.addWorkspaceFromUrl"),
             shortcut: "Ctrl+Shift+O",
             onSelect: onAddWorkspaceFromUrl,
           },
@@ -335,7 +337,7 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "file-settings",
-            label: "Settings...",
+            label: t("linuxMenu.file.settings"),
             shortcut: "Ctrl+,",
             onSelect: onOpenSettings,
           },
@@ -343,14 +345,14 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "file-close-window",
-            label: "Close Window",
+            label: t("linuxMenu.file.closeWindow"),
             shortcut: "Ctrl+W",
             onSelect: onCloseWindow,
           },
           {
             type: "action",
             id: "file-quit",
-            label: "Quit",
+            label: t("linuxMenu.file.quit"),
             shortcut: "Ctrl+Q",
             onSelect: onQuitApp,
           },
@@ -358,19 +360,19 @@ export function LinuxAppMenuBar({
       },
       {
         key: "edit",
-        label: "Edit",
+        label: t("linuxMenu.menu.edit"),
         items: [
           {
             type: "action",
             id: "edit-undo",
-            label: "Undo",
+            label: t("linuxMenu.edit.undo"),
             shortcut: "Ctrl+Z",
             onSelect: onEditUndo,
           },
           {
             type: "action",
             id: "edit-redo",
-            label: "Redo",
+            label: t("linuxMenu.edit.redo"),
             shortcut: "Ctrl+Shift+Z",
             onSelect: onEditRedo,
           },
@@ -378,28 +380,28 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "edit-cut",
-            label: "Cut",
+            label: t("linuxMenu.edit.cut"),
             shortcut: "Ctrl+X",
             onSelect: onEditCut,
           },
           {
             type: "action",
             id: "edit-copy",
-            label: "Copy",
+            label: t("linuxMenu.edit.copy"),
             shortcut: "Ctrl+C",
             onSelect: onEditCopy,
           },
           {
             type: "action",
             id: "edit-paste",
-            label: "Paste",
+            label: t("linuxMenu.edit.paste"),
             shortcut: "Ctrl+V",
             onSelect: onEditPaste,
           },
           {
             type: "action",
             id: "edit-select-all",
-            label: "Select All",
+            label: t("linuxMenu.edit.selectAll"),
             shortcut: "Ctrl+A",
             onSelect: onEditSelectAll,
           },
@@ -407,33 +409,33 @@ export function LinuxAppMenuBar({
       },
       {
         key: "composer",
-        label: "Composer",
+        label: t("linuxMenu.menu.composer"),
         items: [
           {
             type: "action",
             id: "composer-cycle-model",
-            label: "Cycle Model",
+            label: t("linuxMenu.composer.cycleModel"),
             shortcut: "Ctrl+Shift+M",
             onSelect: onComposerCycleModel,
           },
           {
             type: "action",
             id: "composer-cycle-access",
-            label: "Cycle Access Mode",
+            label: t("linuxMenu.composer.cycleAccessMode"),
             shortcut: "Ctrl+Shift+A",
             onSelect: onComposerCycleAccess,
           },
           {
             type: "action",
             id: "composer-cycle-reasoning",
-            label: "Cycle Reasoning",
+            label: t("linuxMenu.composer.cycleReasoning"),
             shortcut: "Ctrl+Shift+R",
             onSelect: onComposerCycleReasoning,
           },
           {
             type: "action",
             id: "composer-cycle-collaboration",
-            label: "Cycle Collaboration",
+            label: t("linuxMenu.composer.cycleCollaboration"),
             shortcut: "Shift+Tab",
             onSelect: onComposerCycleCollaboration,
           },
@@ -441,19 +443,23 @@ export function LinuxAppMenuBar({
       },
       {
         key: "view",
-        label: "View",
+        label: t("linuxMenu.menu.view"),
         items: [
           {
             type: "action",
             id: "view-toggle-projects",
-            label: sidebarCollapsed ? "Show Projects Sidebar" : "Hide Projects Sidebar",
+            label: sidebarCollapsed
+              ? t("linuxMenu.view.showProjectsSidebar")
+              : t("linuxMenu.view.hideProjectsSidebar"),
             shortcut: "Ctrl+B",
             onSelect: onToggleProjectsSidebar,
           },
           {
             type: "action",
             id: "view-toggle-git",
-            label: rightPanelCollapsed ? "Show Git Sidebar" : "Hide Git Sidebar",
+            label: rightPanelCollapsed
+              ? t("linuxMenu.view.showGitSidebar")
+              : t("linuxMenu.view.hideGitSidebar"),
             shortcut: "Ctrl+J",
             onSelect: onToggleGitSidebar,
           },
@@ -461,14 +467,14 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "view-toggle-debug",
-            label: "Toggle Debug Panel",
+            label: t("linuxMenu.view.toggleDebugPanel"),
             shortcut: "Ctrl+Shift+D",
             onSelect: onToggleDebugPanel,
           },
           {
             type: "action",
             id: "view-toggle-terminal",
-            label: "Toggle Terminal",
+            label: t("linuxMenu.view.toggleTerminal"),
             shortcut: "Ctrl+Shift+T",
             onSelect: onToggleTerminal,
           },
@@ -476,7 +482,7 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "view-next-agent",
-            label: "Next Agent",
+            label: t("linuxMenu.view.nextAgent"),
             disabled: !canCycleAgent,
             shortcut: "Ctrl+PgDown",
             onSelect: onNextAgent,
@@ -484,7 +490,7 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "view-prev-agent",
-            label: "Previous Agent",
+            label: t("linuxMenu.view.previousAgent"),
             disabled: !canCycleAgent,
             shortcut: "Ctrl+PgUp",
             onSelect: onPrevAgent,
@@ -492,7 +498,7 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "view-next-workspace",
-            label: "Next Workspace",
+            label: t("linuxMenu.view.nextWorkspace"),
             disabled: !canCycleWorkspace,
             shortcut: "Ctrl+Tab",
             onSelect: onNextWorkspace,
@@ -500,7 +506,7 @@ export function LinuxAppMenuBar({
           {
             type: "action",
             id: "view-prev-workspace",
-            label: "Previous Workspace",
+            label: t("linuxMenu.view.previousWorkspace"),
             disabled: !canCycleWorkspace,
             shortcut: "Ctrl+Shift+Tab",
             onSelect: onPrevWorkspace,
@@ -509,43 +515,43 @@ export function LinuxAppMenuBar({
       },
       {
         key: "window",
-        label: "Window",
+        label: t("linuxMenu.menu.window"),
         items: [
           {
             type: "action",
             id: "window-minimize",
-            label: "Minimize",
+            label: t("linuxMenu.window.minimize"),
             onSelect: onWindowMinimize,
           },
           {
             type: "action",
             id: "window-maximize",
-            label: "Maximize / Restore",
+            label: t("linuxMenu.window.maximizeRestore"),
             onSelect: onWindowToggleMaximize,
           },
           { type: "separator", id: "window-sep-1" },
           {
             type: "action",
             id: "window-close",
-            label: "Close Window",
+            label: t("linuxMenu.window.closeWindow"),
             onSelect: onCloseWindow,
           },
         ],
       },
       {
         key: "help",
-        label: "Help",
+        label: t("linuxMenu.menu.help"),
         items: [
           {
             type: "action",
             id: "help-check-updates",
-            label: "Check for Updates",
+            label: t("linuxMenu.help.checkForUpdates"),
             onSelect: onHelpCheckUpdates,
           },
           {
             type: "action",
             id: "help-about",
-            label: "About",
+            label: t("linuxMenu.help.about"),
             onSelect: onHelpAbout,
           },
         ],
@@ -588,6 +594,7 @@ export function LinuxAppMenuBar({
       onHelpCheckUpdates,
       sidebarCollapsed,
       rightPanelCollapsed,
+      t,
     ],
   );
 
@@ -617,7 +624,7 @@ export function LinuxAppMenuBar({
             <section
               key={menu.key}
               className="linux-app-menu-section"
-              aria-label={`${menu.label} menu section`}
+              aria-label={t("linuxMenu.section.aria", { label: menu.label })}
             >
               <h3 className="linux-app-menu-section-title sidebar-sort-section-label">{menu.label}</h3>
               {menu.items.map((item) => {
@@ -656,14 +663,19 @@ export function LinuxAppMenuBar({
       : null;
 
   return (
-    <div className="linux-app-menu" ref={containerRef} role="group" aria-label="Application menu">
+    <div
+      className="linux-app-menu"
+      ref={containerRef}
+      role="group"
+      aria-label={t("linuxMenu.group.applicationMenu")}
+    >
       <MenuTrigger
         isOpen={isOpen}
         activeClassName="is-open"
         className="linux-app-menu-launcher"
         onClick={toggle}
-        aria-label="Open application menu"
-        title="Codex Monitor"
+        aria-label={t("linuxMenu.trigger.openApplicationMenu")}
+        title={t("linuxMenu.trigger.title")}
       >
         <img className="linux-app-menu-app-icon" src={appIconUrl} alt="" aria-hidden />
       </MenuTrigger>

@@ -1,10 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { MouseEvent } from "react";
 import { Menu, MenuItem, PredefinedMenuItem } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/dpi";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import * as Sentry from "@sentry/react";
+import { useI18n } from "@/i18n/useI18n";
 import { openWorkspaceIn } from "../../../services/tauri";
 import { pushErrorToast } from "../../../services/toasts";
 import type { OpenAppTarget } from "../../../types";
@@ -23,9 +24,8 @@ type OpenTarget = {
   args: string[];
 };
 
-const DEFAULT_OPEN_TARGET: OpenTarget = {
+const DEFAULT_OPEN_TARGET_BASE: Omit<OpenTarget, "label"> = {
   id: "vscode",
-  label: "VS Code",
   appName: "Visual Studio Code",
   kind: "app",
   command: null,
@@ -65,11 +65,20 @@ export function useFileLinkOpener(
   openTargets: OpenAppTarget[],
   selectedOpenAppId: string,
 ) {
+  const { t } = useI18n();
+  const defaultOpenTarget = useMemo<OpenTarget>(
+    () => ({
+      ...DEFAULT_OPEN_TARGET_BASE,
+      label: t("fileLink.defaultTargetLabel"),
+    }),
+    [t],
+  );
+
   const reportOpenError = useCallback(
     (error: unknown, context: Record<string, string | null>) => {
-      const message = error instanceof Error ? error.message : String(error);
+      const details = error instanceof Error ? error.message : String(error);
       Sentry.captureException(
-        error instanceof Error ? error : new Error(message),
+        error instanceof Error ? error : new Error(details),
         {
           tags: {
             feature: "file-link-open",
@@ -78,18 +87,19 @@ export function useFileLinkOpener(
         },
       );
       pushErrorToast({
-        title: "Couldn’t open file",
-        message,
+        title: t("errors.openFile.title"),
+        message: t("errors.openFile.message"),
+        details,
       });
-      console.warn("Failed to open file link", { message, ...context });
+      console.warn("Failed to open file link", { details, ...context });
     },
-    [],
+    [t],
   );
 
   const openFileLink = useCallback(
     async (rawPath: string) => {
       const target = {
-        ...DEFAULT_OPEN_TARGET,
+        ...defaultOpenTarget,
         ...(openTargets.find((entry) => entry.id === selectedOpenAppId) ??
           openTargets[0]),
       };
@@ -136,7 +146,7 @@ export function useFileLinkOpener(
         });
       }
     },
-    [openTargets, reportOpenError, selectedOpenAppId, workspacePath],
+    [defaultOpenTarget, openTargets, reportOpenError, selectedOpenAppId, workspacePath],
   );
 
   const showFileLinkMenu = useCallback(
@@ -144,7 +154,7 @@ export function useFileLinkOpener(
       event.preventDefault();
       event.stopPropagation();
       const target = {
-        ...DEFAULT_OPEN_TARGET,
+        ...defaultOpenTarget,
         ...(openTargets.find((entry) => entry.id === selectedOpenAppId) ??
           openTargets[0]),
       };
@@ -157,11 +167,11 @@ export function useFileLinkOpener(
           ? revealInFileManagerLabel()
           : target.kind === "command"
             ? command
-              ? `Open in ${target.label}`
-              : "Set command in Settings"
+              ? t("fileLink.menu.openIn", { app: target.label })
+              : t("fileLink.menu.setCommandInSettings")
             : appName
-              ? `Open in ${appName}`
-              : "Set app name in Settings";
+              ? t("fileLink.menu.openIn", { app: appName })
+              : t("fileLink.menu.setAppNameInSettings");
       const items = [
         await MenuItem.new({
           text: openLabel,
@@ -193,11 +203,11 @@ export function useFileLinkOpener(
               }),
             ]),
         await MenuItem.new({
-          text: "Download Linked File",
+          text: t("fileLink.menu.downloadLinkedFile"),
           enabled: false,
         }),
         await MenuItem.new({
-          text: "Copy Link",
+          text: t("fileLink.menu.copyLink"),
           action: async () => {
             const link =
               resolvedPath.startsWith("/") ? `file://${resolvedPath}` : resolvedPath;
@@ -217,7 +227,15 @@ export function useFileLinkOpener(
       const position = new LogicalPosition(event.clientX, event.clientY);
       await menu.popup(position, window);
     },
-    [openFileLink, openTargets, reportOpenError, selectedOpenAppId, workspacePath],
+    [
+      defaultOpenTarget,
+      openFileLink,
+      openTargets,
+      reportOpenError,
+      selectedOpenAppId,
+      t,
+      workspacePath,
+    ],
   );
 
   return { openFileLink, showFileLinkMenu };

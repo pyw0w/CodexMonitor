@@ -104,11 +104,11 @@ describe("SettingsDisplaySection", () => {
     );
 
     fireEvent.change(screen.getByLabelText("Interface language"), {
-      target: { value: "zh-CN" },
+      target: { value: "ru" },
     });
 
     expect(onUpdateAppSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ uiLanguage: "zh-CN" }),
+      expect.objectContaining({ uiLanguage: "ru" }),
     );
   });
   it("toggles unlimited chat history", () => {

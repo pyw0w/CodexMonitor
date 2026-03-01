@@ -1,4 +1,5 @@
 import type { ErrorToast } from "../../../services/toasts";
+import { useI18n } from "@/i18n/useI18n";
 import {
   ToastBody,
   ToastCard,
@@ -13,6 +14,7 @@ type ErrorToastsProps = {
 };
 
 export function ErrorToasts({ toasts, onDismiss }: ErrorToastsProps) {
+  const { t } = useI18n();
   if (!toasts.length) {
     return null;
   }
@@ -27,13 +29,19 @@ export function ErrorToasts({ toasts, onDismiss }: ErrorToastsProps) {
               type="button"
               className="ghost error-toast-dismiss"
               onClick={() => onDismiss(toast.id)}
-              aria-label="Dismiss error"
-              title="Dismiss"
+              aria-label={t("errors.toast.dismissAria")}
+              title={t("errors.toast.dismiss")}
             >
               ×
             </button>
           </ToastHeader>
           <ToastBody className="error-toast-body">{toast.message}</ToastBody>
+          {toast.details ? (
+            <details className="error-toast-details">
+              <summary>{t("errors.toast.details")}</summary>
+              <pre className="error-toast-details-text">{toast.details}</pre>
+            </details>
+          ) : null}
         </ToastCard>
       ))}
     </ToastViewport>

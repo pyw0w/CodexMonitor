@@ -14,6 +14,7 @@ import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Users from "lucide-react/dist/esm/icons/users";
 import Wrench from "lucide-react/dist/esm/icons/wrench";
 import X from "lucide-react/dist/esm/icons/x";
+import { useI18n } from "@/i18n/useI18n";
 import { exportMarkdownFile } from "@services/tauri";
 import { pushErrorToast } from "@services/toasts";
 import type { ConversationItem } from "../../../types";
@@ -128,6 +129,7 @@ const ImageLightbox = memo(function ImageLightbox({
   activeIndex: number;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const activeImage = images[activeIndex];
 
   useEffect(() => {
@@ -169,7 +171,7 @@ const ImageLightbox = memo(function ImageLightbox({
           type="button"
           className="message-image-lightbox-close"
           onClick={onClose}
-          aria-label="Close image preview"
+          aria-label={t("messages.image.closePreview")}
         >
           <X size={16} aria-hidden />
         </button>
@@ -369,6 +371,7 @@ export const MessageRow = memo(function MessageRow({
   onOpenFileLinkMenu,
   onOpenThreadLink,
 }: MessageRowProps) {
+  const { t } = useI18n();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const hasText = item.text.trim().length > 0;
   const imageItems = useMemo(() => {
@@ -421,8 +424,8 @@ export const MessageRow = memo(function MessageRow({
             type="button"
             className="ghost message-quote-button"
             onClick={() => onQuote(item)}
-            aria-label="Quote message"
-            title="Quote message"
+            aria-label={t("messages.message.quote")}
+            title={t("messages.message.quote")}
           >
             <Quote size={14} aria-hidden />
           </button>
@@ -431,8 +434,8 @@ export const MessageRow = memo(function MessageRow({
           type="button"
           className={`ghost message-copy-button${isCopied ? " is-copied" : ""}`}
           onClick={() => onCopy(item)}
-          aria-label="Copy message"
-          title="Copy message"
+          aria-label={t("messages.message.copy")}
+          title={t("messages.message.copy")}
         >
           <span className="message-copy-icon" aria-hidden>
             <Copy className="message-copy-icon-copy" size={14} />
@@ -455,6 +458,7 @@ export const ReasoningRow = memo(function ReasoningRow({
   onOpenFileLinkMenu,
   onOpenThreadLink,
 }: ReasoningRowProps) {
+  const { t } = useI18n();
   const { summaryTitle, bodyText, hasBody } = parsed;
   const reasoningTone: StatusTone = hasBody ? "completed" : "processing";
   return (
@@ -464,7 +468,7 @@ export const ReasoningRow = memo(function ReasoningRow({
         className="tool-inline-bar-toggle"
         onClick={() => onToggle(item.id)}
         aria-expanded={isExpanded}
-        aria-label="Toggle reasoning details"
+        aria-label={t("messages.reasoning.toggleDetails")}
       />
       <div className="tool-inline-content">
         <button
@@ -557,6 +561,7 @@ export const ToolRow = memo(function ToolRow({
   onOpenThreadLink,
   onRequestAutoScroll,
 }: ToolRowProps) {
+  const { t } = useI18n();
   const isFileChange = item.toolType === "fileChange";
   const isCommand = item.toolType === "commandExecution";
   const isPlan = item.toolType === "plan";
@@ -629,16 +634,18 @@ export const ToolRow = memo(function ToolRow({
       try {
         await exportMarkdownFile(output, buildPlanExportFileName(item.id));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to export plan.";
+        const details =
+          error instanceof Error ? error.message : t("errors.planExport.fallbackDetails");
         pushErrorToast({
-          title: "Plan export failed",
-          message,
+          title: t("errors.planExport.title"),
+          message: t("errors.planExport.message"),
+          details,
         });
       } finally {
         setIsExportingPlan(false);
       }
     },
-    [item.id, summary.output],
+    [item.id, summary.output, t],
   );
 
   return (
@@ -648,7 +655,7 @@ export const ToolRow = memo(function ToolRow({
         className="tool-inline-bar-toggle"
         onClick={() => onToggle(item.id)}
         aria-expanded={isExpanded}
-        aria-label="Toggle tool details"
+        aria-label={t("messages.tool.toggleDetails")}
       />
       <div className="tool-inline-content">
         <button

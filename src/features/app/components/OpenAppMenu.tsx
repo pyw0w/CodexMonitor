@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import * as Sentry from "@sentry/react";
+import { useI18n } from "@/i18n/useI18n";
 import { openWorkspaceIn } from "../../../services/tauri";
 import { pushErrorToast } from "../../../services/toasts";
 import type { OpenAppTarget } from "../../../types";
@@ -39,6 +40,7 @@ export function OpenAppMenu({
   onSelectOpenAppId,
   iconById = {},
 }: OpenAppMenuProps) {
+  const { t } = useI18n();
   const openMenu = useMenuController();
   const { isOpen: openMenuOpen, containerRef: openMenuRef } = openMenu;
   const availableTargets =
@@ -71,7 +73,7 @@ export function OpenAppMenu({
       DEFAULT_OPEN_APP_TARGETS.find((target) => target.id === DEFAULT_OPEN_APP_ID)
         ?.label ??
       DEFAULT_OPEN_APP_TARGETS[0]?.label ??
-      "Open",
+      t("openApp.menu.fallbackLabel"),
     icon: getKnownOpenAppIcon(DEFAULT_OPEN_APP_ID) ?? GENERIC_APP_ICON,
     target:
       DEFAULT_OPEN_APP_TARGETS.find((target) => target.id === DEFAULT_OPEN_APP_ID) ??
@@ -90,8 +92,8 @@ export function OpenAppMenu({
     fallbackTarget;
 
   const reportOpenError = (error: unknown, target: OpenTarget) => {
-    const message = error instanceof Error ? error.message : String(error);
-    Sentry.captureException(error instanceof Error ? error : new Error(message), {
+    const details = error instanceof Error ? error.message : String(error);
+    Sentry.captureException(error instanceof Error ? error : new Error(details), {
       tags: {
         feature: "open-app-menu",
       },
@@ -104,11 +106,12 @@ export function OpenAppMenu({
       },
     });
     pushErrorToast({
-      title: "Couldn’t open workspace",
-      message,
+      title: t("errors.openWorkspace.title"),
+      message: t("errors.openWorkspace.message"),
+      details,
     });
     console.warn("Failed to open workspace in target app", {
-      message,
+      details,
       path,
       targetId: target.id,
     });
@@ -177,10 +180,10 @@ export function OpenAppMenu({
 
   const selectedCanOpen = canOpenTarget(selectedOpenTarget);
   const openLabel = selectedCanOpen
-    ? `Open in ${selectedOpenTarget.label}`
+    ? t("openApp.menu.openIn", { app: selectedOpenTarget.label })
     : selectedOpenTarget.target.kind === "command"
-      ? "Set command in Settings"
-      : "Set app name in Settings";
+      ? t("openApp.menu.setCommandInSettings")
+      : t("openApp.menu.setAppNameInSettings");
 
   return (
     <SplitActionMenu
@@ -194,7 +197,7 @@ export function OpenAppMenu({
           onClick={handleOpen}
           disabled={!selectedCanOpen}
           data-tauri-drag-region="false"
-          aria-label={`Open in ${selectedOpenTarget.label}`}
+          aria-label={t("openApp.menu.openIn", { app: selectedOpenTarget.label })}
           title={openLabel}
         >
           <span className="open-app-label">
@@ -211,8 +214,8 @@ export function OpenAppMenu({
       isOpen={openMenuOpen}
       onToggle={openMenu.toggle}
       toggleClassName="ghost main-header-action open-app-toggle"
-      toggleAriaLabel="Select editor"
-      toggleTitle="Select editor"
+      toggleAriaLabel={t("openApp.menu.selectEditor")}
+      toggleTitle={t("openApp.menu.selectEditor")}
       toggleIcon={<ChevronDown size={14} aria-hidden />}
       popoverClassName="open-app-dropdown"
       popoverRole="menu"

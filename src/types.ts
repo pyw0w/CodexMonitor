@@ -173,7 +173,7 @@ export type RemoteBackendTarget = {
   lastConnectedAtMs?: number | null;
 };
 export type ThemePreference = "system" | "light" | "dark" | "dim";
-export type UiLanguagePreference = "system" | "en" | "zh-CN";
+export type UiLanguagePreference = "system" | "en" | "ru";
 export type PersonalityPreference = "friendly" | "pragmatic";
 export type FollowUpMessageBehavior = "queue" | "steer";
 export type ComposerSendIntent = "default" | "queue" | "steer";

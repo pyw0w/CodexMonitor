@@ -17,7 +17,7 @@ export type I18nValue = {
 
 function fallbackTranslate(key: string, params?: TranslationParams): string {
   const english = dictionaries.en[key] ?? key;
-  return formatTranslation(english, params);
+  return formatTranslation(english, DEFAULT_LOCALE, params);
 }
 
 export const I18nContext = createContext<I18nValue>({
@@ -34,7 +34,7 @@ type I18nProviderProps = {
 
 export function I18nProvider({ children, languagePreference }: I18nProviderProps) {
   const resolvedPreference: UiLanguagePreference = (() => {
-    if (languagePreference === "en" || languagePreference === "zh-CN") {
+    if (languagePreference === "en" || languagePreference === "ru") {
       return languagePreference;
     }
     return "system";
@@ -52,7 +52,7 @@ export function I18nProvider({ children, languagePreference }: I18nProviderProps
         if (import.meta.env.DEV && !localized && !english) {
           console.warn(`[i18n] Missing translation key: ${key}`);
         }
-        return formatTranslation(template, params);
+        return formatTranslation(template, locale, params);
       },
       hasKey: (key) => hasTranslationKey(key, locale),
     };
