@@ -329,9 +329,12 @@ where
         });
     };
 
-    let current_session = {
+    let (current_session, workspace_ids) = {
         let sessions = sessions.lock().await;
-        sessions.values().next().cloned()
+        (
+            sessions.values().next().cloned(),
+            sessions.keys().cloned().collect::<Vec<_>>(),
+        )
     };
 
     let Some(current_session) = current_session else {
@@ -362,9 +365,10 @@ where
         )
         .await?;
 
-    let workspace_ids = {
-        let sessions = sessions.lock().await;
-        sessions.keys().cloned().collect::<Vec<_>>()
+    let workspace_ids = if workspace_ids.is_empty() {
+        vec![owner_workspace.id.clone()]
+    } else {
+        workspace_ids
     };
 
     let workspace_paths = {

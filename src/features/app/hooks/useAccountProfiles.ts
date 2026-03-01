@@ -118,7 +118,8 @@ export function useAccountProfiles({
       }
       setBusy(true);
       try {
-        await switchAccountProfile(profileId, activeProcessingCount > 0);
+        const result = await switchAccountProfile(profileId, activeProcessingCount > 0);
+        setActiveProfileId(result.activeProfileId ?? null);
         await refresh();
         await onAfterSwitch?.();
       } catch (error) {
