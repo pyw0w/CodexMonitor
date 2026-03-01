@@ -400,6 +400,65 @@ pub(super) async fn try_handle(
             };
             Some(state.codex_login_cancel(workspace_id).await)
         }
+        "account_profiles_list" => Some(state.account_profiles_list().await),
+        "account_profile_add_login" => {
+            let name = match parse_string(params, "name") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            let make_active = parse_optional_bool(params, "makeActive").unwrap_or(true);
+            Some(state.account_profile_add_login(name, make_active).await)
+        }
+        "account_profile_add_import" => {
+            let name = match parse_string(params, "name") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            let import_path = match parse_string(params, "importPath") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            let make_active = parse_optional_bool(params, "makeActive").unwrap_or(true);
+            Some(
+                state
+                    .account_profile_add_import(name, import_path, make_active)
+                    .await,
+            )
+        }
+        "account_profile_switch" => {
+            let profile_id = match parse_string(params, "profileId") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            let force = parse_optional_bool(params, "force").unwrap_or(false);
+            Some(state.account_profile_switch(profile_id, force).await)
+        }
+        "account_profile_sign_out" => {
+            let workspace_id = match parse_string(params, "workspaceId") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            let profile_id = parse_optional_string(params, "profileId");
+            Some(state.account_profile_sign_out(workspace_id, profile_id).await)
+        }
+        "account_profile_remove" => {
+            let profile_id = match parse_string(params, "profileId") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            Some(state.account_profile_remove(profile_id).await)
+        }
+        "account_profile_rename" => {
+            let profile_id = match parse_string(params, "profileId") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            let name = match parse_string(params, "name") {
+                Ok(value) => value,
+                Err(err) => return Some(Err(err)),
+            };
+            Some(state.account_profile_rename(profile_id, name).await)
+        }
         "skills_list" => {
             let workspace_id = match parse_string(params, "workspaceId") {
                 Ok(value) => value,

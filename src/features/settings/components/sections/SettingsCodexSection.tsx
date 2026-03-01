@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef } from "react";
+import { useState } from "react";
 import Stethoscope from "lucide-react/dist/esm/icons/stethoscope";
 import type { Dispatch, SetStateAction } from "react";
 import type {
+  AccountProfileMeta,
   AppSettings,
   CodexDoctorResult,
   CodexUpdateResult,
@@ -59,6 +61,16 @@ type SettingsCodexSectionProps = {
   onSaveGlobalAgents: () => void;
   onRefreshGlobalConfig: () => void;
   onSaveGlobalConfig: () => void;
+  accountProfiles: AccountProfileMeta[];
+  activeAccountProfileId: string | null;
+  accountProfilesBusy: boolean;
+  onRefreshAccountProfiles: () => Promise<void>;
+  onAddAccountProfileLogin: (name: string) => Promise<void>;
+  onAddAccountProfileImport: (name: string, importPath: string) => Promise<void>;
+  onSwitchAccountProfile: (profileId: string) => Promise<void>;
+  onSignOutCurrentAccountProfile: () => Promise<void>;
+  onRenameAccountProfile: (profileId: string, name: string) => Promise<void>;
+  onRemoveAccountProfile: (profileId: string) => Promise<void>;
 };
 
 const DEFAULT_REASONING_EFFORT = "medium";
@@ -145,7 +157,23 @@ export function SettingsCodexSection({
   onSaveGlobalAgents,
   onRefreshGlobalConfig,
   onSaveGlobalConfig,
+  accountProfiles,
+  activeAccountProfileId,
+  accountProfilesBusy,
+  onRefreshAccountProfiles,
+  onAddAccountProfileLogin,
+  onAddAccountProfileImport,
+  onSwitchAccountProfile,
+  onSignOutCurrentAccountProfile,
+  onRenameAccountProfile,
+  onRemoveAccountProfile,
 }: SettingsCodexSectionProps) {
+  const [newLoginProfileName, setNewLoginProfileName] = useState("");
+  const [newImportProfileName, setNewImportProfileName] = useState("");
+  const [newImportProfilePath, setNewImportProfilePath] = useState("");
+  const [renameProfileId, setRenameProfileId] = useState<string | null>(null);
+  const [renameProfileName, setRenameProfileName] = useState("");
+  const [pendingDeleteProfileId, setPendingDeleteProfileId] = useState<string | null>(null);
   const latestModelSlug = defaultModels[0]?.model ?? null;
   const savedModelSlug = useMemo(
     () => coerceSavedModelSlug(appSettings.lastComposerModelId, defaultModels),
@@ -392,6 +420,207 @@ export function SettingsCodexSection({
       <div className="settings-divider" />
       <div className="settings-field-label settings-field-label--section">
         Default parameters
+      </div>
+
+      <div className="settings-divider" />
+      <div className="settings-field-label settings-field-label--section">
+        Account profiles
+      </div>
+      <div className="settings-field">
+        <div className="settings-help">
+          Save multiple account profiles and switch quickly between them.
+        </div>
+        <div className="settings-field-row">
+          <input
+            className="settings-input settings-input--compact"
+            value={newLoginProfileName}
+            placeholder="New login profile name"
+            onChange={(event) => setNewLoginProfileName(event.target.value)}
+          />
+          <button
+            type="button"
+            className="ghost settings-button-compact"
+            onClick={() => {
+              const name = newLoginProfileName.trim();
+              if (!name) {
+                return;
+              }
+              void onAddAccountProfileLogin(name);
+              setNewLoginProfileName("");
+            }}
+            disabled={accountProfilesBusy}
+          >
+            Add account (Login)
+          </button>
+        </div>
+        <div className="settings-field-row">
+          <input
+            className="settings-input settings-input--compact"
+            value={newImportProfileName}
+            placeholder="Import profile name"
+            onChange={(event) => setNewImportProfileName(event.target.value)}
+          />
+          <input
+            className="settings-input settings-input--compact"
+            value={newImportProfilePath}
+            placeholder="Path to CODEX_HOME"
+            onChange={(event) => setNewImportProfilePath(event.target.value)}
+          />
+          <button
+            type="button"
+            className="ghost settings-button-compact"
+            onClick={() => {
+              const name = newImportProfileName.trim();
+              if (!name) {
+                return;
+              }
+              const importPath = newImportProfilePath.trim();
+              if (!importPath) {
+                return;
+              }
+              void onAddAccountProfileImport(name, importPath);
+              setNewImportProfileName("");
+              setNewImportProfilePath("");
+            }}
+            disabled={accountProfilesBusy}
+          >
+            Import account
+          </button>
+          <button
+            type="button"
+            className="ghost settings-button-compact"
+            onClick={() => {
+              void onRefreshAccountProfiles();
+            }}
+            disabled={accountProfilesBusy}
+          >
+            Refresh
+          </button>
+        </div>
+        <div className="settings-field-row">
+          <button
+            type="button"
+            className="ghost settings-button-compact"
+            onClick={() => {
+              void onSignOutCurrentAccountProfile();
+            }}
+            disabled={accountProfilesBusy}
+          >
+            Sign out current
+          </button>
+        </div>
+        <div className="settings-mobile-remotes" role="list" aria-label="Account profiles">
+          {accountProfiles.length === 0 && (
+            <div className="settings-help">No saved profiles yet.</div>
+          )}
+          {accountProfiles.map((profile) => {
+            const isActive = profile.id === activeAccountProfileId;
+            return (
+              <div className="settings-mobile-remote" role="listitem" key={profile.id}>
+                <div className="settings-mobile-remote-main">
+                  <div className="settings-mobile-remote-name-row">
+                    <div className="settings-mobile-remote-name">{profile.name}</div>
+                    {isActive && <span className="settings-mobile-remote-badge">Active</span>}
+                  </div>
+                  <div className="settings-mobile-remote-meta">Source: {profile.source}</div>
+                </div>
+                <div className="settings-mobile-remote-actions">
+                  <button
+                    type="button"
+                    className="ghost settings-mobile-remote-action"
+                    onClick={() => {
+                      void onSwitchAccountProfile(profile.id);
+                    }}
+                    disabled={isActive || accountProfilesBusy}
+                  >
+                    {isActive ? "Using" : "Use"}
+                  </button>
+                  {renameProfileId === profile.id ? (
+                    <>
+                      <input
+                        className="settings-input settings-input--compact"
+                        value={renameProfileName}
+                        onChange={(event) => setRenameProfileName(event.target.value)}
+                        placeholder="Profile name"
+                      />
+                      <button
+                        type="button"
+                        className="ghost settings-mobile-remote-action"
+                        onClick={() => {
+                          const next = renameProfileName.trim();
+                          if (!next) {
+                            return;
+                          }
+                          void onRenameAccountProfile(profile.id, next);
+                          setRenameProfileId(null);
+                          setRenameProfileName("");
+                        }}
+                        disabled={accountProfilesBusy}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost settings-mobile-remote-action"
+                        onClick={() => {
+                          setRenameProfileId(null);
+                          setRenameProfileName("");
+                        }}
+                        disabled={accountProfilesBusy}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ghost settings-mobile-remote-action"
+                      onClick={() => {
+                        setRenameProfileId(profile.id);
+                        setRenameProfileName(profile.name);
+                      }}
+                      disabled={accountProfilesBusy}
+                    >
+                      Rename
+                    </button>
+                  )}
+                  {pendingDeleteProfileId === profile.id ? (
+                    <>
+                      <button
+                        type="button"
+                        className="ghost settings-mobile-remote-action settings-mobile-remote-action-danger"
+                        onClick={() => {
+                          void onRemoveAccountProfile(profile.id);
+                          setPendingDeleteProfileId(null);
+                        }}
+                        disabled={accountProfilesBusy}
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost settings-mobile-remote-action"
+                        onClick={() => setPendingDeleteProfileId(null)}
+                        disabled={accountProfilesBusy}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ghost settings-mobile-remote-action settings-mobile-remote-action-danger"
+                      onClick={() => setPendingDeleteProfileId(profile.id)}
+                      disabled={accountProfilesBusy}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <SettingsToggleRow

@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use tokio::sync::Mutex;
 
 use crate::codex::config as codex_config;
+use crate::shared::account_profiles_core::apply_active_account_profile_env;
 use crate::storage::write_settings;
 use crate::types::AppSettings;
 
@@ -16,6 +17,7 @@ fn normalize_personality(value: &str) -> Option<&'static str> {
 
 pub(crate) async fn get_app_settings_core(app_settings: &Mutex<AppSettings>) -> AppSettings {
     let mut settings = app_settings.lock().await.clone();
+    let _ = apply_active_account_profile_env(&settings);
     if let Ok(Some(collaboration_modes_enabled)) = codex_config::read_collaboration_modes_enabled()
     {
         settings.collaboration_modes_enabled = collaboration_modes_enabled;
@@ -49,6 +51,7 @@ pub(crate) async fn update_app_settings_core(
     let _ = codex_config::write_unified_exec_enabled(settings.unified_exec_enabled);
     let _ = codex_config::write_apps_enabled(settings.experimental_apps_enabled);
     let _ = codex_config::write_personality(settings.personality.as_str());
+    let _ = apply_active_account_profile_env(&settings);
     write_settings(settings_path, &settings)?;
     let mut current = app_settings.lock().await;
     *current = settings.clone();

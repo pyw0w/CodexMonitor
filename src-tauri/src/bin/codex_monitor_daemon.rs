@@ -81,8 +81,8 @@ use shared::codex_core::CodexLoginCancelState;
 use shared::process_core::kill_child_process_tree;
 use shared::prompts_core::{self, CustomPromptEntry};
 use shared::{
-    agents_config_core, codex_aux_core, codex_core, files_core, git_core, git_ui_core,
-    local_usage_core, settings_core, workspaces_core, worktree_core,
+    account_profiles_core, agents_config_core, codex_aux_core, codex_core, files_core, git_core,
+    git_ui_core, local_usage_core, settings_core, workspaces_core, worktree_core,
 };
 use storage::{read_settings, read_workspaces};
 use types::{
@@ -172,6 +172,7 @@ impl DaemonState {
         let settings_path = config.data_dir.join("settings.json");
         let workspaces = read_workspaces(&storage_path).unwrap_or_default();
         let app_settings = read_settings(&settings_path).unwrap_or_default();
+        let _ = account_profiles_core::apply_active_account_profile_env(&app_settings);
         let daemon_binary_path = std::env::current_exe()
             .ok()
             .and_then(|path| path.to_str().map(str::to_string));
@@ -897,6 +898,118 @@ impl DaemonState {
     async fn codex_login_cancel(&self, workspace_id: String) -> Result<Value, String> {
         codex_core::codex_login_cancel_core(&self.sessions, &self.codex_login_cancels, workspace_id)
             .await
+    }
+
+    async fn account_profiles_list(&self) -> Result<Value, String> {
+        serde_json::to_value(account_profiles_core::account_profiles_list_core(&self.app_settings).await)
+            .map_err(|err| err.to_string())
+    }
+
+    async fn account_profile_add_login(
+        &self,
+        name: String,
+        make_active: bool,
+    ) -> Result<Value, String> {
+        serde_json::to_value(
+            account_profiles_core::account_profile_add_login_core(
+                name,
+                make_active,
+                &self.app_settings,
+                &self.settings_path,
+            )
+            .await?,
+        )
+        .map_err(|err| err.to_string())
+    }
+
+    async fn account_profile_add_import(
+        &self,
+        name: String,
+        import_path: String,
+        make_active: bool,
+    ) -> Result<Value, String> {
+        serde_json::to_value(
+            account_profiles_core::account_profile_add_import_core(
+                name,
+                import_path,
+                make_active,
+                &self.app_settings,
+                &self.settings_path,
+            )
+            .await?,
+        )
+        .map_err(|err| err.to_string())
+    }
+
+    async fn account_profile_switch(
+        &self,
+        profile_id: String,
+        force: bool,
+    ) -> Result<Value, String> {
+        serde_json::to_value(
+            account_profiles_core::account_profile_switch_core(
+                profile_id,
+                force,
+                &self.workspaces,
+                &self.sessions,
+                &self.app_settings,
+                &self.settings_path,
+                |entry, default_bin, codex_args, codex_home| {
+                    spawn_with_client(
+                        self.event_sink.clone(),
+                        env!("CARGO_PKG_VERSION").to_string(),
+                        entry,
+                        default_bin,
+                        codex_args,
+                        codex_home,
+                    )
+                },
+            )
+            .await?,
+        )
+        .map_err(|err| err.to_string())
+    }
+
+    async fn account_profile_sign_out(
+        &self,
+        workspace_id: String,
+        profile_id: Option<String>,
+    ) -> Result<Value, String> {
+        serde_json::to_value(
+            account_profiles_core::account_profile_sign_out_core(
+                workspace_id,
+                profile_id,
+                &self.sessions,
+                &self.app_settings,
+            )
+            .await?,
+        )
+        .map_err(|err| err.to_string())
+    }
+
+    async fn account_profile_remove(&self, profile_id: String) -> Result<Value, String> {
+        serde_json::to_value(
+            account_profiles_core::account_profile_remove_core(
+                profile_id,
+                &self.app_settings,
+                &self.settings_path,
+            )
+            .await?,
+        )
+        .map_err(|err| err.to_string())
+    }
+
+    async fn account_profile_rename(&self, profile_id: String, name: String) -> Result<Value, String> {
+        serde_json::to_value(
+            account_profiles_core::account_profile_rename_core(
+                profile_id,
+                name,
+                &self.app_settings,
+                &self.settings_path,
+            )
+            .await?,
+        )
+        .map_err(|err| err.to_string())
     }
 
     async fn skills_list(&self, workspace_id: String) -> Result<Value, String> {

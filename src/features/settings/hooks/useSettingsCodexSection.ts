@@ -2,11 +2,21 @@ import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import type {
+  AccountProfileMeta,
   AppSettings,
   CodexDoctorResult,
   CodexUpdateResult,
   WorkspaceInfo,
 } from "@/types";
+import {
+  addAccountProfileImport,
+  addAccountProfileLogin,
+  listAccountProfiles,
+  removeAccountProfile,
+  renameAccountProfile,
+  signOutAccountProfile,
+  switchAccountProfile,
+} from "@services/tauri";
 import { useGlobalAgentsMd } from "./useGlobalAgentsMd";
 import { useGlobalCodexConfigToml } from "./useGlobalCodexConfigToml";
 import { useSettingsDefaultModels } from "./useSettingsDefaultModels";
@@ -73,6 +83,16 @@ export type SettingsCodexSectionProps = {
   onSaveGlobalAgents: () => void;
   onRefreshGlobalConfig: () => void;
   onSaveGlobalConfig: () => void;
+  accountProfiles: AccountProfileMeta[];
+  activeAccountProfileId: string | null;
+  accountProfilesBusy: boolean;
+  onRefreshAccountProfiles: () => Promise<void>;
+  onAddAccountProfileLogin: (name: string) => Promise<void>;
+  onAddAccountProfileImport: (name: string, importPath: string) => Promise<void>;
+  onSwitchAccountProfile: (profileId: string) => Promise<void>;
+  onSignOutCurrentAccountProfile: () => Promise<void>;
+  onRenameAccountProfile: (profileId: string, name: string) => Promise<void>;
+  onRemoveAccountProfile: (profileId: string) => Promise<void>;
 };
 
 export const useSettingsCodexSection = ({
@@ -93,6 +113,9 @@ export const useSettingsCodexSection = ({
     status: "idle" | "running" | "done";
     result: CodexUpdateResult | null;
   }>({ status: "idle", result: null });
+  const [accountProfiles, setAccountProfiles] = useState<AccountProfileMeta[]>([]);
+  const [activeAccountProfileId, setActiveAccountProfileId] = useState<string | null>(null);
+  const [accountProfilesBusy, setAccountProfilesBusy] = useState(false);
 
   const {
     models: defaultModels,
@@ -241,6 +264,87 @@ export const useSettingsCodexSection = ({
     }
   };
 
+  const refreshAccountProfiles = async () => {
+    const response = await listAccountProfiles();
+    setAccountProfiles(response.profiles ?? []);
+    setActiveAccountProfileId(response.activeProfileId ?? null);
+  };
+
+  const withAccountProfilesBusy = async (fn: () => Promise<void>) => {
+    setAccountProfilesBusy(true);
+    try {
+      await fn();
+      await refreshAccountProfiles();
+    } finally {
+      setAccountProfilesBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshAccountProfiles().catch(() => {
+      // Optional on unsupported backends.
+    });
+  }, []);
+
+  const handleAddAccountProfileLogin = async (name: string) => {
+    const normalized = name.trim();
+    if (!normalized) {
+      return;
+    }
+    await withAccountProfilesBusy(async () => {
+      await addAccountProfileLogin(normalized, true);
+    });
+  };
+
+  const handleAddAccountProfileImport = async (name: string, importPath: string) => {
+    const normalized = name.trim();
+    const normalizedPath = importPath.trim();
+    if (!normalized || !normalizedPath) {
+      return;
+    }
+    await withAccountProfilesBusy(async () => {
+      await addAccountProfileImport(normalized, normalizedPath, false);
+    });
+  };
+
+  const handleSwitchAccountProfile = async (profileId: string) => {
+    if (!profileId) {
+      return;
+    }
+    await withAccountProfilesBusy(async () => {
+      await switchAccountProfile(profileId, false);
+    });
+  };
+
+  const handleSignOutCurrentAccountProfile = async () => {
+    const workspaceId = projects.find((workspace) => workspace.connected)?.id ?? projects[0]?.id;
+    if (!workspaceId) {
+      return;
+    }
+    await withAccountProfilesBusy(async () => {
+      await signOutAccountProfile(workspaceId, activeAccountProfileId);
+    });
+  };
+
+  const handleRenameAccountProfile = async (profileId: string, name: string) => {
+    const normalized = name.trim();
+    if (!profileId || !normalized) {
+      return;
+    }
+    await withAccountProfilesBusy(async () => {
+      await renameAccountProfile(profileId, normalized);
+    });
+  };
+
+  const handleRemoveAccountProfile = async (profileId: string) => {
+    if (!profileId) {
+      return;
+    }
+    await withAccountProfilesBusy(async () => {
+      await removeAccountProfile(profileId);
+    });
+  };
+
   return {
     appSettings,
     onUpdateAppSettings,
@@ -291,5 +395,15 @@ export const useSettingsCodexSection = ({
     onSaveGlobalConfig: () => {
       void saveGlobalConfig();
     },
+    accountProfiles,
+    activeAccountProfileId,
+    accountProfilesBusy,
+    onRefreshAccountProfiles: refreshAccountProfiles,
+    onAddAccountProfileLogin: handleAddAccountProfileLogin,
+    onAddAccountProfileImport: handleAddAccountProfileImport,
+    onSwitchAccountProfile: handleSwitchAccountProfile,
+    onSignOutCurrentAccountProfile: handleSignOutCurrentAccountProfile,
+    onRenameAccountProfile: handleRenameAccountProfile,
+    onRemoveAccountProfile: handleRemoveAccountProfile,
   };
 };

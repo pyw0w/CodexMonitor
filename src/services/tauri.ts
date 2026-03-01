@@ -760,6 +760,67 @@ export async function cancelCodexLogin(workspaceId: string) {
   );
 }
 
+export async function listAccountProfiles() {
+  return invoke<{
+    profiles: Array<{
+      id: string;
+      name: string;
+      source: "login" | "import";
+      lastUsedAtMs: number | null;
+      createdAtMs: number;
+    }>;
+    activeProfileId: string | null;
+  }>("account_profiles_list");
+}
+
+export async function addAccountProfileLogin(name: string, makeActive = true) {
+  return invoke<{
+    profileId: string;
+    activeProfileId: string | null;
+  }>("account_profile_add_login", { name, makeActive });
+}
+
+export async function addAccountProfileImport(
+  name: string,
+  importPath: string,
+  makeActive = true,
+) {
+  return invoke<{
+    profileId: string;
+    activeProfileId: string | null;
+  }>("account_profile_add_import", { name, importPath, makeActive });
+}
+
+export async function switchAccountProfile(profileId: string, force = false) {
+  return invoke<{
+    switched: boolean;
+    requiresConfirmation: boolean;
+    interruptedRunsCount: number;
+    activeProfileId: string | null;
+  }>("account_profile_switch", { profileId, force });
+}
+
+export async function signOutAccountProfile(
+  workspaceId: string,
+  profileId?: string | null,
+) {
+  return invoke<{ signedOut: boolean }>("account_profile_sign_out", {
+    workspaceId,
+    profileId: profileId ?? null,
+  });
+}
+
+export async function removeAccountProfile(profileId: string) {
+  return invoke<{ removed: boolean; activeProfileId: string | null }>(
+    "account_profile_remove",
+    { profileId },
+  );
+}
+
+export async function renameAccountProfile(profileId: string, name: string) {
+  return invoke<{ updated: boolean }>("account_profile_rename", { profileId, name });
+}
+
 export async function getSkillsList(workspaceId: string) {
   return invoke<any>("skills_list", { workspaceId });
 }

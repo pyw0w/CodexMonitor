@@ -1,4 +1,5 @@
 import type {
+  AccountProfileMeta,
   AccountSnapshot,
   RequestUserInputRequest,
   RateLimitSnapshot,
@@ -84,6 +85,15 @@ type SidebarProps = {
   onSwitchAccount: () => void;
   onCancelSwitchAccount: () => void;
   accountSwitching: boolean;
+  accountProfiles: AccountProfileMeta[];
+  activeAccountProfileId: string | null;
+  accountProfilesBusy: boolean;
+  onSwitchAccountProfile: (profileId: string) => void;
+  onAddAccountProfileLogin: (name: string) => void;
+  onAddAccountProfileImport: (name: string, importPath: string) => void;
+  onSignOutAccountProfile: () => void;
+  onRenameAccountProfile: (profileId: string, name: string) => void;
+  onRemoveAccountProfile: (profileId: string) => void;
   onOpenSettings: () => void;
   onOpenDebug: () => void;
   showDebugButton: boolean;
@@ -146,6 +156,15 @@ export const Sidebar = memo(function Sidebar({
   onSwitchAccount,
   onCancelSwitchAccount,
   accountSwitching,
+  accountProfiles,
+  activeAccountProfileId,
+  accountProfilesBusy,
+  onSwitchAccountProfile,
+  onAddAccountProfileLogin,
+  onAddAccountProfileImport,
+  onSignOutAccountProfile,
+  onRenameAccountProfile,
+  onRemoveAccountProfile,
   onOpenSettings,
   onOpenDebug,
   showDebugButton,
@@ -1208,6 +1227,15 @@ export const Sidebar = memo(function Sidebar({
         accountCancelDisabled={accountCancelDisabled}
         onSwitchAccount={onSwitchAccount}
         onCancelSwitchAccount={onCancelSwitchAccount}
+        accountProfiles={accountProfiles}
+        activeAccountProfileId={activeAccountProfileId}
+        accountProfilesBusy={accountProfilesBusy}
+        onSwitchAccountProfile={onSwitchAccountProfile}
+        onAddAccountProfileLogin={onAddAccountProfileLogin}
+        onAddAccountProfileImport={onAddAccountProfileImport}
+        onSignOutAccountProfile={onSignOutAccountProfile}
+        onRenameAccountProfile={onRenameAccountProfile}
+        onRemoveAccountProfile={onRemoveAccountProfile}
       />
     </aside>
   );

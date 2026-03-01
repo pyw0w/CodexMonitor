@@ -374,6 +374,17 @@ pub(crate) struct RemoteBackendTarget {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct AccountProfileMeta {
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) source: String,
+    #[serde(default)]
+    pub(crate) last_used_at_ms: Option<i64>,
+    pub(crate) created_at_ms: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct AppSettings {
     #[serde(default, rename = "codexBin")]
     pub(crate) codex_bin: Option<String>,
@@ -633,6 +644,10 @@ pub(crate) struct AppSettings {
         rename = "composerCodeBlockCopyUseModifier"
     )]
     pub(crate) composer_code_block_copy_use_modifier: bool,
+    #[serde(default = "default_account_profiles", rename = "accountProfiles")]
+    pub(crate) account_profiles: Vec<AccountProfileMeta>,
+    #[serde(default, rename = "activeAccountProfileId")]
+    pub(crate) active_account_profile_id: Option<String>,
     #[serde(default = "default_workspace_groups", rename = "workspaceGroups")]
     pub(crate) workspace_groups: Vec<WorkspaceGroup>,
     #[serde(default = "default_open_app_targets", rename = "openAppTargets")]
@@ -983,6 +998,10 @@ fn default_composer_code_block_copy_use_modifier() -> bool {
     false
 }
 
+fn default_account_profiles() -> Vec<AccountProfileMeta> {
+    Vec::new()
+}
+
 fn default_workspace_groups() -> Vec<WorkspaceGroup> {
     Vec::new()
 }
@@ -1181,6 +1200,8 @@ impl Default for AppSettings {
                 default_composer_fence_auto_wrap_paste_code_like(),
             composer_list_continuation: default_composer_list_continuation(),
             composer_code_block_copy_use_modifier: default_composer_code_block_copy_use_modifier(),
+            account_profiles: default_account_profiles(),
+            active_account_profile_id: None,
             workspace_groups: default_workspace_groups(),
             open_app_targets: default_open_app_targets(),
             selected_open_app_id: default_selected_open_app_id(),
@@ -1341,6 +1362,8 @@ mod tests {
         assert!(!settings.composer_fence_auto_wrap_paste_code_like);
         assert!(!settings.composer_list_continuation);
         assert!(!settings.composer_code_block_copy_use_modifier);
+        assert!(settings.account_profiles.is_empty());
+        assert!(settings.active_account_profile_id.is_none());
         assert!(settings.workspace_groups.is_empty());
         let expected_open_id = if cfg!(target_os = "windows") {
             "finder"

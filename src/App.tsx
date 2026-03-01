@@ -130,6 +130,7 @@ import { computePlanFollowupState } from "@/features/messages/utils/messageRende
 import { OPEN_APP_STORAGE_KEY } from "@app/constants";
 import { useOpenAppIcons } from "@app/hooks/useOpenAppIcons";
 import { useAccountSwitching } from "@app/hooks/useAccountSwitching";
+import { useAccountProfiles } from "@app/hooks/useAccountProfiles";
 import { useNewAgentDraft } from "@app/hooks/useNewAgentDraft";
 import { useSystemNotificationThreadLinks } from "@app/hooks/useSystemNotificationThreadLinks";
 import { useThreadListSortKey } from "@app/hooks/useThreadListSortKey";
@@ -1024,6 +1025,33 @@ function MainApp() {
     accountByWorkspace,
     refreshAccountInfo,
     refreshAccountRateLimits,
+    alertError,
+  });
+  const activeProcessingCount = useMemo(
+    () => Object.values(threadStatusById).filter((status) => status?.isProcessing).length,
+    [threadStatusById],
+  );
+  const {
+    profiles: accountProfiles,
+    activeProfileId: activeAccountProfileId,
+    busy: accountProfilesBusy,
+    addProfileWithLogin,
+    addProfileFromImport,
+    switchProfile,
+    signOutActiveProfile,
+    renameProfile,
+    removeProfile,
+  } = useAccountProfiles({
+    activeWorkspaceId,
+    activeProcessingCount,
+    onAfterSwitch: async () => {
+      if (!activeWorkspaceId) {
+        return;
+      }
+      await refreshAccountInfo(activeWorkspaceId);
+      await refreshAccountRateLimits(activeWorkspaceId);
+    },
+    onAfterAddLogin: handleSwitchAccount,
     alertError,
   });
   const {
@@ -2234,6 +2262,15 @@ function MainApp() {
     onSwitchAccount: handleSwitchAccount,
     onCancelSwitchAccount: handleCancelSwitchAccount,
     accountSwitching,
+    accountProfiles,
+    activeAccountProfileId,
+    accountProfilesBusy,
+    onSwitchAccountProfile: switchProfile,
+    onAddAccountProfileLogin: addProfileWithLogin,
+    onAddAccountProfileImport: addProfileFromImport,
+    onSignOutAccountProfile: signOutActiveProfile,
+    onRenameAccountProfile: renameProfile,
+    onRemoveAccountProfile: removeProfile,
     codeBlockCopyUseModifier: appSettings.composerCodeBlockCopyUseModifier,
     showMessageFilePath: appSettings.showMessageFilePath,
     openAppTargets: appSettings.openAppTargets,

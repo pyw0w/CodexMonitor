@@ -1492,6 +1492,77 @@
   height: 12px;
 }
 
+.sidebar-account-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 2px 0;
+}
+
+.sidebar-account-profile-list {
+  display: grid;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.sidebar-account-profile-empty {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.sidebar-account-profile-item {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.sidebar-account-profile-switch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.sidebar-account-profile-badge {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.sidebar-account-profile-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.sidebar-account-profile-actions .ghost {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.sidebar-account-actions-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar-account-actions-stack .ghost {
+  justify-content: flex-start;
+  font-size: 11px;
+}
+
+.sidebar-account-form-row {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar-account-inline-input {
+  width: 100%;
+  font-size: 11px;
+  min-height: 28px;
+}
+
 .sidebar-corner-actions {
   position: absolute;
   left: var(--sidebar-padding);

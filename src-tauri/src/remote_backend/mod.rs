@@ -145,7 +145,14 @@ pub(crate) async fn call_remote(
 fn can_retry_after_disconnect(method: &str) -> bool {
     matches!(
         method,
-        "account_rate_limits"
+        "account_profile_add_import"
+            | "account_profile_add_login"
+            | "account_profile_remove"
+            | "account_profile_rename"
+            | "account_profile_sign_out"
+            | "account_profile_switch"
+            | "account_profiles_list"
+            | "account_rate_limits"
             | "account_read"
             | "apps_list"
             | "collaboration_mode_list"

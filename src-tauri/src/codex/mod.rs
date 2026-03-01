@@ -14,6 +14,7 @@ use crate::backend::events::AppServerEvent;
 use crate::event_sink::TauriEventSink;
 use crate::remote_backend;
 use crate::shared::agents_config_core;
+use crate::shared::account_profiles_core;
 use crate::shared::codex_core;
 use crate::state::AppState;
 use crate::types::WorkspaceEntry;
@@ -757,6 +758,211 @@ pub(crate) async fn codex_login_cancel(
 
     codex_core::codex_login_cancel_core(&state.sessions, &state.codex_login_cancels, workspace_id)
         .await
+}
+
+#[tauri::command]
+pub(crate) async fn account_profiles_list(
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Value, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        return remote_backend::call_remote(
+            &*state,
+            app,
+            "account_profiles_list",
+            json!({}),
+        )
+        .await;
+    }
+
+    serde_json::to_value(account_profiles_core::account_profiles_list_core(&state.app_settings).await)
+        .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub(crate) async fn account_profile_add_login(
+    name: String,
+    make_active: Option<bool>,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Value, String> {
+    let make_active = make_active.unwrap_or(true);
+    if remote_backend::is_remote_mode(&*state).await {
+        return remote_backend::call_remote(
+            &*state,
+            app,
+            "account_profile_add_login",
+            json!({ "name": name, "makeActive": make_active }),
+        )
+        .await;
+    }
+
+    serde_json::to_value(
+        account_profiles_core::account_profile_add_login_core(
+            name,
+            make_active,
+            &state.app_settings,
+            &state.settings_path,
+        )
+        .await?,
+    )
+    .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub(crate) async fn account_profile_add_import(
+    name: String,
+    import_path: String,
+    make_active: Option<bool>,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Value, String> {
+    let make_active = make_active.unwrap_or(true);
+    if remote_backend::is_remote_mode(&*state).await {
+        return remote_backend::call_remote(
+            &*state,
+            app,
+            "account_profile_add_import",
+            json!({
+                "name": name,
+                "importPath": import_path,
+                "makeActive": make_active
+            }),
+        )
+        .await;
+    }
+
+    serde_json::to_value(
+        account_profiles_core::account_profile_add_import_core(
+            name,
+            import_path,
+            make_active,
+            &state.app_settings,
+            &state.settings_path,
+        )
+        .await?,
+    )
+    .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub(crate) async fn account_profile_switch(
+    profile_id: String,
+    force: Option<bool>,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Value, String> {
+    let force = force.unwrap_or(false);
+    if remote_backend::is_remote_mode(&*state).await {
+        return remote_backend::call_remote(
+            &*state,
+            app,
+            "account_profile_switch",
+            json!({ "profileId": profile_id, "force": force }),
+        )
+        .await;
+    }
+
+    serde_json::to_value(
+        account_profiles_core::account_profile_switch_core(
+            profile_id,
+            force,
+            &state.workspaces,
+            &state.sessions,
+            &state.app_settings,
+            &state.settings_path,
+            |entry, default_bin, args, home| {
+                spawn_workspace_session(entry, default_bin, args, app.clone(), home)
+            },
+        )
+        .await?,
+    )
+    .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub(crate) async fn account_profile_sign_out(
+    workspace_id: String,
+    profile_id: Option<String>,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Value, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        return remote_backend::call_remote(
+            &*state,
+            app,
+            "account_profile_sign_out",
+            json!({ "workspaceId": workspace_id, "profileId": profile_id }),
+        )
+        .await;
+    }
+
+    serde_json::to_value(
+        account_profiles_core::account_profile_sign_out_core(
+            workspace_id,
+            profile_id,
+            &state.sessions,
+            &state.app_settings,
+        )
+        .await?,
+    )
+    .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub(crate) async fn account_profile_remove(
+    profile_id: String,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Value, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        return remote_backend::call_remote(
+            &*state,
+            app,
+            "account_profile_remove",
+            json!({ "profileId": profile_id }),
+        )
+        .await;
+    }
+
+    serde_json::to_value(
+        account_profiles_core::account_profile_remove_core(
+            profile_id,
+            &state.app_settings,
+            &state.settings_path,
+        )
+        .await?,
+    )
+    .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub(crate) async fn account_profile_rename(
+    profile_id: String,
+    name: String,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Value, String> {
+    if remote_backend::is_remote_mode(&*state).await {
+        return remote_backend::call_remote(
+            &*state,
+            app,
+            "account_profile_rename",
+            json!({ "profileId": profile_id, "name": name }),
+        )
+        .await;
+    }
+
+    serde_json::to_value(
+        account_profiles_core::account_profile_rename_core(
+            profile_id,
+            name,
+            &state.app_settings,
+            &state.settings_path,
+        )
+        .await?,
+    )
+    .map_err(|err| err.to_string())
 }
 
 #[tauri::command]

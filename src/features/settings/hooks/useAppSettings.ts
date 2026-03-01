@@ -203,6 +203,8 @@ function buildDefaultSettings(): AppSettings {
     composerFenceAutoWrapPasteCodeLike: false,
     composerListContinuation: false,
     composerCodeBlockCopyUseModifier: false,
+    accountProfiles: [],
+    activeAccountProfileId: null,
     workspaceGroups: [],
     openAppTargets: DEFAULT_OPEN_APP_TARGETS,
     selectedOpenAppId: DEFAULT_OPEN_APP_ID,
@@ -272,6 +274,33 @@ function normalizeAppSettings(settings: AppSettings): AppSettings {
       settings.reviewDeliveryMode === "detached" ? "detached" : "inline",
     chatHistoryScrollbackItems,
     commitMessagePrompt,
+    accountProfiles: Array.isArray(settings.accountProfiles)
+      ? settings.accountProfiles
+          .filter(
+            (profile): profile is AppSettings["accountProfiles"][number] =>
+              typeof profile?.id === "string" &&
+              typeof profile?.name === "string" &&
+              typeof profile?.source === "string",
+          )
+          .map((profile) => ({
+            id: profile.id.trim(),
+            name: profile.name.trim() || "Account",
+            source: profile.source === "import" ? "import" : "login",
+            lastUsedAtMs:
+              typeof profile.lastUsedAtMs === "number" && Number.isFinite(profile.lastUsedAtMs)
+                ? profile.lastUsedAtMs
+                : null,
+            createdAtMs:
+              typeof profile.createdAtMs === "number" && Number.isFinite(profile.createdAtMs)
+                ? profile.createdAtMs
+                : Date.now(),
+          }))
+      : [],
+    activeAccountProfileId:
+      typeof settings.activeAccountProfileId === "string" &&
+      settings.activeAccountProfileId.trim().length > 0
+        ? settings.activeAccountProfileId
+        : null,
     openAppTargets: normalizedTargets,
     selectedOpenAppId,
   };

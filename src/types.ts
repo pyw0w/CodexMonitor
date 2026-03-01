@@ -202,6 +202,16 @@ export type OpenAppTarget = {
   args: string[];
 };
 
+export type AccountProfileSource = "login" | "import";
+
+export type AccountProfileMeta = {
+  id: string;
+  name: string;
+  source: AccountProfileSource;
+  lastUsedAtMs: number | null;
+  createdAtMs: number;
+};
+
 export type AppSettings = {
   codexBin: string | null;
   codexArgs: string | null;
@@ -272,6 +282,8 @@ export type AppSettings = {
   composerFenceAutoWrapPasteCodeLike: boolean;
   composerListContinuation: boolean;
   composerCodeBlockCopyUseModifier: boolean;
+  accountProfiles: AccountProfileMeta[];
+  activeAccountProfileId: string | null;
   workspaceGroups: WorkspaceGroup[];
   openAppTargets: OpenAppTarget[];
   selectedOpenAppId: string;

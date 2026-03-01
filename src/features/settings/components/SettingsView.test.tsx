@@ -139,6 +139,8 @@ const baseSettings: AppSettings = {
   composerFenceAutoWrapPasteCodeLike: false,
   composerListContinuation: false,
   composerCodeBlockCopyUseModifier: false,
+  accountProfiles: [],
+  activeAccountProfileId: null,
   workspaceGroups: [],
   openAppTargets: [
     {

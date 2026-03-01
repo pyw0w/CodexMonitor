@@ -60,6 +60,15 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       onSwitchAccount={options.onSwitchAccount}
       onCancelSwitchAccount={options.onCancelSwitchAccount}
       accountSwitching={options.accountSwitching}
+      accountProfiles={options.accountProfiles}
+      activeAccountProfileId={options.activeAccountProfileId}
+      accountProfilesBusy={options.accountProfilesBusy}
+      onSwitchAccountProfile={options.onSwitchAccountProfile}
+      onAddAccountProfileLogin={options.onAddAccountProfileLogin}
+      onAddAccountProfileImport={options.onAddAccountProfileImport}
+      onSignOutAccountProfile={options.onSignOutAccountProfile}
+      onRenameAccountProfile={options.onRenameAccountProfile}
+      onRemoveAccountProfile={options.onRemoveAccountProfile}
       onOpenSettings={options.onOpenSettings}
       onOpenDebug={options.onOpenDebug}
       showDebugButton={options.showDebugButton}

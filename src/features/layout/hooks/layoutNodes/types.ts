@@ -11,6 +11,7 @@ import type {
   ComposerEditorSettings,
   CustomPromptOption,
   AccountSnapshot,
+  AccountProfileMeta,
   AppMention,
   AppOption,
   DebugEntry,
@@ -133,6 +134,15 @@ export type LayoutNodesOptions = {
   onSwitchAccount: () => void;
   onCancelSwitchAccount: () => void;
   accountSwitching: boolean;
+  accountProfiles: AccountProfileMeta[];
+  activeAccountProfileId: string | null;
+  accountProfilesBusy: boolean;
+  onSwitchAccountProfile: (profileId: string) => void;
+  onAddAccountProfileLogin: (name: string) => void;
+  onAddAccountProfileImport: (name: string, importPath: string) => void;
+  onSignOutAccountProfile: () => void;
+  onRenameAccountProfile: (profileId: string, name: string) => void;
+  onRemoveAccountProfile: (profileId: string) => void;
   codeBlockCopyUseModifier: boolean;
   showMessageFilePath: boolean;
   openAppTargets: OpenAppTarget[];
