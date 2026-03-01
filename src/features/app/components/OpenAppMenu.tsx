@@ -204,7 +204,7 @@ export function OpenAppMenu({
               alt=""
               aria-hidden
             />
-            {selectedOpenTarget.label}
+            <span className="open-app-label-text">{selectedOpenTarget.label}</span>
           </span>
         </button>
       }
