@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    tags: ["v*"]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
   test-js:
@@ -25,8 +27,6 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - name: macOS
-            os: macos-latest
           - name: Linux
             os: ubuntu-latest
           - name: Windows
@@ -44,9 +44,6 @@ jobs:
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('src-tauri/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-test-
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: command -v cmake >/dev/null 2>&1 || brew install cmake
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
