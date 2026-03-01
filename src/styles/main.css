@@ -24,6 +24,7 @@
   align-items: stretch;
   column-gap: 0;
   min-width: 0;
+  flex: 1;
   overflow: hidden;
   -webkit-app-region: drag;
 }
@@ -60,9 +61,8 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  padding-left: 12px;
-  margin-left: 4px;
-  border-left: 1px solid var(--border-subtle);
+  padding-left: 0;
+  margin-left: 0;
   -webkit-app-region: no-drag;
   flex-shrink: 0;
   justify-self: end;
@@ -376,7 +376,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 7px var(--main-panel-padding);
+  padding: 7px 16px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-topbar);
   -webkit-app-region: drag;
@@ -393,11 +393,11 @@
 }
 
 .app.is-linux .main-topbar {
-  padding-right: calc(var(--main-panel-padding) + var(--window-caption-width, 0px) + var(--window-caption-gap, 0px));
+  padding-right: 16px;
 }
 
 .app.sidebar-collapsed .main-topbar {
-  padding-left: calc(var(--main-panel-padding) + var(--titlebar-inset-left, 0px) + var(--titlebar-collapsed-left-extra, 0px) + var(--titlebar-toggle-size, 28px) + var(--titlebar-toggle-title-offset, -6px));
+  padding-left: calc(16px + var(--titlebar-inset-left, 0px) + var(--titlebar-collapsed-left-extra, 0px) + var(--titlebar-toggle-size, 28px) + var(--titlebar-toggle-title-offset, -6px));
 }
 
 .app.layout-compact.sidebar-collapsed .main-topbar {
@@ -409,7 +409,7 @@
 }
 
 .app.right-panel-collapsed .main-topbar {
-  padding-right: calc(var(--main-panel-padding) + var(--window-caption-width, 0px) + var(--window-caption-gap, 0px));
+  padding-right: calc(16px + var(--window-caption-width, 0px) + var(--window-caption-gap, 0px));
 }
 
 .app.reduced-transparency .main-topbar {
