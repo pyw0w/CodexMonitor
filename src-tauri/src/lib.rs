@@ -1,12 +1,8 @@
 #[cfg(desktop)]
 use std::sync::atomic::{AtomicBool, Ordering};
-#[cfg(all(desktop, target_os = "linux"))]
-use tauri::menu::{Menu, MenuItemBuilder, PredefinedMenuItem};
 use tauri::Manager;
 #[cfg(desktop)]
 use tauri::RunEvent;
-#[cfg(all(desktop, target_os = "linux"))]
-use tauri::tray::TrayIconBuilder;
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 use tauri::WindowEvent;
 
@@ -62,67 +58,6 @@ fn keep_daemon_running_after_close(app_handle: &tauri::AppHandle) -> bool {
 async fn stop_managed_daemons_for_exit(app_handle: tauri::AppHandle) {
     let state = app_handle.state::<state::AppState>();
     let _ = tailscale::tailscale_daemon_stop(state).await;
-}
-
-#[cfg(all(desktop, target_os = "linux"))]
-const TRAY_TOGGLE_WINDOW_ID: &str = "tray_toggle_window";
-#[cfg(all(desktop, target_os = "linux"))]
-const TRAY_QUIT_ID: &str = "tray_quit";
-
-#[cfg(all(desktop, target_os = "linux"))]
-fn show_main_window(app_handle: &tauri::AppHandle<tauri::Wry>) {
-    if let Some(window) = app_handle.get_webview_window("main") {
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
-}
-
-#[cfg(all(desktop, target_os = "linux"))]
-fn hide_main_window(app_handle: &tauri::AppHandle<tauri::Wry>) {
-    if let Some(window) = app_handle.get_webview_window("main") {
-        let _ = window.hide();
-    }
-}
-
-#[cfg(all(desktop, target_os = "linux"))]
-fn toggle_main_window(app_handle: &tauri::AppHandle<tauri::Wry>) {
-    if let Some(window) = app_handle.get_webview_window("main") {
-        match window.is_visible() {
-            Ok(true) => hide_main_window(app_handle),
-            Ok(false) => show_main_window(app_handle),
-            Err(_) => show_main_window(app_handle),
-        }
-    }
-}
-
-#[cfg(all(desktop, target_os = "linux"))]
-fn build_linux_tray_icon(app_handle: &tauri::AppHandle<tauri::Wry>) -> tauri::Result<()> {
-    let toggle_item = MenuItemBuilder::with_id(TRAY_TOGGLE_WINDOW_ID, "Show / Hide").build(app_handle)?;
-    let quit_item = MenuItemBuilder::with_id(TRAY_QUIT_ID, "Quit").build(app_handle)?;
-    let tray_menu = Menu::with_items(
-        app_handle,
-        &[
-            &toggle_item,
-            &PredefinedMenuItem::separator(app_handle)?,
-            &quit_item,
-        ],
-    )?;
-
-    let mut tray_builder = TrayIconBuilder::with_id("main-tray")
-        .menu(&tray_menu)
-        .tooltip("Codex Monitor");
-    if let Some(icon) = app_handle.default_window_icon() {
-        tray_builder = tray_builder.icon(icon.clone());
-    }
-
-    let _ = tray_builder
-        .on_menu_event(|app, event| match event.id().as_ref() {
-            TRAY_TOGGLE_WINDOW_ID => toggle_main_window(app),
-            TRAY_QUIT_ID => app.exit(0),
-            _ => {}
-        })
-        .build(app_handle)?;
-    Ok(())
 }
 
 #[tauri::command]
@@ -195,9 +130,9 @@ pub fn run() {
                 let _ = window.hide();
             }
             #[cfg(target_os = "linux")]
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                api.prevent_close();
-                let _ = window.hide();
+            if let WindowEvent::CloseRequested { .. } = event {
+                // Linux uses in-app controls and does not rely on a tray icon fallback.
+                // Let close requests proceed with default application shutdown behavior.
             }
         })
         .setup(|app| {
@@ -220,7 +155,6 @@ pub fn run() {
                 }
                 // Ensure app-wide menu bar is hidden for windows using the shared app menu.
                 let _ = app.hide_menu();
-                build_linux_tray_icon(&app.handle())?;
             }
             #[cfg(desktop)]
             {

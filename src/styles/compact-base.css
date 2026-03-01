@@ -44,7 +44,19 @@
 }
 
 .compact-topbar {
-  padding: 10px 16px 8px;
+  padding-top: 10px;
+  padding-bottom: 8px;
+  padding-left: var(--topbar-compact-padding, 16px);
+  padding-right: var(--topbar-compact-padding, 16px);
+}
+
+.app.is-linux .compact-topbar,
+.app.is-windows .compact-topbar {
+  padding-right: calc(
+    var(--topbar-compact-padding, 16px)
+    + var(--window-caption-width, 0px)
+    + var(--window-caption-gap, 0px)
+  );
 }
 
 .compact-content {

@@ -88,7 +88,19 @@
 }
 
 .tablet-topbar {
-  padding: 10px 20px 8px;
+  padding-top: 10px;
+  padding-bottom: 8px;
+  padding-left: var(--topbar-tablet-padding, 20px);
+  padding-right: var(--topbar-tablet-padding, 20px);
+}
+
+.app.is-linux .tablet-topbar,
+.app.is-windows .tablet-topbar {
+  padding-right: calc(
+    var(--topbar-tablet-padding, 20px)
+    + var(--window-caption-width, 0px)
+    + var(--window-caption-gap, 0px)
+  );
 }
 
 .tablet-content {

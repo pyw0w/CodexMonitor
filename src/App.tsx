@@ -2757,8 +2757,8 @@ function MainApp() {
   return (
     <div className={`${appClassName}${isResizing ? " is-resizing" : ""}`} style={appStyle} ref={appRef}>
       <div className="drag-strip" id="titlebar" />
-      <TitlebarExpandControls {...sidebarToggleProps} />
-      <WindowCaptionControls />
+      {!isCompact ? <TitlebarExpandControls {...sidebarToggleProps} /> : null}
+      {!isCompact ? <WindowCaptionControls /> : null}
       {shouldLoadGitHubPanelData ? (
         <Suspense fallback={null}>
           <GitHubPanelData

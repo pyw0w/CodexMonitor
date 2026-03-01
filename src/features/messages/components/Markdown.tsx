@@ -509,21 +509,15 @@ export function Markdown({
           />
         );
       }
-      const isExternal =
-        url.startsWith("http://") ||
-        url.startsWith("https://") ||
-        url.startsWith("mailto:");
-
-      if (!isExternal) {
-        return <a href={href}>{children}</a>;
-      }
-
       return (
         <a
           href={href}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
+            if (!url) {
+              return;
+            }
             void openUrl(url);
           }}
         >

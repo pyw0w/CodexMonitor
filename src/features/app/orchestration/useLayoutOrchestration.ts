@@ -45,7 +45,7 @@ export function useAppShellOrchestration({
 }: UseAppShellOrchestrationOptions) {
   const isWindows = isWindowsPlatform();
   const isLinux = isLinuxPlatform();
-  const hasCustomCaptionControls = isWindows || isLinux;
+  const hasCustomCaptionControls = (isWindows || isLinux) && !isCompact;
   const showGitDetail = Boolean(selectedDiffPath) && isPhone && centerMode === "diff";
   const isThreadOpen = Boolean(activeThreadId && showComposer);
 
