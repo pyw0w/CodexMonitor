@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/i18n/useI18n";
 import type {
   CreateMcpServerInput,
   DeleteMcpServerInput,
@@ -103,6 +104,7 @@ const parseRuntimeStatuses = (payload: unknown): McpRuntimeStatus[] => {
 export const useSettingsMcpSection = ({
   statusWorkspaceId,
 }: UseSettingsMcpSectionArgs): SettingsMcpSectionProps => {
+  const { t } = useI18n();
   const [settings, setSettings] = useState<McpSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -119,16 +121,16 @@ export const useSettingsMcpSection = ({
       const next = await getMcpSettings();
       setSettings(next);
     } catch (refreshError) {
-      setError(toErrorMessage(refreshError, "Unable to load MCP settings."));
+      setError(toErrorMessage(refreshError, t("settings.mcp.error.loadSettings")));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const onRefreshRuntimeStatus = useCallback(async () => {
     if (!statusWorkspaceId) {
       setRuntimeStatuses([]);
-      setRuntimeStatusError("Connect a workspace to load MCP runtime status.");
+      setRuntimeStatusError(t("settings.mcp.runtime.noWorkspace"));
       return;
     }
 
@@ -138,12 +140,12 @@ export const useSettingsMcpSection = ({
       const response = await listMcpServerStatus(statusWorkspaceId, null, 200);
       setRuntimeStatuses(parseRuntimeStatuses(response));
     } catch (statusError) {
-      setRuntimeStatusError(toErrorMessage(statusError, "Unable to load MCP runtime status."));
+      setRuntimeStatusError(toErrorMessage(statusError, t("settings.mcp.error.loadRuntimeStatus")));
       setRuntimeStatuses([]);
     } finally {
       setRuntimeStatusLoading(false);
     }
-  }, [statusWorkspaceId]);
+  }, [statusWorkspaceId, t]);
 
   useEffect(() => {
     void refresh();
@@ -161,12 +163,12 @@ export const useSettingsMcpSection = ({
       setSettings(next);
       return true;
     } catch (mutationError) {
-      setError(toErrorMessage(mutationError, "Unable to update MCP settings."));
+      setError(toErrorMessage(mutationError, t("settings.mcp.error.updateSettings")));
       return false;
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  }, [t]);
 
   const onCreateServer = useCallback(
     async (input: CreateMcpServerInput): Promise<boolean> =>
