@@ -24,6 +24,7 @@ const allowedThemes = new Set(["system", "light", "dark", "dim"]);
 const allowedUiLanguages = new Set(["system", "en", "ru"]);
 const allowedPersonality = new Set(["friendly", "pragmatic"]);
 const allowedFollowUpMessageBehavior = new Set(["queue", "steer"]);
+const allowedSyncModes = new Set(["app_authoritative", "bidirectional"]);
 const DEFAULT_REMOTE_BACKEND_HOST = "127.0.0.1:4732";
 const DEFAULT_REMOTE_BACKEND_ID = "remote-default";
 const DEFAULT_REMOTE_BACKEND_NAME = "Primary remote";
@@ -179,6 +180,8 @@ function buildDefaultSettings(): AppSettings {
     notificationSoundsEnabled: true,
     systemNotificationsEnabled: true,
     subagentSystemNotificationsEnabled: true,
+    showSubagentSessions: true,
+    syncMode: "app_authoritative",
     splitChatDiffView: false,
     preloadGitDiffs: true,
     gitDiffIgnoreWhitespaceChanges: false,
@@ -269,6 +272,9 @@ function normalizeAppSettings(settings: AppSettings): AppSettings {
       : settings.steerEnabled
         ? "steer"
         : "queue",
+    syncMode: allowedSyncModes.has(settings.syncMode)
+      ? settings.syncMode
+      : "app_authoritative",
     composerFollowUpHintEnabled:
       typeof settings.composerFollowUpHintEnabled === "boolean"
         ? settings.composerFollowUpHintEnabled
