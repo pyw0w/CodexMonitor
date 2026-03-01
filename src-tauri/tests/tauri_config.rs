@@ -155,3 +155,47 @@ fn fedora_override_pins_rpm_bundle_and_linux_window_defaults() {
         "Fedora override should disable updater artifacts for local/manual RPM distribution"
     );
 }
+
+#[test]
+fn windows_override_pins_windows_bundle_targets() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let config_path = manifest_dir.join("tauri.windows.conf.json");
+    let config = read_json_config(&config_path);
+    let window = config
+        .get("app")
+        .and_then(|app| app.get("windows"))
+        .and_then(|windows| windows.get(0))
+        .unwrap_or_else(|| panic!("Missing app.windows[0] in {}", config_path.display()));
+
+    assert_eq!(
+        window
+            .get("titleBarStyle")
+            .and_then(|value| value.as_str())
+            .unwrap_or(""),
+        "Visible",
+        "Windows override should use visible native title bar"
+    );
+    assert_eq!(
+        window
+            .get("hiddenTitle")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(true),
+        false,
+        "Windows override should keep native title text visible"
+    );
+    assert_eq!(
+        config
+            .get("bundle")
+            .and_then(|bundle| bundle.get("targets"))
+            .and_then(Value::as_array)
+            .map(|targets| {
+                targets
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default(),
+        vec!["nsis", "msi"],
+        "Windows override should only target NSIS and MSI bundles"
+    );
+}

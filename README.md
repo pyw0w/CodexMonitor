@@ -279,6 +279,7 @@ Note: Fedora/RPM distribution currently uses manual package updates (not in-app 
 ### Windows (opt-in)
 
 Windows builds are opt-in and use a separate Tauri config file to avoid macOS-only window effects.
+The Windows bundle command is pinned to Windows targets (`nsis`, `msi`) and should be run on a Windows host.
 
 ```bash
 npm run tauri:build:win

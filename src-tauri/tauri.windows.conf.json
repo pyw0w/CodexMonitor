@@ -17,6 +17,7 @@
     ]
   },
   "bundle": {
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "targets": ["nsis", "msi"]
   }
 }
