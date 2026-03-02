@@ -5,6 +5,7 @@ import { getAppServerRawMethod } from "@utils/appServerEvents";
 import { useThreadApprovalEvents } from "./useThreadApprovalEvents";
 import { useThreadItemEvents } from "./useThreadItemEvents";
 import { useThreadTurnEvents } from "./useThreadTurnEvents";
+import { useThreadToolCallEvents } from "./useThreadToolCallEvents";
 import { useThreadUserInputEvents } from "./useThreadUserInputEvents";
 import type { ThreadAction } from "./useThreadsReducer";
 
@@ -71,6 +72,7 @@ export function useThreadEventHandlers({
     dispatch,
     approvalAllowlistRef,
   });
+  const onToolCallRequest = useThreadToolCallEvents({ dispatch });
   const onRequestUserInput = useThreadUserInputEvents({ dispatch });
 
   const {
@@ -158,6 +160,7 @@ export function useThreadEventHandlers({
     () => ({
       onWorkspaceConnected,
       onApprovalRequest,
+      onToolCallRequest,
       onRequestUserInput,
       onBackgroundThreadAction,
       onAppServerEvent,
@@ -189,6 +192,7 @@ export function useThreadEventHandlers({
     [
       onWorkspaceConnected,
       onApprovalRequest,
+      onToolCallRequest,
       onRequestUserInput,
       onBackgroundThreadAction,
       onAppServerEvent,

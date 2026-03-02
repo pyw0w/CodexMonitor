@@ -66,6 +66,7 @@ describe("useAgentResponseRequiredNotifications", () => {
         enabled: true,
         isWindowFocused: false,
         approvals,
+        toolCallRequests: [],
         userInputRequests,
       }),
     );
@@ -109,6 +110,7 @@ describe("useAgentResponseRequiredNotifications", () => {
         enabled: true,
         isWindowFocused: false,
         approvals,
+        toolCallRequests: [],
         userInputRequests: [],
       }),
     );
@@ -163,6 +165,7 @@ describe("useAgentResponseRequiredNotifications", () => {
         enabled: true,
         isWindowFocused: false,
         approvals: [],
+        toolCallRequests: [],
         userInputRequests,
       }),
     );
@@ -207,6 +210,7 @@ describe("useAgentResponseRequiredNotifications", () => {
         enabled: true,
         isWindowFocused: false,
         approvals: [],
+        toolCallRequests: [],
         userInputRequests,
         subagentNotificationsEnabled: false,
         isSubagentThread: (_workspaceId, threadId) => threadId === "child-thread",
@@ -226,6 +230,7 @@ describe("useAgentResponseRequiredNotifications", () => {
         enabled: true,
         isWindowFocused: false,
         approvals: [],
+        toolCallRequests: [],
         userInputRequests: [],
       }),
     );
@@ -292,6 +297,7 @@ describe("useAgentResponseRequiredNotifications", () => {
           enabled: true,
           isWindowFocused: false,
           approvals,
+          toolCallRequests: [],
           userInputRequests: [],
         }),
       { initialProps: { approvals: [firstApproval] as ApprovalRequest[] } },
@@ -344,6 +350,7 @@ describe("useAgentResponseRequiredNotifications", () => {
           enabled: true,
           isWindowFocused: false,
           approvals: [],
+          toolCallRequests: [],
           userInputRequests,
         }),
       {

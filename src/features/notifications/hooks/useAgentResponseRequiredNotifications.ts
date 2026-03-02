@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   ApprovalRequest,
   DebugEntry,
+  DynamicToolCallRequest,
   RequestUserInputRequest,
 } from "../../../types";
 import { sendNotification } from "../../../services/tauri";
@@ -26,6 +27,10 @@ function buildUserInputKey(workspaceId: string, requestId: string | number) {
   return `${workspaceId}:${requestId}`;
 }
 
+function buildToolCallKey(workspaceId: string, requestId: string | number) {
+  return `${workspaceId}:${requestId}`;
+}
+
 function buildPlanKey(workspaceId: string, threadId: string, itemId: string) {
   return `${workspaceId}:${threadId}:${itemId}`;
 }
@@ -47,6 +52,7 @@ type ResponseRequiredNotificationOptions = {
   enabled: boolean;
   isWindowFocused: boolean;
   approvals: ApprovalRequest[];
+  toolCallRequests: DynamicToolCallRequest[];
   userInputRequests: RequestUserInputRequest[];
   subagentNotificationsEnabled?: boolean;
   isSubagentThread?: (workspaceId: string, threadId: string) => boolean;
@@ -64,6 +70,7 @@ export function useAgentResponseRequiredNotifications({
   enabled,
   isWindowFocused,
   approvals,
+  toolCallRequests,
   userInputRequests,
   subagentNotificationsEnabled = true,
   isSubagentThread,
@@ -72,6 +79,7 @@ export function useAgentResponseRequiredNotifications({
 }: ResponseRequiredNotificationOptions) {
   const lastNotifiedAtRef = useRef(0);
   const notifiedApprovalsRef = useRef(new Set<string>());
+  const notifiedToolCallsRef = useRef(new Set<string>());
   const notifiedUserInputsRef = useRef(new Set<string>());
   const notifiedPlanItemsRef = useRef(new Set<string>());
   const pendingPlanNotificationsRef = useRef(new Map<string, PendingPlanNotification>());
@@ -175,6 +183,19 @@ export function useAgentResponseRequiredNotifications({
 
   useEffect(() => {
     const activeKeys = new Set(
+      toolCallRequests.map((request) =>
+        buildToolCallKey(request.workspace_id, request.request_id),
+      ),
+    );
+    for (const key of notifiedToolCallsRef.current) {
+      if (!activeKeys.has(key)) {
+        notifiedToolCallsRef.current.delete(key);
+      }
+    }
+  }, [toolCallRequests]);
+
+  useEffect(() => {
+    const activeKeys = new Set(
       userInputRequests.map((request) =>
         buildUserInputKey(request.workspace_id, request.request_id),
       ),
@@ -266,6 +287,67 @@ export function useAgentResponseRequiredNotifications({
     }
     return null;
   })();
+
+  const latestUnnotifiedToolCall = (() => {
+    for (let index = toolCallRequests.length - 1; index >= 0; index -= 1) {
+      const request = toolCallRequests[index];
+      if (!request) {
+        continue;
+      }
+      const key = buildToolCallKey(request.workspace_id, request.request_id);
+      if (notifiedToolCallsRef.current.has(key)) {
+        continue;
+      }
+      if (shouldMuteSubagentThread(request.workspace_id, request.params.thread_id)) {
+        continue;
+      }
+      return request;
+    }
+    return null;
+  })();
+
+  useEffect(() => {
+    if (!latestUnnotifiedToolCall) {
+      return;
+    }
+    if (!canNotifyNow()) {
+      scheduleRetry();
+      return;
+    }
+
+    const toolCallKey = buildToolCallKey(
+      latestUnnotifiedToolCall.workspace_id,
+      latestUnnotifiedToolCall.request_id,
+    );
+    notifiedToolCallsRef.current.add(toolCallKey);
+
+    const workspaceName = getWorkspaceName?.(latestUnnotifiedToolCall.workspace_id);
+    const title = workspaceName ? `Tool call — ${workspaceName}` : "Tool call";
+    const toolName = String(latestUnnotifiedToolCall.params.tool ?? "").trim();
+    const body = truncateText(
+      toolName || "Tool call response is required.",
+      MAX_BODY_LENGTH,
+    );
+
+    void notify(title, body, {
+      kind: "response_required",
+      type: "tool_call",
+      workspaceId: latestUnnotifiedToolCall.workspace_id,
+      requestId: latestUnnotifiedToolCall.request_id,
+      threadId: latestUnnotifiedToolCall.params.thread_id,
+      turnId: latestUnnotifiedToolCall.params.turn_id,
+      callId: latestUnnotifiedToolCall.params.call_id,
+      tool: latestUnnotifiedToolCall.params.tool,
+    });
+    scheduleRetry();
+  }, [
+    canNotifyNow,
+    getWorkspaceName,
+    latestUnnotifiedToolCall,
+    notify,
+    retrySignal,
+    scheduleRetry,
+  ]);
 
   useEffect(() => {
     if (!latestUnnotifiedQuestion) {

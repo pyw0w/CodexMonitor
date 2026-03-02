@@ -608,6 +608,7 @@ function MainApp() {
     activeThreadId,
     activeItems,
     approvals,
+    toolCallRequests,
     userInputRequests,
     threadsByWorkspace,
     threadParentById,
@@ -668,6 +669,7 @@ function MainApp() {
     confirmCustom,
     handleApprovalDecision,
     handleApprovalRemember,
+    handleToolCallSubmit,
     handleUserInputSubmit,
     refreshAccountInfo,
     refreshAccountRateLimits,
@@ -1004,6 +1006,7 @@ function MainApp() {
       appSettings.subagentSystemNotificationsEnabled,
     isSubagentThread,
     approvals,
+    toolCallRequests,
     userInputRequests,
     getWorkspaceName,
     onDebug: addDebugEntry,
@@ -1413,6 +1416,14 @@ function MainApp() {
           (!activeWorkspaceId || request.workspace_id === activeWorkspaceId),
       ),
   );
+  const hasToolCallRequestForActiveThread = Boolean(
+    activeThreadId &&
+      toolCallRequests.some(
+        (request) =>
+          request.params.thread_id === activeThreadId &&
+          (!activeWorkspaceId || request.workspace_id === activeWorkspaceId),
+      ),
+  );
 
   const isPlanReadyAwaitingResponse = useMemo(() => {
     return computePlanFollowupState({
@@ -1420,10 +1431,12 @@ function MainApp() {
       items: activeItems,
       isThinking: isProcessing,
       hasVisibleUserInputRequest: hasUserInputRequestForActiveThread,
+      hasVisibleToolCallRequest: hasToolCallRequestForActiveThread,
     }).shouldShow;
   }, [
     activeItems,
     activeThreadId,
+    hasToolCallRequestForActiveThread,
     hasUserInputRequestForActiveThread,
     isProcessing,
   ]);
@@ -1431,12 +1444,18 @@ function MainApp() {
   const queueFlushPaused = Boolean(
     appSettings.pauseQueuedMessagesWhenResponseRequired &&
       activeThreadId &&
-      (hasUserInputRequestForActiveThread || isPlanReadyAwaitingResponse),
+      (
+        hasUserInputRequestForActiveThread ||
+        hasToolCallRequestForActiveThread ||
+        isPlanReadyAwaitingResponse
+      ),
   );
 
   const queuePausedReason =
     queueFlushPaused && hasUserInputRequestForActiveThread
       ? "Paused — waiting for your answers."
+      : queueFlushPaused && hasToolCallRequestForActiveThread
+        ? "Paused — waiting for tool call result."
       : queueFlushPaused && isPlanReadyAwaitingResponse
         ? "Paused — waiting for plan accept/changes."
         : null;
@@ -2119,9 +2138,11 @@ function MainApp() {
     selectedOpenAppId: appSettings.selectedOpenAppId,
     onSelectOpenAppId: handleSelectOpenAppId,
     approvals,
+    toolCallRequests,
     userInputRequests,
     handleApprovalDecision,
     handleApprovalRemember,
+    handleToolCallSubmit,
     handleUserInputSubmit,
     onPlanAccept: handlePlanAccept,
     onPlanSubmitChanges: handlePlanSubmitChanges,

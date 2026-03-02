@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type {
   AppServerEvent,
   ApprovalRequest,
+  DynamicToolCallRequest,
   RequestUserInputRequest,
 } from "../../../types";
 import { subscribeAppServerEvents } from "../../../services/events";
@@ -49,6 +50,7 @@ type AppServerEventHandlers = {
     action: string,
   ) => void;
   onApprovalRequest?: (request: ApprovalRequest) => void;
+  onToolCallRequest?: (request: DynamicToolCallRequest) => void;
   onRequestUserInput?: (request: RequestUserInputRequest) => void;
   onAgentMessageDelta?: (event: AgentDelta) => void;
   onAgentMessageCompleted?: (event: AgentCompleted) => void;
@@ -115,6 +117,7 @@ export const METHODS_ROUTED_IN_USE_APP_SERVER_EVENTS = [
   "item/reasoning/summaryTextDelta",
   "item/reasoning/textDelta",
   "item/started",
+  "item/tool/call",
   "item/tool/requestUserInput",
   "thread/archived",
   "thread/closed",
@@ -208,6 +211,33 @@ export function useAppServerEvents(handlers: AppServerEventHandlers) {
             questions,
           },
         });
+        return;
+      }
+
+      if (method === "item/tool/call" && hasRequestId) {
+        const threadId = String(params.threadId ?? params.thread_id ?? "").trim();
+        const turnId = String(params.turnId ?? params.turn_id ?? "").trim();
+        const callId = String(params.callId ?? params.call_id ?? "").trim();
+        const tool = String(params.tool ?? "").trim();
+        const args =
+          params.arguments !== undefined
+            ? params.arguments
+            : params.args !== undefined
+              ? params.args
+              : null;
+        if (threadId && turnId && callId && tool) {
+          currentHandlers.onToolCallRequest?.({
+            workspace_id: workspace_id,
+            request_id: requestId as string | number,
+            params: {
+              thread_id: threadId,
+              turn_id: turnId,
+              call_id: callId,
+              tool,
+              arguments: args,
+            },
+          });
+        }
         return;
       }
 

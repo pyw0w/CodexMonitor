@@ -2,6 +2,7 @@ import type {
   AccountSnapshot,
   ApprovalRequest,
   ConversationItem,
+  DynamicToolCallRequest,
   RateLimitSnapshot,
   RequestUserInputRequest,
   ThreadListSortKey,
@@ -40,6 +41,7 @@ export type ThreadState = {
   activeTurnIdByThread: Record<string, string | null>;
   turnDiffByThread: Record<string, string>;
   approvals: ApprovalRequest[];
+  toolCallRequests: DynamicToolCallRequest[];
   userInputRequests: RequestUserInputRequest[];
   tokenUsageByThread: Record<string, ThreadTokenUsage>;
   tokenUsageThreadIdsByWorkspace: Record<string, string[]>;
@@ -139,6 +141,12 @@ export type ThreadAction =
     }
   | { type: "addApproval"; approval: ApprovalRequest }
   | { type: "removeApproval"; requestId: number | string; workspaceId: string }
+  | { type: "addToolCallRequest"; request: DynamicToolCallRequest }
+  | {
+      type: "removeToolCallRequest";
+      requestId: number | string;
+      workspaceId: string;
+    }
   | { type: "addUserInputRequest"; request: RequestUserInputRequest }
   | {
       type: "removeUserInputRequest";
@@ -190,6 +198,7 @@ export const initialState: ThreadState = {
   activeTurnIdByThread: {},
   turnDiffByThread: {},
   approvals: [],
+  toolCallRequests: [],
   userInputRequests: [],
   tokenUsageByThread: {},
   tokenUsageThreadIdsByWorkspace: {},

@@ -11,12 +11,15 @@ import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
 import type {
   ConversationItem,
+  DynamicToolCallRequest,
+  DynamicToolCallResponse,
   OpenAppTarget,
   RequestUserInputRequest,
   RequestUserInputResponse,
 } from "../../../types";
 import { isPlanReadyTaggedMessage } from "../../../utils/internalPlanReadyMessages";
 import { PlanReadyFollowupMessage } from "../../app/components/PlanReadyFollowupMessage";
+import { RequestToolCallMessage } from "../../app/components/RequestToolCallMessage";
 import { RequestUserInputMessage } from "../../app/components/RequestUserInputMessage";
 import { useFileLinkOpener } from "../hooks/useFileLinkOpener";
 import {
@@ -52,6 +55,11 @@ type MessagesProps = {
   selectedOpenAppId: string;
   codeBlockCopyUseModifier?: boolean;
   showMessageFilePath?: boolean;
+  toolCallRequests?: DynamicToolCallRequest[];
+  onToolCallSubmit?: (
+    request: DynamicToolCallRequest,
+    response: DynamicToolCallResponse,
+  ) => void;
   userInputRequests?: RequestUserInputRequest[];
   onUserInputSubmit?: (
     request: RequestUserInputRequest,
@@ -90,6 +98,8 @@ export const Messages = memo(function Messages({
   selectedOpenAppId,
   codeBlockCopyUseModifier = false,
   showMessageFilePath = true,
+  toolCallRequests = [],
+  onToolCallSubmit,
   userInputRequests = [],
   onUserInputSubmit,
   onPlanAccept,
@@ -115,7 +125,15 @@ export const Messages = memo(function Messages({
             (!workspaceId || request.workspace_id === workspaceId),
         )?.request_id ?? null)
       : null;
-  const scrollKey = `${scrollKeyForItems(items)}-${activeUserInputRequestId ?? "no-input"}`;
+  const activeToolCallRequestId =
+    threadId && toolCallRequests.length
+      ? (toolCallRequests.find(
+          (request) =>
+            request.params.thread_id === threadId &&
+            (!workspaceId || request.workspace_id === workspaceId),
+        )?.request_id ?? null)
+      : null;
+  const scrollKey = `${scrollKeyForItems(items)}-${activeUserInputRequestId ?? "no-input"}-${activeToolCallRequestId ?? "no-tool-call"}`;
   const { openFileLink, showFileLinkMenu } = useFileLinkOpener(
     workspacePath,
     openTargets,
@@ -305,7 +323,9 @@ export const Messages = memo(function Messages({
   const groupedItems = useMemo(() => buildToolGroups(visibleItems), [visibleItems]);
 
   const hasActiveUserInputRequest = activeUserInputRequestId !== null;
+  const hasActiveToolCallRequest = activeToolCallRequestId !== null;
   const hasVisibleUserInputRequest = hasActiveUserInputRequest && Boolean(onUserInputSubmit);
+  const hasVisibleToolCallRequest = hasActiveToolCallRequest && Boolean(onToolCallSubmit);
   const userInputNode =
     hasActiveUserInputRequest && onUserInputSubmit ? (
       <RequestUserInputMessage
@@ -313,6 +333,15 @@ export const Messages = memo(function Messages({
         activeThreadId={threadId}
         activeWorkspaceId={workspaceId}
         onSubmit={onUserInputSubmit}
+      />
+    ) : null;
+  const toolCallNode =
+    hasActiveToolCallRequest && onToolCallSubmit ? (
+      <RequestToolCallMessage
+        requests={toolCallRequests}
+        activeThreadId={threadId}
+        activeWorkspaceId={workspaceId}
+        onSubmit={onToolCallSubmit}
       />
     ) : null;
 
@@ -329,6 +358,7 @@ export const Messages = memo(function Messages({
       items,
       isThinking,
       hasVisibleUserInputRequest,
+      hasVisibleToolCallRequest,
     });
 
     if (threadId && candidate.planItemId) {
@@ -341,6 +371,7 @@ export const Messages = memo(function Messages({
   }, [
     dismissedPlanFollowupByThread,
     hasVisibleUserInputRequest,
+    hasVisibleToolCallRequest,
     isThinking,
     items,
     onPlanAccept,
@@ -498,6 +529,7 @@ export const Messages = memo(function Messages({
         return renderItem(entry.item);
       })}
       {planFollowupNode}
+      {toolCallNode}
       {userInputNode}
       <WorkingIndicator
         isThinking={isThinking}

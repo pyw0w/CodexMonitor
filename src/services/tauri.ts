@@ -5,6 +5,7 @@ import type {
   AppSettings,
   CodexUpdateResult,
   CodexDoctorResult,
+  DynamicToolCallResponse,
   DictationModelStatus,
   DictationSessionState,
   LocalThreadUsageSnapshot,
@@ -590,6 +591,18 @@ export async function respondToUserInputRequest(
     workspaceId,
     requestId,
     result: { answers },
+  });
+}
+
+export async function respondToToolCallRequest(
+  workspaceId: string,
+  requestId: number | string,
+  response: DynamicToolCallResponse,
+) {
+  return invoke("respond_to_server_request", {
+    workspaceId,
+    requestId,
+    result: response,
   });
 }
 

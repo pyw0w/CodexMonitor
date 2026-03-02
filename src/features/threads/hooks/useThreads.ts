@@ -19,6 +19,7 @@ import { useThreadAccountInfo } from "./useThreadAccountInfo";
 import { useThreadRateLimits } from "./useThreadRateLimits";
 import { useThreadSelectors } from "./useThreadSelectors";
 import { useThreadStatus } from "./useThreadStatus";
+import { useThreadToolCall } from "./useThreadToolCall";
 import { useThreadUserInput } from "./useThreadUserInput";
 import { useThreadTitleAutogeneration } from "./useThreadTitleAutogeneration";
 import {
@@ -125,6 +126,7 @@ export function useThreads({
   rateLimitsByWorkspaceRef.current = state.rateLimitsByWorkspace;
   const { approvalAllowlistRef, handleApprovalDecision, handleApprovalRemember } =
     useThreadApprovals({ dispatch, onDebug });
+  const { handleToolCallSubmit } = useThreadToolCall({ dispatch });
   const { handleUserInputSubmit } = useThreadUserInput({ dispatch });
   const {
     customNamesRef,
@@ -846,6 +848,7 @@ export function useThreads({
     hasLocalThreadSnapshot,
     activeItems,
     approvals: state.approvals,
+    toolCallRequests: state.toolCallRequests,
     userInputRequests: state.userInputRequests,
     threadsByWorkspace: state.threadsByWorkspace,
     threadParentById: state.threadParentById,
@@ -913,6 +916,7 @@ export function useThreads({
     confirmCustom,
     handleApprovalDecision,
     handleApprovalRemember,
+    handleToolCallSubmit,
     handleUserInputSubmit,
   };
 }

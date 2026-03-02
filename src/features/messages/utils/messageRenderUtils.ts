@@ -454,16 +454,21 @@ export function computePlanFollowupState({
   items,
   isThinking,
   hasVisibleUserInputRequest,
+  hasVisibleToolCallRequest = false,
 }: {
   threadId: string | null;
   items: ConversationItem[];
   isThinking: boolean;
   hasVisibleUserInputRequest: boolean;
+  hasVisibleToolCallRequest?: boolean;
 }): PlanFollowupState {
   if (!threadId) {
     return { shouldShow: false, planItemId: null };
   }
   if (hasVisibleUserInputRequest) {
+    return { shouldShow: false, planItemId: null };
+  }
+  if (hasVisibleToolCallRequest) {
     return { shouldShow: false, planItemId: null };
   }
 

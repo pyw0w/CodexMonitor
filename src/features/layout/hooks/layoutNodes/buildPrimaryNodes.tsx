@@ -108,6 +108,8 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       selectedOpenAppId={options.selectedOpenAppId}
       codeBlockCopyUseModifier={options.codeBlockCopyUseModifier}
       showMessageFilePath={options.showMessageFilePath}
+      toolCallRequests={options.toolCallRequests}
+      onToolCallSubmit={options.handleToolCallSubmit}
       userInputRequests={options.userInputRequests}
       onUserInputSubmit={options.handleUserInputSubmit}
       onPlanAccept={options.onPlanAccept}

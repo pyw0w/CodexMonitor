@@ -1,4 +1,9 @@
-import type { ApprovalRequest, DebugEntry, RequestUserInputRequest } from "../../../types";
+import type {
+  ApprovalRequest,
+  DebugEntry,
+  DynamicToolCallRequest,
+  RequestUserInputRequest,
+} from "../../../types";
 import { useWindowFocusState } from "../../layout/hooks/useWindowFocusState";
 import { useAgentResponseRequiredNotifications } from "../../notifications/hooks/useAgentResponseRequiredNotifications";
 
@@ -7,6 +12,7 @@ type Params = {
   subagentSystemNotificationsEnabled: boolean;
   isSubagentThread?: (workspaceId: string, threadId: string) => boolean;
   approvals: ApprovalRequest[];
+  toolCallRequests: DynamicToolCallRequest[];
   userInputRequests: RequestUserInputRequest[];
   getWorkspaceName?: (workspaceId: string) => string | undefined;
   onDebug?: (entry: DebugEntry) => void;
@@ -17,6 +23,7 @@ export function useResponseRequiredNotificationsController({
   subagentSystemNotificationsEnabled,
   isSubagentThread,
   approvals,
+  toolCallRequests,
   userInputRequests,
   getWorkspaceName,
   onDebug,
@@ -29,6 +36,7 @@ export function useResponseRequiredNotificationsController({
     isSubagentThread,
     isWindowFocused,
     approvals,
+    toolCallRequests,
     userInputRequests,
     getWorkspaceName,
     onDebug,

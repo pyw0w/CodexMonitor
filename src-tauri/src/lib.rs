@@ -306,6 +306,7 @@ pub fn run() {
             codex::codex_login_cancel,
             codex::skills_list,
             codex::apps_list,
+            codex::debug_emit_app_server_event,
             prompts::prompts_list,
             prompts::prompts_create,
             prompts::prompts_update,

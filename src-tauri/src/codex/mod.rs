@@ -1102,3 +1102,19 @@ pub(crate) async fn predict_response(
     )
     .await
 }
+
+#[tauri::command]
+pub(crate) async fn debug_emit_app_server_event(
+    workspace_id: String,
+    message: Value,
+    app: AppHandle,
+) -> Result<(), String> {
+    app.emit(
+        "app-server-event",
+        AppServerEvent {
+            workspace_id,
+            message,
+        },
+    )
+    .map_err(|err| err.to_string())
+}

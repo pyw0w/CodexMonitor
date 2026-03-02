@@ -399,6 +399,35 @@ export type RequestUserInputResponse = {
   answers: Record<string, RequestUserInputAnswer>;
 };
 
+export type DynamicToolCallParams = {
+  thread_id: string;
+  turn_id: string;
+  call_id: string;
+  tool: string;
+  arguments: unknown;
+};
+
+export type DynamicToolCallRequest = {
+  workspace_id: string;
+  request_id: number | string;
+  params: DynamicToolCallParams;
+};
+
+export type DynamicToolCallOutputContentItem =
+  | {
+      type: "inputText";
+      text: string;
+    }
+  | {
+      type: "inputImage";
+      imageUrl: string;
+    };
+
+export type DynamicToolCallResponse = {
+  contentItems: DynamicToolCallOutputContentItem[];
+  success: boolean;
+};
+
 export type GitFileStatus = {
   path: string;
   status: string;

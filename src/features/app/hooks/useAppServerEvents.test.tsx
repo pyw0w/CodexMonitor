@@ -58,6 +58,7 @@ describe("useAppServerEvents", () => {
       onReasoningSummaryBoundary: vi.fn(),
       onPlanDelta: vi.fn(),
       onApprovalRequest: vi.fn(),
+      onToolCallRequest: vi.fn(),
       onRequestUserInput: vi.fn(),
       onItemCompleted: vi.fn(),
       onAgentMessageCompleted: vi.fn(),
@@ -273,6 +274,34 @@ describe("useAppServerEvents", () => {
             ],
           },
         ],
+      },
+    });
+
+    act(() => {
+      listener?.({
+        workspace_id: "ws-1",
+        message: {
+          method: "item/tool/call",
+          id: 12,
+          params: {
+            threadId: "thread-1",
+            turnId: "turn-2",
+            callId: "call-1",
+            tool: "lookup_ticket",
+            arguments: { id: "ABC-123" },
+          },
+        },
+      });
+    });
+    expect(handlers.onToolCallRequest).toHaveBeenCalledWith({
+      workspace_id: "ws-1",
+      request_id: 12,
+      params: {
+        thread_id: "thread-1",
+        turn_id: "turn-2",
+        call_id: "call-1",
+        tool: "lookup_ticket",
+        arguments: { id: "ABC-123" },
       },
     });
 

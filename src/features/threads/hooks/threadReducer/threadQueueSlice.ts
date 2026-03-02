@@ -22,6 +22,29 @@ export function reduceThreadQueue(state: ThreadState, action: ThreadAction): Thr
             item.workspace_id !== action.workspaceId,
         ),
       };
+    case "addToolCallRequest": {
+      const exists = state.toolCallRequests.some(
+        (item) =>
+          item.request_id === action.request.request_id &&
+          item.workspace_id === action.request.workspace_id,
+      );
+      if (exists) {
+        return state;
+      }
+      return {
+        ...state,
+        toolCallRequests: [...state.toolCallRequests, action.request],
+      };
+    }
+    case "removeToolCallRequest":
+      return {
+        ...state,
+        toolCallRequests: state.toolCallRequests.filter(
+          (item) =>
+            item.request_id !== action.requestId ||
+            item.workspace_id !== action.workspaceId,
+        ),
+      };
     case "addUserInputRequest": {
       const exists = state.userInputRequests.some(
         (item) =>

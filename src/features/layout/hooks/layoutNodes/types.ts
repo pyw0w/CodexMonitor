@@ -15,6 +15,8 @@ import type {
   AppMention,
   AppOption,
   DebugEntry,
+  DynamicToolCallRequest,
+  DynamicToolCallResponse,
   DictationSessionState,
   DictationTranscript,
   GitFileStatus,
@@ -142,6 +144,7 @@ export type LayoutNodesOptions = {
   selectedOpenAppId: string;
   onSelectOpenAppId: (id: string) => void;
   approvals: ApprovalRequest[];
+  toolCallRequests: DynamicToolCallRequest[];
   userInputRequests: RequestUserInputRequest[];
   handleApprovalDecision: (
     request: ApprovalRequest,
@@ -154,6 +157,10 @@ export type LayoutNodesOptions = {
   handleUserInputSubmit: (
     request: RequestUserInputRequest,
     response: RequestUserInputResponse,
+  ) => void;
+  handleToolCallSubmit: (
+    request: DynamicToolCallRequest,
+    response: DynamicToolCallResponse,
   ) => void;
   onPlanAccept?: () => void;
   onPlanSubmitChanges?: (changes: string) => void;

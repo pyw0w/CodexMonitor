@@ -201,11 +201,11 @@ Compared against Codex v2 request methods, CodexMonitor currently does not send:
 Supported server requests:
 
 - `*requestApproval` methods (handled via suffix match in `isApprovalRequestMethod(method)`)
+- `item/tool/call`
 - `item/tool/requestUserInput`
 
 Missing server requests:
 
-- `item/tool/call`
 - `account/chatgptAuthTokens/refresh`
 
 ## Where To Look In ../Codex
