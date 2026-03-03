@@ -14,7 +14,6 @@ import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Users from "lucide-react/dist/esm/icons/users";
 import Wrench from "lucide-react/dist/esm/icons/wrench";
 import X from "lucide-react/dist/esm/icons/x";
-import { useI18n } from "@/i18n/useI18n";
 import { exportMarkdownFile } from "@services/tauri";
 import { pushErrorToast } from "@services/toasts";
 import type { ConversationItem } from "../../../types";
@@ -57,7 +56,7 @@ type MessageRowProps = MarkdownFileLinkProps & {
   item: Extract<ConversationItem, { kind: "message" }>;
   isCopied: boolean;
   onCopy: (item: Extract<ConversationItem, { kind: "message" }>) => void;
-  onQuote?: (item: Extract<ConversationItem, { kind: "message" }>) => void;
+  onQuote?: (item: Extract<ConversationItem, { kind: "message" }>, selectedText?: string) => void;
   codeBlockCopyUseModifier?: boolean;
 };
 
@@ -129,7 +128,6 @@ const ImageLightbox = memo(function ImageLightbox({
   activeIndex: number;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
   const activeImage = images[activeIndex];
 
   useEffect(() => {
@@ -171,7 +169,7 @@ const ImageLightbox = memo(function ImageLightbox({
           type="button"
           className="message-image-lightbox-close"
           onClick={onClose}
-          aria-label={t("messages.image.closePreview")}
+          aria-label="Close image preview"
         >
           <X size={16} aria-hidden />
         </button>
@@ -371,8 +369,9 @@ export const MessageRow = memo(function MessageRow({
   onOpenFileLinkMenu,
   onOpenThreadLink,
 }: MessageRowProps) {
-  const { t } = useI18n();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const bubbleRef = useRef<HTMLDivElement | null>(null);
+  const selectionSnapshotRef = useRef<string | null>(null);
   const hasText = item.text.trim().length > 0;
   const imageItems = useMemo(() => {
     if (!item.images || item.images.length === 0) {
@@ -389,9 +388,47 @@ export const MessageRow = memo(function MessageRow({
       .filter(Boolean) as MessageImage[];
   }, [item.images]);
 
+  const getSelectedMessageText = useCallback(() => {
+    const bubble = bubbleRef.current;
+    const selection = window.getSelection();
+    if (!bubble || !selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return null;
+    }
+    const selectedText = selection.toString().trim();
+    if (!selectedText) {
+      return null;
+    }
+    const range = selection.getRangeAt(0);
+    if (!bubble.contains(range.commonAncestorContainer)) {
+      return null;
+    }
+
+    const isWithinMessageControls = (node: Node | null) => {
+      if (!node) {
+        return false;
+      }
+      const element = node instanceof Element ? node : node.parentElement;
+      return Boolean(element?.closest(".message-quote-button, .message-copy-button"));
+    };
+
+    if (isWithinMessageControls(selection.anchorNode) || isWithinMessageControls(selection.focusNode)) {
+      return null;
+    }
+    return selectedText;
+  }, []);
+
+  const handleQuote = useCallback(() => {
+    if (!onQuote) {
+      return;
+    }
+    const selectedText = getSelectedMessageText() ?? selectionSnapshotRef.current ?? undefined;
+    selectionSnapshotRef.current = null;
+    onQuote(item, selectedText);
+  }, [getSelectedMessageText, item, onQuote]);
+
   return (
     <div className={`message ${item.role}`}>
-      <div className="bubble message-bubble">
+      <div ref={bubbleRef} className="bubble message-bubble">
         {imageItems.length > 0 && (
           <MessageImageGrid
             images={imageItems}
@@ -423,9 +460,15 @@ export const MessageRow = memo(function MessageRow({
           <button
             type="button"
             className="ghost message-quote-button"
-            onClick={() => onQuote(item)}
-            aria-label={t("messages.message.quote")}
-            title={t("messages.message.quote")}
+            onMouseDown={() => {
+              selectionSnapshotRef.current = getSelectedMessageText();
+            }}
+            onTouchStart={() => {
+              selectionSnapshotRef.current = getSelectedMessageText();
+            }}
+            onClick={handleQuote}
+            aria-label="Quote message"
+            title="Quote message"
           >
             <Quote size={14} aria-hidden />
           </button>
@@ -434,8 +477,8 @@ export const MessageRow = memo(function MessageRow({
           type="button"
           className={`ghost message-copy-button${isCopied ? " is-copied" : ""}`}
           onClick={() => onCopy(item)}
-          aria-label={t("messages.message.copy")}
-          title={t("messages.message.copy")}
+          aria-label="Copy message"
+          title="Copy message"
         >
           <span className="message-copy-icon" aria-hidden>
             <Copy className="message-copy-icon-copy" size={14} />
@@ -458,7 +501,6 @@ export const ReasoningRow = memo(function ReasoningRow({
   onOpenFileLinkMenu,
   onOpenThreadLink,
 }: ReasoningRowProps) {
-  const { t } = useI18n();
   const { summaryTitle, bodyText, hasBody } = parsed;
   const reasoningTone: StatusTone = hasBody ? "completed" : "processing";
   return (
@@ -468,7 +510,7 @@ export const ReasoningRow = memo(function ReasoningRow({
         className="tool-inline-bar-toggle"
         onClick={() => onToggle(item.id)}
         aria-expanded={isExpanded}
-        aria-label={t("messages.reasoning.toggleDetails")}
+        aria-label="Toggle reasoning details"
       />
       <div className="tool-inline-content">
         <button
@@ -561,7 +603,6 @@ export const ToolRow = memo(function ToolRow({
   onOpenThreadLink,
   onRequestAutoScroll,
 }: ToolRowProps) {
-  const { t } = useI18n();
   const isFileChange = item.toolType === "fileChange";
   const isCommand = item.toolType === "commandExecution";
   const isPlan = item.toolType === "plan";
@@ -634,18 +675,16 @@ export const ToolRow = memo(function ToolRow({
       try {
         await exportMarkdownFile(output, buildPlanExportFileName(item.id));
       } catch (error) {
-        const details =
-          error instanceof Error ? error.message : t("errors.planExport.fallbackDetails");
+        const message = error instanceof Error ? error.message : "Unable to export plan.";
         pushErrorToast({
-          title: t("errors.planExport.title"),
-          message: t("errors.planExport.message"),
-          details,
+          title: "Plan export failed",
+          message,
         });
       } finally {
         setIsExportingPlan(false);
       }
     },
-    [item.id, summary.output, t],
+    [item.id, summary.output],
   );
 
   return (
@@ -655,7 +694,7 @@ export const ToolRow = memo(function ToolRow({
         className="tool-inline-bar-toggle"
         onClick={() => onToggle(item.id)}
         aria-expanded={isExpanded}
-        aria-label={t("messages.tool.toggleDetails")}
+        aria-label="Toggle tool details"
       />
       <div className="tool-inline-content">
         <button

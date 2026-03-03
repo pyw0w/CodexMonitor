@@ -1,13 +1,13 @@
-import type { MouseEvent } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 
 import type { ThreadSummary } from "../../../types";
 import type { ThreadStatusById } from "../../../utils/threadStatus";
 import { ThreadRow } from "./ThreadRow";
+import { buildThreadRowVisibility } from "./threadRowVisibility";
 
 type PinnedThreadRow = {
   thread: ThreadSummary;
   depth: number;
-  hasChildren: boolean;
   workspaceId: string;
 };
 
@@ -20,7 +20,6 @@ type PinnedThreadListProps = {
   getWorkspaceLabel?: (workspaceId: string) => string | null;
   getThreadTime: (thread: ThreadSummary) => string | null;
   getThreadArgsBadge?: (workspaceId: string, threadId: string) => string | null;
-  getThreadTokenUsageLabel?: (workspaceId: string, threadId: string) => string | null;
   isThreadPinned: (workspaceId: string, threadId: string) => boolean;
   onSelectThread: (workspaceId: string, threadId: string) => void;
   onShowThreadMenu: (
@@ -29,8 +28,6 @@ type PinnedThreadListProps = {
     threadId: string,
     canPin: boolean,
   ) => void;
-  collapsedThreadIdsByWorkspace?: Record<string, ReadonlySet<string>>;
-  onToggleThreadChildren?: (workspaceId: string, threadId: string) => void;
 };
 
 export function PinnedThreadList({
@@ -42,22 +39,43 @@ export function PinnedThreadList({
   getWorkspaceLabel,
   getThreadTime,
   getThreadArgsBadge,
-  getThreadTokenUsageLabel,
   isThreadPinned,
   onSelectThread,
   onShowThreadMenu,
-  collapsedThreadIdsByWorkspace,
-  onToggleThreadChildren,
 }: PinnedThreadListProps) {
+  const [collapsedThreadKeys, setCollapsedThreadKeys] = useState<Set<string>>(new Set());
+  const visibility = useMemo(
+    () =>
+      buildThreadRowVisibility(
+        rows,
+        (row) => collapsedThreadKeys.has(`${row.workspaceId}:${row.thread.id}`),
+      ),
+    [collapsedThreadKeys, rows],
+  );
+
+  const toggleThreadSubagents = (workspaceId: string, threadId: string) => {
+    const threadKey = `${workspaceId}:${threadId}`;
+    setCollapsedThreadKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(threadKey)) {
+        next.delete(threadKey);
+      } else {
+        next.add(threadKey);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="thread-list pinned-thread-list">
-      {rows.map(({ thread, depth, hasChildren, workspaceId }) => {
+      {visibility.visibleRows.map((row) => {
+        const { thread, depth, workspaceId } = row;
+        const threadKey = `${workspaceId}:${thread.id}`;
         return (
           <ThreadRow
             key={`${workspaceId}:${thread.id}`}
             thread={thread}
             depth={depth}
-            hasChildren={hasChildren}
             workspaceId={workspaceId}
             indentUnit={14}
             activeWorkspaceId={activeWorkspaceId}
@@ -67,12 +85,12 @@ export function PinnedThreadList({
             workspaceLabel={getWorkspaceLabel?.(workspaceId) ?? null}
             getThreadTime={getThreadTime}
             getThreadArgsBadge={getThreadArgsBadge}
-            getThreadTokenUsageLabel={getThreadTokenUsageLabel}
             isThreadPinned={isThreadPinned}
             onSelectThread={onSelectThread}
             onShowThreadMenu={onShowThreadMenu}
-            isCollapsed={Boolean(collapsedThreadIdsByWorkspace?.[workspaceId]?.has(thread.id))}
-            onToggleThreadChildren={onToggleThreadChildren}
+            hasSubagentChildren={visibility.rowsWithChildren.has(row)}
+            subagentsExpanded={!collapsedThreadKeys.has(threadKey)}
+            onToggleSubagents={toggleThreadSubagents}
           />
         );
       })}

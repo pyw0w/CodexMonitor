@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ThreadSummary } from "../../../types";
 import { PinnedThreadList } from "./PinnedThreadList";
 
@@ -16,13 +16,19 @@ const otherThread: ThreadSummary = {
   updatedAt: 800,
 };
 
+const nestedThread: ThreadSummary = {
+  id: "thread-3",
+  name: "Pinned Nested",
+  updatedAt: 700,
+};
+
 const statusMap = {
   "thread-1": { isProcessing: false, hasUnread: false, isReviewing: true },
   "thread-2": { isProcessing: true, hasUnread: false, isReviewing: false },
 };
 
 const baseProps = {
-  rows: [{ thread, depth: 0, hasChildren: false, workspaceId: "ws-1" }],
+  rows: [{ thread, depth: 0, workspaceId: "ws-1" }],
   activeWorkspaceId: "ws-1",
   activeThreadId: "thread-1",
   threadStatusById: statusMap,
@@ -33,6 +39,10 @@ const baseProps = {
 };
 
 describe("PinnedThreadList", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders pinned rows and handles click/context menu", () => {
     const onSelectThread = vi.fn();
     const onShowThreadMenu = vi.fn();
@@ -76,8 +86,8 @@ describe("PinnedThreadList", () => {
       <PinnedThreadList
         {...baseProps}
         rows={[
-          { thread, depth: 0, hasChildren: false, workspaceId: "ws-1" },
-          { thread: otherThread, depth: 0, hasChildren: false, workspaceId: "ws-2" },
+          { thread, depth: 0, workspaceId: "ws-1" },
+          { thread: otherThread, depth: 0, workspaceId: "ws-2" },
         ]}
         onSelectThread={onSelectThread}
         onShowThreadMenu={onShowThreadMenu}
@@ -106,7 +116,7 @@ describe("PinnedThreadList", () => {
     const { container } = render(
       <PinnedThreadList
         {...baseProps}
-        rows={[{ thread: otherThread, depth: 0, hasChildren: false, workspaceId: "ws-2" }]}
+        rows={[{ thread: otherThread, depth: 0, workspaceId: "ws-2" }]}
         threadStatusById={{
           "thread-1": { isProcessing: false, hasUnread: false, isReviewing: true },
           "thread-2": { isProcessing: true, hasUnread: false, isReviewing: false },
@@ -122,14 +132,21 @@ describe("PinnedThreadList", () => {
     expect(row?.querySelector(".thread-status")?.className).not.toContain("processing");
   });
 
-  it("renders a token usage label when provided", () => {
+  it("toggles descendant visibility for pinned rows with sub-agents", () => {
     render(
       <PinnedThreadList
         {...baseProps}
-        getThreadTokenUsageLabel={() => "900 tokens"}
+        rows={[
+          { thread, depth: 0, workspaceId: "ws-1" },
+          { thread: nestedThread, depth: 1, workspaceId: "ws-1" },
+        ]}
       />,
     );
 
-    expect(screen.getByText("900 tokens")).toBeTruthy();
+    expect(screen.getByText("Pinned Nested")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Hide sub-agents" }));
+    expect(screen.queryByText("Pinned Nested")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Show sub-agents" }));
+    expect(screen.getByText("Pinned Nested")).toBeTruthy();
   });
 });

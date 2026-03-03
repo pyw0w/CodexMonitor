@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ThreadSummary } from "../../../types";
 import { ThreadList } from "./ThreadList";
 
@@ -24,7 +24,7 @@ const statusMap = {
 const baseProps = {
   workspaceId: "ws-1",
   pinnedRows: [],
-  unpinnedRows: [{ thread, depth: 0, hasChildren: false }],
+  unpinnedRows: [{ thread, depth: 0 }],
   totalThreadRoots: 1,
   isExpanded: false,
   nextCursor: null,
@@ -42,6 +42,10 @@ const baseProps = {
 };
 
 describe("ThreadList", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders active row and handles click/context menu", () => {
     const onSelectThread = vi.fn();
     const onShowThreadMenu = vi.fn();
@@ -111,8 +115,8 @@ describe("ThreadList", () => {
         {...baseProps}
         nested
         unpinnedRows={[
-          { thread, depth: 0, hasChildren: true },
-          { thread: nestedThread, depth: 1, hasChildren: false },
+          { thread, depth: 0 },
+          { thread: nestedThread, depth: 1 },
         ]}
         onShowThreadMenu={onShowThreadMenu}
       />,
@@ -153,14 +157,31 @@ describe("ThreadList", () => {
     expect(row?.querySelector(".thread-status")?.className).not.toContain("processing");
   });
 
-  it("renders a token usage label when provided", () => {
-    render(
+  it("toggles sub-agent descendants for parent rows", () => {
+    const { getByText, queryByText, getByRole } = render(
       <ThreadList
         {...baseProps}
-        getThreadTokenUsageLabel={() => "1.2k tokens"}
+        unpinnedRows={[
+          { thread, depth: 0 },
+          { thread: nestedThread, depth: 1 },
+        ]}
       />,
     );
 
-    expect(screen.getByText("1.2k tokens")).toBeTruthy();
+    expect(getByText("Nested Agent")).toBeTruthy();
+    const hideButton = getByRole("button", { name: "Hide sub-agents" });
+    fireEvent.click(hideButton);
+    expect(queryByText("Nested Agent")).toBeNull();
+
+    const showButton = getByRole("button", { name: "Show sub-agents" });
+    fireEvent.click(showButton);
+    expect(getByText("Nested Agent")).toBeTruthy();
+  });
+
+  it("does not show sub-agent toggle for rows without descendants", () => {
+    const { queryByRole } = render(<ThreadList {...baseProps} />);
+
+    expect(queryByRole("button", { name: "Hide sub-agents" })).toBeNull();
+    expect(queryByRole("button", { name: "Show sub-agents" })).toBeNull();
   });
 });
