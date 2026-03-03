@@ -156,6 +156,61 @@ export function useThreadEventHandlers({
     [onDebug],
   );
 
+  const onAuxNotification = useCallback(
+    (
+      workspaceId: string,
+      payload: {
+        method: string;
+        params: Record<string, unknown>;
+        requestId: string | number | null;
+      },
+    ) => {
+      const { method, params, requestId } = payload;
+      onDebug?.({
+        id: `${Date.now()}-server-aux-event`,
+        timestamp: Date.now(),
+        source: "event",
+        label: `app-server/${method}`,
+        payload: { workspaceId, params, requestId },
+      });
+
+      if (method !== "serverRequest/resolved") {
+        return;
+      }
+
+      const resolvedRequestId =
+        requestId ??
+        (typeof params.requestId === "number" || typeof params.requestId === "string"
+          ? params.requestId
+          : null) ??
+        (typeof params.request_id === "number" || typeof params.request_id === "string"
+          ? params.request_id
+          : null) ??
+        (typeof params.id === "number" || typeof params.id === "string" ? params.id : null);
+
+      if (resolvedRequestId === null) {
+        return;
+      }
+
+      dispatch({
+        type: "removeApproval",
+        workspaceId,
+        requestId: resolvedRequestId,
+      });
+      dispatch({
+        type: "removeToolCallRequest",
+        workspaceId,
+        requestId: resolvedRequestId,
+      });
+      dispatch({
+        type: "removeUserInputRequest",
+        workspaceId,
+        requestId: resolvedRequestId,
+      });
+    },
+    [dispatch, onDebug],
+  );
+
   const handlers = useMemo(
     () => ({
       onWorkspaceConnected,
@@ -163,6 +218,7 @@ export function useThreadEventHandlers({
       onToolCallRequest,
       onRequestUserInput,
       onBackgroundThreadAction,
+      onAuxNotification,
       onAppServerEvent,
       onAgentMessageDelta,
       onAgentMessageCompleted,
@@ -195,6 +251,7 @@ export function useThreadEventHandlers({
       onToolCallRequest,
       onRequestUserInput,
       onBackgroundThreadAction,
+      onAuxNotification,
       onAppServerEvent,
       onAgentMessageDelta,
       onAgentMessageCompleted,

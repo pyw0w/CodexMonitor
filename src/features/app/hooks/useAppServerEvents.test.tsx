@@ -460,6 +460,50 @@ describe("useAppServerEvents", () => {
     });
   });
 
+  it("routes auxiliary notifications through onAuxNotification", async () => {
+    const handlers: Handlers = {
+      onAuxNotification: vi.fn(),
+    };
+    const { root } = await mount(handlers);
+
+    act(() => {
+      listener?.({
+        workspace_id: "ws-aux",
+        message: {
+          method: "serverRequest/resolved",
+          id: "req-17",
+          params: { threadId: "thread-1", status: "completed" },
+        },
+      });
+    });
+
+    expect(handlers.onAuxNotification).toHaveBeenCalledWith("ws-aux", {
+      method: "serverRequest/resolved",
+      params: { threadId: "thread-1", status: "completed" },
+      requestId: "req-17",
+    });
+
+    act(() => {
+      listener?.({
+        workspace_id: "ws-aux",
+        message: {
+          method: "thread/realtime/error",
+          params: { threadId: "thread-1", error: "socket closed" },
+        },
+      });
+    });
+
+    expect(handlers.onAuxNotification).toHaveBeenCalledWith("ws-aux", {
+      method: "thread/realtime/error",
+      params: { threadId: "thread-1", error: "socket closed" },
+      requestId: null,
+    });
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
   it("ignores delta events missing required fields", async () => {
     const handlers: Handlers = {
       onAgentMessageDelta: vi.fn(),

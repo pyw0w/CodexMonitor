@@ -98,20 +98,31 @@ type AppServerEventHandlers = {
     workspaceId: string,
     payload: { loginId: string | null; success: boolean; error: string | null },
   ) => void;
+  onAuxNotification?: (
+    workspaceId: string,
+    payload: {
+      method: string;
+      params: Record<string, unknown>;
+      requestId: string | number | null;
+    },
+  ) => void;
 };
 
 export const METHODS_ROUTED_IN_USE_APP_SERVER_EVENTS = [
   "account/login/completed",
   "account/rateLimits/updated",
   "account/updated",
+  "configWarning",
   "codex/backgroundThread",
   "codex/connected",
+  "deprecationNotice",
   "error",
   "item/agentMessage/delta",
   "item/commandExecution/outputDelta",
   "item/commandExecution/terminalInteraction",
   "item/completed",
   "item/fileChange/outputDelta",
+  "item/mcpToolCall/progress",
   "item/plan/delta",
   "item/reasoning/summaryPartAdded",
   "item/reasoning/summaryTextDelta",
@@ -119,9 +130,19 @@ export const METHODS_ROUTED_IN_USE_APP_SERVER_EVENTS = [
   "item/started",
   "item/tool/call",
   "item/tool/requestUserInput",
+  "mcpServer/oauthLogin/completed",
+  "model/rerouted",
+  "rawResponseItem/completed",
+  "serverRequest/resolved",
   "thread/archived",
   "thread/closed",
+  "thread/compacted",
   "thread/name/updated",
+  "thread/realtime/closed",
+  "thread/realtime/error",
+  "thread/realtime/itemAdded",
+  "thread/realtime/outputAudio/delta",
+  "thread/realtime/started",
   "thread/status/changed",
   "thread/started",
   "thread/tokenUsage/updated",
@@ -130,7 +151,27 @@ export const METHODS_ROUTED_IN_USE_APP_SERVER_EVENTS = [
   "turn/diff/updated",
   "turn/plan/updated",
   "turn/started",
+  "windows/worldWritableWarning",
+  "windowsSandbox/setupCompleted",
 ] as const satisfies readonly SupportedAppServerMethod[];
+
+const AUX_NOTIFICATION_METHODS = new Set<SupportedAppServerMethod>([
+  "configWarning",
+  "deprecationNotice",
+  "item/mcpToolCall/progress",
+  "mcpServer/oauthLogin/completed",
+  "model/rerouted",
+  "rawResponseItem/completed",
+  "serverRequest/resolved",
+  "thread/compacted",
+  "thread/realtime/closed",
+  "thread/realtime/error",
+  "thread/realtime/itemAdded",
+  "thread/realtime/outputAudio/delta",
+  "thread/realtime/started",
+  "windows/worldWritableWarning",
+  "windowsSandbox/setupCompleted",
+]);
 
 export function useAppServerEvents(handlers: AppServerEventHandlers) {
   // Use ref to keep handlers current without triggering re-subscription
@@ -172,6 +213,15 @@ export function useAppServerEvents(handlers: AppServerEventHandlers) {
       }
 
       if (!isSupportedAppServerMethod(method)) {
+        return;
+      }
+
+      if (AUX_NOTIFICATION_METHODS.has(method)) {
+        currentHandlers.onAuxNotification?.(workspace_id, {
+          method,
+          params,
+          requestId,
+        });
         return;
       }
 

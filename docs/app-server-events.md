@@ -77,6 +77,8 @@ of the v2 `Notification` enum in `common.rs`; these are called out below.
 - `thread/unarchived`
 - `codex/backgroundThread`
 - `error`
+- `configWarning`
+- `deprecationNotice`
 - `turn/completed`
 - `turn/plan/updated`
 - `turn/diff/updated`
@@ -86,6 +88,7 @@ of the v2 `Notification` enum in `common.rs`; these are called out below.
 - `account/login/completed`
 - `item/started`
 - `item/completed`
+- `item/mcpToolCall/progress`
 - `item/reasoning/summaryTextDelta`
 - `item/reasoning/summaryPartAdded`
 - `item/reasoning/textDelta`
@@ -93,6 +96,18 @@ of the v2 `Notification` enum in `common.rs`; these are called out below.
 - `item/commandExecution/outputDelta`
 - `item/commandExecution/terminalInteraction`
 - `item/fileChange/outputDelta`
+- `mcpServer/oauthLogin/completed`
+- `model/rerouted`
+- `rawResponseItem/completed`
+- `serverRequest/resolved`
+- `thread/compacted` (deprecated; routed as auxiliary notification)
+- `thread/realtime/closed`
+- `thread/realtime/error`
+- `thread/realtime/itemAdded`
+- `thread/realtime/outputAudio/delta`
+- `thread/realtime/started`
+- `windows/worldWritableWarning`
+- `windowsSandbox/setupCompleted`
 - `codex/event/skills_update_available` (handled via
   `isSkillsUpdateAvailableEvent(...)` in `useSkills.ts`)
 
@@ -116,28 +131,12 @@ CodexMonitor status:
 
 - It routes `item/started` and `item/completed`, so the preferred signal reaches the frontend event layer.
 - It renders/stores `contextCompaction` items via the normal item lifecycle.
-- It no longer routes deprecated `thread/compacted`.
+- It also routes deprecated `thread/compacted` as an auxiliary/debug notification for compatibility.
 
 ## Missing Events (Codex v2 Notifications)
 
-Compared against Codex app-server protocol v2 notifications, the following
-events are currently not routed:
-
-- `configWarning`
-- `deprecationNotice`
-- `item/mcpToolCall/progress`
-- `mcpServer/oauthLogin/completed`
-- `model/rerouted`
-- `rawResponseItem/completed`
-- `serverRequest/resolved`
-- `thread/compacted` (deprecated; intentionally not routed)
-- `thread/realtime/closed`
-- `thread/realtime/error`
-- `thread/realtime/itemAdded`
-- `thread/realtime/outputAudio/delta`
-- `thread/realtime/started`
-- `windows/worldWritableWarning`
-- `windowsSandbox/setupCompleted`
+Compared against Codex app-server protocol v2 notifications, there are no
+currently missing routed methods.
 
 ## Supported Requests (CodexMonitor -> App-Server, v2)
 
