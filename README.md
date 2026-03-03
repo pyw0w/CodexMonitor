@@ -243,6 +243,8 @@ Build a Fedora-oriented RPM bundle locally:
 npm run tauri:build:fedora
 ```
 
+This command now also builds and bundles the desktop daemon binaries (`codex_monitor_daemon`, `codex_monitor_daemonctl`) into the RPM package.
+
 Artifacts will be in:
 
 - `src-tauri/target/release/bundle/rpm/` (`.rpm`)

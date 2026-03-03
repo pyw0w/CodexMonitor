@@ -154,6 +154,21 @@ fn fedora_override_pins_rpm_bundle_and_linux_window_defaults() {
         Some(false),
         "Fedora override should disable updater artifacts for local/manual RPM distribution"
     );
+    assert_eq!(
+        config
+            .get("bundle")
+            .and_then(|bundle| bundle.get("externalBin"))
+            .and_then(Value::as_array)
+            .map(|entries| {
+                entries
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default(),
+        vec!["binaries/codex_monitor_daemon", "binaries/codex_monitor_daemonctl"],
+        "Fedora override should package daemon sidecar binaries"
+    );
 }
 
 #[test]

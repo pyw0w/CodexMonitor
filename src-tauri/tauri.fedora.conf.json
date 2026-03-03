@@ -18,6 +18,10 @@
   },
   "bundle": {
     "createUpdaterArtifacts": false,
-    "targets": ["rpm"]
+    "targets": ["rpm"],
+    "externalBin": [
+      "binaries/codex_monitor_daemon",
+      "binaries/codex_monitor_daemonctl"
+    ]
   }
 }

@@ -153,9 +153,16 @@ import { useAppShellOrchestration } from "@app/orchestration/useLayoutOrchestrat
 import { buildCodexArgsOptions } from "@threads/utils/codexArgsProfiles";
 import { normalizeCodexArgsInput } from "@/utils/codexArgsInput";
 import {
+  NO_THREAD_SCOPE_SUFFIX,
   resolveWorkspaceRuntimeCodexArgsBadgeLabel,
   resolveWorkspaceRuntimeCodexArgsOverride,
 } from "@threads/utils/threadCodexParamsSeed";
+import {
+  estimateThreadUsageCost,
+  formatUsageCostLabel,
+  mergeUsageCostSummaries,
+} from "@app/utils/usageCost";
+import { formatCompactTokenCount } from "@utils/tokenUsage";
 import { setWorkspaceRuntimeCodexArgs } from "@services/tauri";
 import { I18nProvider } from "@/i18n/provider";
 
@@ -620,6 +627,7 @@ function MainApp() {
     threadListCursorByWorkspace,
     activeTurnIdByThread,
     tokenUsageByThread,
+    tokenUsageThreadIdsByWorkspace,
     rateLimitsByWorkspace,
     accountByWorkspace,
     planByThread,
@@ -1370,6 +1378,126 @@ function MainApp() {
   const activeTokenUsage = activeThreadId
     ? tokenUsageByThread[activeThreadId] ?? null
     : null;
+  const formatFullTokenCount = useCallback((value: number) => {
+    if (!Number.isFinite(value) || value <= 0) {
+      return null;
+    }
+    return Math.round(value).toLocaleString();
+  }, []);
+  const resolveThreadModelId = useCallback(
+    (workspaceId: string, threadId: string) => {
+      const fromList =
+        threadsByWorkspace[workspaceId]
+          ?.find((thread) => thread.id === threadId)
+          ?.modelId?.trim() ?? "";
+      if (fromList) {
+        return fromList;
+      }
+      const fromThreadScope = getThreadCodexParams(workspaceId, threadId)?.modelId?.trim() ?? "";
+      if (fromThreadScope) {
+        return fromThreadScope;
+      }
+      const fromWorkspaceScope =
+        getThreadCodexParams(workspaceId, NO_THREAD_SCOPE_SUFFIX)?.modelId?.trim() ?? "";
+      if (fromWorkspaceScope) {
+        return fromWorkspaceScope;
+      }
+      const fromLastComposerModel = appSettings.lastComposerModelId?.trim() ?? "";
+      return fromLastComposerModel || null;
+    },
+    [appSettings.lastComposerModelId, getThreadCodexParams, threadsByWorkspace],
+  );
+  const getDisplayThreadTokenUsageTotal = useCallback(
+    (threadId: string) => {
+      const usage = tokenUsageByThread[threadId];
+      const totalTokens = usage?.total.totalTokens ?? 0;
+      if (!appSettings.threadTokenUsageExcludeCache) {
+        return totalTokens;
+      }
+      const cachedInputTokens = usage?.total.cachedInputTokens ?? 0;
+      return Math.max(0, totalTokens - cachedInputTokens);
+    },
+    [appSettings.threadTokenUsageExcludeCache, tokenUsageByThread],
+  );
+  const getThreadTokenUsageLabel = useCallback(
+    (workspaceId: string, threadId: string) => {
+      if (!appSettings.showThreadTokenUsage) {
+        return null;
+      }
+      const totalTokens = getDisplayThreadTokenUsageTotal(threadId);
+      const formattedTotal = appSettings.threadTokenUsageShowFull
+        ? formatFullTokenCount(totalTokens)
+        : formatCompactTokenCount(totalTokens);
+      if (!formattedTotal) {
+        return null;
+      }
+      const costSummary = estimateThreadUsageCost(
+        tokenUsageByThread[threadId],
+        resolveThreadModelId(workspaceId, threadId),
+        { excludeCache: appSettings.threadTokenUsageExcludeCache },
+      );
+      const costLabel = formatUsageCostLabel(
+        costSummary,
+        !appSettings.threadTokenUsageShowFull,
+      );
+      return costLabel ? `${formattedTotal} tokens · ${costLabel}` : `${formattedTotal} tokens`;
+    },
+    [
+      appSettings.showThreadTokenUsage,
+      appSettings.threadTokenUsageExcludeCache,
+      appSettings.threadTokenUsageShowFull,
+      formatFullTokenCount,
+      getDisplayThreadTokenUsageTotal,
+      resolveThreadModelId,
+      tokenUsageByThread,
+    ],
+  );
+  const getWorkspaceTokenUsageLabel = useCallback(
+    (workspaceId: string) => {
+      if (!appSettings.showThreadTokenUsage) {
+        return null;
+      }
+      const threadIds = new Set<string>([
+        ...(tokenUsageThreadIdsByWorkspace[workspaceId] ?? []),
+        ...(threadsByWorkspace[workspaceId] ?? []).map((thread) => thread.id),
+      ]);
+      let totalTokens = 0;
+      const costSummary = mergeUsageCostSummaries(
+        Array.from(threadIds).map((threadId) =>
+          estimateThreadUsageCost(
+            tokenUsageByThread[threadId],
+            resolveThreadModelId(workspaceId, threadId),
+            { excludeCache: appSettings.threadTokenUsageExcludeCache },
+          ),
+        ),
+      );
+      threadIds.forEach((threadId) => {
+        totalTokens += getDisplayThreadTokenUsageTotal(threadId);
+      });
+      const formattedTotal = appSettings.threadTokenUsageShowFull
+        ? formatFullTokenCount(totalTokens)
+        : formatCompactTokenCount(totalTokens);
+      if (!formattedTotal) {
+        return null;
+      }
+      const costLabel = formatUsageCostLabel(
+        costSummary,
+        !appSettings.threadTokenUsageShowFull,
+      );
+      return costLabel ? `${formattedTotal} tokens · ${costLabel}` : `${formattedTotal} tokens`;
+    },
+    [
+      appSettings.showThreadTokenUsage,
+      appSettings.threadTokenUsageExcludeCache,
+      appSettings.threadTokenUsageShowFull,
+      formatFullTokenCount,
+      getDisplayThreadTokenUsageTotal,
+      resolveThreadModelId,
+      threadsByWorkspace,
+      tokenUsageByThread,
+      tokenUsageThreadIdsByWorkspace,
+    ],
+  );
   const activePlan = activeThreadId
     ? planByThread[activeThreadId] ?? null
     : null;
@@ -2537,6 +2665,8 @@ function MainApp() {
     onWorkspaceDragLeave: handleWorkspaceDragLeave,
     onWorkspaceDrop: handleWorkspaceDrop,
     getThreadArgsBadge,
+    getThreadTokenUsageLabel,
+    getWorkspaceTokenUsageLabel,
   });
 
   const gitRootOverride = activeWorkspace?.settings.gitRoot;

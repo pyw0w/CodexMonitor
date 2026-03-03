@@ -34,7 +34,6 @@ type WorktreeSectionProps = {
     pinVersion?: number,
     options?: {
       showSubagentSessions?: boolean;
-      collapsedParentThreadIds?: ReadonlySet<string>;
     },
   ) => ThreadRowsResult;
   getThreadTime: (thread: ThreadSummary) => string | null;
@@ -58,8 +57,6 @@ type WorktreeSectionProps = {
   onToggleExpanded: (workspaceId: string) => void;
   onLoadOlderThreads: (workspaceId: string) => void;
   showSubagentSessions: boolean;
-  collapsedThreadIdsByWorkspace?: Record<string, ReadonlySet<string>>;
-  onToggleThreadChildren?: (workspaceId: string, threadId: string) => void;
   sectionLabel?: string;
   sectionIcon?: ReactNode;
   className?: string;
@@ -94,8 +91,6 @@ export function WorktreeSection({
   onToggleExpanded,
   onLoadOlderThreads,
   showSubagentSessions,
-  collapsedThreadIdsByWorkspace,
-  onToggleThreadChildren,
   sectionLabel = "Worktrees",
   sectionIcon,
   className,
@@ -135,7 +130,6 @@ export function WorktreeSection({
             pinnedThreadsVersion,
             {
               showSubagentSessions,
-              collapsedParentThreadIds: collapsedThreadIdsByWorkspace?.[worktree.id],
             },
           );
 
@@ -170,8 +164,6 @@ export function WorktreeSection({
                   getThreadArgsBadge={getThreadArgsBadge}
                   getThreadTokenUsageLabel={getThreadTokenUsageLabel}
                   isThreadPinned={isThreadPinned}
-                  collapsedThreadIds={collapsedThreadIdsByWorkspace?.[worktree.id]}
-                  onToggleThreadChildren={onToggleThreadChildren}
                   onToggleExpanded={onToggleExpanded}
                   onLoadOlderThreads={onLoadOlderThreads}
                   onSelectThread={onSelectThread}

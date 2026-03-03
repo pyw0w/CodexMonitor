@@ -15,6 +15,7 @@ type ThreadRowProps = {
   workspaceLabel?: string | null;
   getThreadTime: (thread: ThreadSummary) => string | null;
   getThreadArgsBadge?: (workspaceId: string, threadId: string) => string | null;
+  getThreadTokenUsageLabel?: (workspaceId: string, threadId: string) => string | null;
   isThreadPinned: (workspaceId: string, threadId: string) => boolean;
   onSelectThread: (workspaceId: string, threadId: string) => void;
   onShowThreadMenu: (
@@ -40,6 +41,7 @@ export function ThreadRow({
   workspaceLabel,
   getThreadTime,
   getThreadArgsBadge,
+  getThreadTokenUsageLabel,
   isThreadPinned,
   onSelectThread,
   onShowThreadMenu,
@@ -49,6 +51,7 @@ export function ThreadRow({
 }: ThreadRowProps) {
   const relativeTime = getThreadTime(thread);
   const badge = getThreadArgsBadge?.(workspaceId, thread.id) ?? null;
+  const tokenUsageLabel = getThreadTokenUsageLabel?.(workspaceId, thread.id) ?? null;
   const modelBadge =
     thread.modelId && thread.modelId.trim().length > 0
       ? thread.effort && thread.effort.trim().length > 0
@@ -91,7 +94,10 @@ export function ThreadRow({
     >
       <span className={`thread-status ${statusClass}`} aria-hidden />
       {isPinned && <span className="thread-pin-icon" aria-label="Pinned">📌</span>}
-      <span className="thread-name">{thread.name}</span>
+      <div className="thread-text">
+        <span className="thread-name">{thread.name}</span>
+        {tokenUsageLabel && <span className="thread-token-usage">{tokenUsageLabel}</span>}
+      </div>
       <div className="thread-meta">
         {workspaceLabel && <span className="thread-workspace-label">{workspaceLabel}</span>}
         {modelBadge && (
