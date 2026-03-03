@@ -671,6 +671,8 @@ export const ru: TranslationDictionary = {
   "sidebar.header.refreshAria": "Обновить треды всех рабочих областей",
   "sidebar.header.refreshTitle": "Обновить треды всех рабочих областей",
   "sidebar.header.toggleSearchAria": "Переключить поиск",
+  "sidebar.header.openSearchTitle": "Искать треды",
+  "sidebar.header.closeSearchTitle": "Закрыть поиск",
   "sidebar.sections.pinned": "Закрепленные",
   "sidebar.sections.allThreads": "Все треды",
   "sidebar.actions.newThreadInProject": "Новый тред в проекте",

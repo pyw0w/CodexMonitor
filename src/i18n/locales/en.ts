@@ -808,6 +808,8 @@ export const en: TranslationDictionary = {
   "sidebar.header.refreshAria": "Refresh all workspace threads",
   "sidebar.header.refreshTitle": "Refresh all workspace threads",
   "sidebar.header.toggleSearchAria": "Toggle search",
+  "sidebar.header.openSearchTitle": "Search threads",
+  "sidebar.header.closeSearchTitle": "Close search",
   "sidebar.sections.pinned": "Pinned",
   "sidebar.sections.allThreads": "All threads",
   "sidebar.actions.newThreadInProject": "New thread in project",
