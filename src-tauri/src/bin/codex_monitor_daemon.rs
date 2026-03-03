@@ -1443,10 +1443,25 @@ fn send_notification_fallback_inner(title: String, body: String) -> Result<(), S
         return Err(format!("osascript exited with status: {status}"));
     }
 
-    #[cfg(not(all(target_os = "macos", debug_assertions)))]
+    #[cfg(target_os = "linux")]
+    {
+        let status = std::process::Command::new("notify-send")
+            .arg("--app-name=CodexMonitor")
+            .arg(&title)
+            .arg(&body)
+            .status()
+            .map_err(|error| format!("Failed to run notify-send: {error}"))?;
+
+        if status.success() {
+            return Ok(());
+        }
+        return Err(format!("notify-send exited with status: {status}"));
+    }
+
+    #[cfg(not(any(all(target_os = "macos", debug_assertions), target_os = "linux")))]
     {
         let _ = (title, body);
-        Err("Notification fallback is only available on macOS debug builds.".to_string())
+        Err("Notification fallback is available on macOS debug builds and Linux.".to_string())
     }
 }
 

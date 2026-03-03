@@ -79,6 +79,9 @@ describe("tauri invoke wrappers", () => {
       if (command === "is_macos_debug_build") {
         return false;
       }
+      if (command === "app_build_type") {
+        return "release";
+      }
       if (command === "get_app_settings") {
         return { backendMode: "local" };
       }
@@ -1070,5 +1073,181 @@ describe("tauri invoke wrappers", () => {
       body: "Fallback",
     });
     expect(isPermissionGrantedMock).not.toHaveBeenCalled();
+  });
+
+  it("uses notification plugin first on Linux Tauri runtime", async () => {
+    const isPermissionGrantedMock = vi.mocked(notification.isPermissionGranted);
+    const sendNotificationMock = vi.mocked(notification.sendNotification);
+    const invokeMock = vi.mocked(invoke);
+    const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
+    const navigatorDescriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "navigator",
+    );
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      writable: true,
+      value: { __TAURI__: {} },
+    });
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: { userAgent: "Mozilla/5.0 (X11; Linux x86_64)" },
+    });
+
+    try {
+      invokeMock.mockImplementation(async (command: string) => {
+        if (command === "is_macos_debug_build") {
+          return false;
+        }
+        if (command === "app_build_type") {
+          return "release";
+        }
+        return undefined;
+      });
+
+      await sendNotification("Linux", "Fallback");
+
+      expect(sendNotificationMock).toHaveBeenCalledWith({
+        title: "Linux",
+        body: "Fallback",
+      });
+      expect(isPermissionGrantedMock).not.toHaveBeenCalled();
+      expect(invokeMock).not.toHaveBeenCalledWith("send_notification_fallback", {
+        title: "Linux",
+        body: "Fallback",
+      });
+    } finally {
+      if (windowDescriptor) {
+        Object.defineProperty(globalThis, "window", windowDescriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "window");
+      }
+
+      if (navigatorDescriptor) {
+        Object.defineProperty(globalThis, "navigator", navigatorDescriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "navigator");
+      }
+    }
+  });
+
+  it("falls back on Linux when notification plugin send fails", async () => {
+    const isPermissionGrantedMock = vi.mocked(notification.isPermissionGranted);
+    const sendNotificationMock = vi.mocked(notification.sendNotification);
+    const invokeMock = vi.mocked(invoke);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
+    const navigatorDescriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "navigator",
+    );
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      writable: true,
+      value: { __TAURI__: {} },
+    });
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: { userAgent: "Mozilla/5.0 (X11; Linux x86_64)" },
+    });
+
+    try {
+      sendNotificationMock.mockRejectedValueOnce(new Error("linux-send-failed"));
+      invokeMock.mockImplementation(async (command: string) => {
+        if (command === "is_macos_debug_build") {
+          return false;
+        }
+        if (command === "app_build_type") {
+          return "release";
+        }
+        if (command === "send_notification_fallback") {
+          return undefined;
+        }
+        return undefined;
+      });
+
+      await sendNotification("Linux", "Fallback");
+
+      expect(isPermissionGrantedMock).not.toHaveBeenCalled();
+      expect(invokeMock).toHaveBeenCalledWith("send_notification_fallback", {
+        title: "Linux",
+        body: "Fallback",
+      });
+      expect(warnSpy).toHaveBeenCalledWith("Notification plugin failed.", {
+        error: expect.any(Error),
+      });
+    } finally {
+      if (windowDescriptor) {
+        Object.defineProperty(globalThis, "window", windowDescriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "window");
+      }
+
+      if (navigatorDescriptor) {
+        Object.defineProperty(globalThis, "navigator", navigatorDescriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "navigator");
+      }
+      warnSpy.mockRestore();
+    }
+  });
+
+  it("prefers Linux fallback in debug builds", async () => {
+    const isPermissionGrantedMock = vi.mocked(notification.isPermissionGranted);
+    const sendNotificationMock = vi.mocked(notification.sendNotification);
+    const invokeMock = vi.mocked(invoke);
+    const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
+    const navigatorDescriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "navigator",
+    );
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      writable: true,
+      value: { __TAURI__: {} },
+    });
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: { userAgent: "Mozilla/5.0 (X11; Linux x86_64)" },
+    });
+
+    try {
+      invokeMock.mockImplementation(async (command: string) => {
+        if (command === "is_macos_debug_build") {
+          return false;
+        }
+        if (command === "app_build_type") {
+          return "debug";
+        }
+        if (command === "send_notification_fallback") {
+          return undefined;
+        }
+        return undefined;
+      });
+
+      await sendNotification("Linux", "Debug fallback");
+
+      expect(sendNotificationMock).not.toHaveBeenCalled();
+      expect(isPermissionGrantedMock).not.toHaveBeenCalled();
+      expect(invokeMock).toHaveBeenCalledWith("send_notification_fallback", {
+        title: "Linux",
+        body: "Debug fallback",
+      });
+    } finally {
+      if (windowDescriptor) {
+        Object.defineProperty(globalThis, "window", windowDescriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "window");
+      }
+
+      if (navigatorDescriptor) {
+        Object.defineProperty(globalThis, "navigator", navigatorDescriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "navigator");
+      }
+    }
   });
 });

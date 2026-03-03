@@ -6,8 +6,6 @@ type SoundLabel = "success" | "error" | "test";
 
 type AudioContextConstructor = new () => AudioContext;
 
-let audioContext: AudioContext | null = null;
-
 function resolveAudioContextConstructor(): AudioContextConstructor | null {
   if (typeof window === "undefined") {
     return null;
@@ -22,18 +20,57 @@ function resolveAudioContextConstructor(): AudioContextConstructor | null {
     null);
 }
 
-function getAudioContext(): AudioContext {
-  if (audioContext && audioContext.state !== "closed") {
-    return audioContext;
-  }
-
+function createAudioContext(): AudioContext {
   const AudioContextImpl = resolveAudioContextConstructor();
   if (!AudioContextImpl) {
     throw new Error("Web Audio API is not available in this environment");
   }
 
-  audioContext = new AudioContextImpl();
-  return audioContext;
+  return new AudioContextImpl();
+}
+
+function isTauriLinuxRuntime(): boolean {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return false;
+  }
+
+  const hasTauriBridge = Boolean(
+    (window as unknown as { __TAURI__?: unknown }).__TAURI__ ||
+      (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__,
+  );
+  return hasTauriBridge && /linux/i.test(navigator.userAgent);
+}
+
+function clearMediaSessionState() {
+  if (typeof navigator === "undefined" || !("mediaSession" in navigator)) {
+    return;
+  }
+
+  const mediaSessionNavigator = navigator as Navigator & {
+    mediaSession?: {
+      metadata: unknown;
+      playbackState: "none" | "paused" | "playing";
+      setActionHandler: (
+        action: MediaSessionAction,
+        handler: MediaSessionActionHandler | null,
+      ) => void;
+    };
+  };
+  if (!mediaSessionNavigator.mediaSession) {
+    return;
+  }
+
+  try {
+    mediaSessionNavigator.mediaSession.metadata = null;
+    mediaSessionNavigator.mediaSession.playbackState = "none";
+    mediaSessionNavigator.mediaSession.setActionHandler("play", null);
+    mediaSessionNavigator.mediaSession.setActionHandler("pause", null);
+    mediaSessionNavigator.mediaSession.setActionHandler("previoustrack", null);
+    mediaSessionNavigator.mediaSession.setActionHandler("nexttrack", null);
+    mediaSessionNavigator.mediaSession.setActionHandler("stop", null);
+  } catch {
+    // No-op: media session APIs vary by WebView platform.
+  }
 }
 
 export function playNotificationSound(
@@ -42,10 +79,30 @@ export function playNotificationSound(
   onDebug?: DebugLogger,
 ) {
   try {
-    const ctx = getAudioContext();
+    const ctx = createAudioContext();
 
     if (ctx.state === "suspended") {
       void ctx.resume();
+    }
+
+    const closeContext = () => {
+      clearMediaSessionState();
+      void ctx.close();
+    };
+
+    if (isTauriLinuxRuntime()) {
+      // Keep Linux feedback simple and short to avoid sticky media-player cards.
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = label === "error" ? 360 : 660;
+      gainNode.gain.value = 0.03;
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.onended = closeContext;
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.12);
+      return;
     }
 
     void fetch(url)
@@ -59,9 +116,11 @@ export function playNotificationSound(
         source.buffer = audioBuffer;
         source.connect(gainNode);
         gainNode.connect(ctx.destination);
+        source.onended = closeContext;
         source.start();
       })
       .catch((error) => {
+        closeContext();
         onDebug?.({
           id: `${Date.now()}-audio-${label}-load-or-play-error`,
           timestamp: Date.now(),

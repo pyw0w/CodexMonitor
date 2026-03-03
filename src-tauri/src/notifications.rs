@@ -1,5 +1,7 @@
 #[cfg(all(target_os = "macos", debug_assertions))]
 use std::process::Command;
+#[cfg(target_os = "linux")]
+use std::process::Command;
 
 #[tauri::command]
 pub(crate) async fn is_macos_debug_build() -> bool {
@@ -48,9 +50,25 @@ pub(crate) async fn send_notification_fallback(title: String, body: String) -> R
         }
     }
 
-    #[cfg(not(all(target_os = "macos", debug_assertions)))]
+    #[cfg(target_os = "linux")]
+    {
+        let status = Command::new("notify-send")
+            .arg("--app-name=CodexMonitor")
+            .arg(&title)
+            .arg(&body)
+            .status()
+            .map_err(|error| format!("Failed to run notify-send: {error}"))?;
+
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!("notify-send exited with status: {status}"))
+        }
+    }
+
+    #[cfg(not(any(all(target_os = "macos", debug_assertions), target_os = "linux")))]
     {
         let _ = (title, body);
-        Err("Notification fallback is only available on macOS debug builds.".to_string())
+        Err("Notification fallback is available on macOS debug builds and Linux.".to_string())
     }
 }

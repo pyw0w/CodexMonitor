@@ -1200,9 +1200,44 @@ export async function sendNotification(
     extra?: Record<string, unknown>;
   },
 ): Promise<void> {
+  const payload: NotificationOptions = { title, body };
+  if (options?.id !== undefined) {
+    payload.id = options.id;
+  }
+  if (options?.group !== undefined) {
+    payload.group = options.group;
+  }
+  if (options?.actionTypeId !== undefined) {
+    payload.actionTypeId = options.actionTypeId;
+  }
+  if (options?.sound !== undefined) {
+    payload.sound = options.sound;
+  }
+  if (options?.autoCancel !== undefined) {
+    payload.autoCancel = options.autoCancel;
+  }
+  if (options?.extra !== undefined) {
+    payload.extra = options.extra;
+  }
+
   const macosDebugBuild = await invoke<boolean>("is_macos_debug_build").catch(
     () => false,
   );
+  const appBuildType = await invoke<AppBuildType>("app_build_type").catch(
+    () => "release" as const,
+  );
+  const tauriWindow =
+    typeof window !== "undefined" &&
+    Boolean(
+      (window as unknown as { __TAURI__?: unknown }).__TAURI__ ||
+        (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__,
+    );
+  const isLinuxRuntime =
+    tauriWindow &&
+    typeof navigator !== "undefined" &&
+    /linux/i.test(navigator.userAgent);
+  const linuxDebugBuild = isLinuxRuntime && appBuildType === "debug";
+
   const attemptFallback = async () => {
     try {
       await invoke("send_notification_fallback", { title, body });
@@ -1220,8 +1255,20 @@ export async function sendNotification(
     return;
   }
 
+  // In Linux debug runs, desktop notification delivery through plugin APIs can
+  // be inconsistent depending on session/app-id wiring. Prefer fallback there.
+  if (linuxDebugBuild) {
+    await attemptFallback();
+    return;
+  }
+
   try {
     const notification = await import("@tauri-apps/plugin-notification");
+    if (isLinuxRuntime) {
+      await notification.sendNotification(payload);
+      return;
+    }
+
     let permissionGranted = await notification.isPermissionGranted();
     if (!permissionGranted) {
       const permission = await notification.requestPermission();
@@ -1232,29 +1279,9 @@ export async function sendNotification(
         return;
       }
     }
-    if (permissionGranted) {
-      const payload: NotificationOptions = { title, body };
-      if (options?.id !== undefined) {
-        payload.id = options.id;
-      }
-      if (options?.group !== undefined) {
-        payload.group = options.group;
-      }
-      if (options?.actionTypeId !== undefined) {
-        payload.actionTypeId = options.actionTypeId;
-      }
-      if (options?.sound !== undefined) {
-        payload.sound = options.sound;
-      }
-      if (options?.autoCancel !== undefined) {
-        payload.autoCancel = options.autoCancel;
-      }
-      if (options?.extra !== undefined) {
-        payload.extra = options.extra;
-      }
-      await notification.sendNotification(payload);
-      return;
-    }
+
+    await notification.sendNotification(payload);
+    return;
   } catch (error) {
     console.warn("Notification plugin failed.", { error });
   }
