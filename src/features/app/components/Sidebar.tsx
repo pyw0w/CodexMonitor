@@ -35,6 +35,7 @@ import { useSidebarScrollFade } from "../hooks/useSidebarScrollFade";
 import { useThreadRows } from "../hooks/useThreadRows";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { getUsageLabels } from "../utils/usageLabels";
+import { useI18n } from "@/i18n/useI18n";
 import { formatRelativeTimeShort } from "../../../utils/time";
 import type { ThreadStatusById } from "../../../utils/threadStatus";
 
@@ -186,6 +187,7 @@ export const Sidebar = memo(function Sidebar({
   onWorkspaceDrop,
   headerTopNode,
 }: SidebarProps) {
+  const { t } = useI18n();
   const [expandedWorkspaces, setExpandedWorkspaces] = useState(
     new Set<string>(),
   );
@@ -638,6 +640,20 @@ export const Sidebar = memo(function Sidebar({
   );
   const { sidebarBodyRef, scrollFade, updateScrollFade } =
     useSidebarScrollFade(scrollFadeDeps);
+  const dropIdleText = t("sidebar.workspaceDrop.idle");
+  const dropBusyText = t("sidebar.workspaceDrop.busy");
+  const effectiveWorkspaceDropText =
+    workspaceDropText === "Drop Project Here"
+      ? dropIdleText
+      : workspaceDropText === "Adding Project..."
+        ? dropBusyText
+        : workspaceDropText;
+  const isWorkspaceDropBusy =
+    effectiveWorkspaceDropText === dropBusyText ||
+    workspaceDropText === "Adding Project...";
+  const isWorkspaceDropIdle =
+    effectiveWorkspaceDropText === dropIdleText ||
+    workspaceDropText === "Drop Project Here";
 
   const workspaceNameById = useMemo(() => {
     const byId = new Map<string, string>();
@@ -859,13 +875,13 @@ export const Sidebar = memo(function Sidebar({
       >
         <div
           className={`workspace-drop-overlay-text${
-            workspaceDropText === "Adding Project..." ? " is-busy" : ""
+            isWorkspaceDropBusy ? " is-busy" : ""
           }`}
         >
-          {workspaceDropText === "Drop Project Here" && (
+          {isWorkspaceDropIdle && (
             <FolderOpen className="workspace-drop-overlay-icon" aria-hidden />
           )}
-          {workspaceDropText}
+          {effectiveWorkspaceDropText}
         </div>
       </div>
       <div
@@ -879,7 +895,7 @@ export const Sidebar = memo(function Sidebar({
           {pinnedThreadRows.length > 0 && (
             <div className="pinned-section">
               <div className="workspace-group-header">
-                <div className="workspace-group-label">Pinned</div>
+                <div className="workspace-group-label">{t("sidebar.sections.pinned")}</div>
               </div>
               <PinnedThreadList
                 rows={pinnedThreadRows}
@@ -901,13 +917,13 @@ export const Sidebar = memo(function Sidebar({
             ? groupedWorkspacesForRender.length > 0 && (
                 <div className="workspace-group">
                   <div className="workspace-group-header workspace-group-header-all-threads">
-                    <div className="workspace-group-label">All threads</div>
+                    <div className="workspace-group-label">{t("sidebar.sections.allThreads")}</div>
                     <button
                       className="ghost all-threads-add"
                       onClick={handleAllThreadsAddMenuToggle}
                       data-tauri-drag-region="false"
-                      aria-label="New thread in project"
-                      title="New thread in project"
+                      aria-label={t("sidebar.actions.newThreadInProject")}
+                      title={t("sidebar.actions.newThreadInProject")}
                       aria-expanded={allThreadsAddMenuOpen}
                       disabled={projectOptionsForNewThread.length === 0}
                     >
@@ -1102,7 +1118,7 @@ export const Sidebar = memo(function Sidebar({
                               }}
                             >
                               <span className={`thread-status ${draftStatusClass}`} aria-hidden />
-                              <span className="thread-name">New Agent</span>
+                              <span className="thread-name">{t("sidebar.thread.newAgent")}</span>
                             </div>
                           )}
                           {visibleClones.length > 0 && (
@@ -1207,15 +1223,15 @@ export const Sidebar = memo(function Sidebar({
           {!groupedWorkspacesForRender.length && (
             <div className="empty">
               {isSearchActive
-                ? "No projects match your search."
-                : "Add a workspace to start."}
+                ? t("sidebar.empty.noProjectsMatch")
+                : t("sidebar.empty.addWorkspace")}
             </div>
           )}
           {isThreadsOnlyMode &&
             groupedWorkspacesForRender.length > 0 &&
             flatThreadRows.length === 0 &&
             pinnedThreadRows.length === 0 && (
-              <div className="empty">No threads yet.</div>
+              <div className="empty">{t("sidebar.empty.noThreads")}</div>
             )}
         </div>
       </div>

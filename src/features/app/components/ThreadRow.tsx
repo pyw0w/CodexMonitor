@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEvent } from "react";
+import { useI18n } from "@/i18n/useI18n";
 
 import type { ThreadSummary } from "../../../types";
 import { getThreadStatusClass, type ThreadStatusById } from "../../../utils/threadStatus";
@@ -49,6 +50,7 @@ export function ThreadRow({
   subagentsExpanded = true,
   onToggleSubagents,
 }: ThreadRowProps) {
+  const { t } = useI18n();
   const relativeTime = getThreadTime(thread);
   const badge = getThreadArgsBadge?.(workspaceId, thread.id) ?? null;
   const tokenUsageLabel = getThreadTokenUsageLabel?.(workspaceId, thread.id) ?? null;
@@ -93,7 +95,11 @@ export function ThreadRow({
       }}
     >
       <span className={`thread-status ${statusClass}`} aria-hidden />
-      {isPinned && <span className="thread-pin-icon" aria-label="Pinned">📌</span>}
+      {isPinned && (
+        <span className="thread-pin-icon" aria-label={t("sidebar.threadRow.pinnedAria")}>
+          📌
+        </span>
+      )}
       <div className="thread-text">
         <span className="thread-name">{thread.name}</span>
         {tokenUsageLabel && <span className="thread-token-usage">{tokenUsageLabel}</span>}
@@ -115,7 +121,11 @@ export function ThreadRow({
               onToggleSubagents?.(workspaceId, thread.id);
             }}
             data-tauri-drag-region="false"
-            aria-label={subagentsExpanded ? "Hide sub-agents" : "Show sub-agents"}
+            aria-label={
+              subagentsExpanded
+                ? t("sidebar.threadRow.hideSubagents")
+                : t("sidebar.threadRow.showSubagents")
+            }
             aria-expanded={subagentsExpanded}
           >
             <span className="thread-subagent-time-label">{relativeTime ?? ""}</span>
