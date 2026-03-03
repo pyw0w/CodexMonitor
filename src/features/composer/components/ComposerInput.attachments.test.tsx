@@ -133,12 +133,22 @@ function dispatchDrop(
 
 function dispatchPaste(
   element: HTMLElement,
-  items: Array<{ type: string; getAsFile: () => File | null }>,
+  {
+    items = [],
+    files = [],
+    text = "",
+  }: {
+    items?: Array<{ kind?: string; type: string; getAsFile: () => File | null }>;
+    files?: File[];
+    text?: string;
+  },
 ) {
   const event = new Event("paste", { bubbles: true, cancelable: true });
   Object.defineProperty(event, "clipboardData", {
     value: {
       items,
+      files,
+      getData: (type: string) => (type === "text/plain" ? text : ""),
     },
   });
   element.dispatchEvent(event);
@@ -205,11 +215,31 @@ describe("Composer attachments integration", () => {
     const textarea = getTextarea(harness.container);
 
     const image = new File(["data"], "paste.png", { type: "image/png" });
-    const imageItem = { type: "image/png", getAsFile: () => image };
-    const textItem = { type: "text/plain", getAsFile: () => null };
+    const imageItem = { kind: "file", type: "image/png", getAsFile: () => image };
+    const textItem = { kind: "string", type: "text/plain", getAsFile: () => null };
 
     await act(async () => {
-      dispatchPaste(textarea, [textItem, imageItem]);
+      dispatchPaste(textarea, { items: [textItem, imageItem] });
+    });
+
+    expect(getAttachmentNames(harness.container)).toEqual(["Pasted image"]);
+
+    harness.unmount();
+    restoreFileReader();
+  });
+
+  it("attaches pasted images from clipboard files when items are missing", async () => {
+    const restoreFileReader = setMockFileReader();
+    const harness = renderComposerHarness({
+      activeThreadId: "thread-1",
+      activeWorkspaceId: "ws-1",
+    });
+    const textarea = getTextarea(harness.container);
+
+    const image = new File(["data"], "paste-file.png", { type: "image/png" });
+
+    await act(async () => {
+      dispatchPaste(textarea, { files: [image] });
     });
 
     expect(getAttachmentNames(harness.container)).toEqual(["Pasted image"]);
