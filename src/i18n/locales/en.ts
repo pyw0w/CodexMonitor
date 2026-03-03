@@ -847,6 +847,7 @@ export const en: TranslationDictionary = {
   "mainHeader.branch.empty": "No branches found",
   "mainHeader.actions.toggleTerminalAria": "Toggle terminal panel",
   "mainHeader.actions.terminal": "Terminal",
+  "mainHeader.actions.threadInfo": "Thread info",
   "mainHeader.actions.copyThread": "Copy thread",
   "home.hero.title": "Codex Monitor",
   "home.hero.subtitle": "Orchestrate agents across your local projects.",

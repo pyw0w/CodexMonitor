@@ -709,6 +709,7 @@ export const ru: TranslationDictionary = {
   "mainHeader.branch.empty": "Ветки не найдены",
   "mainHeader.actions.toggleTerminalAria": "Переключить панель терминала",
   "mainHeader.actions.terminal": "Терминал",
+  "mainHeader.actions.threadInfo": "Информация о треде",
   "mainHeader.actions.copyThread": "Скопировать тред",
   "home.hero.title": "Codex Monitor",
   "home.hero.subtitle": "Управляйте агентами в локальных проектах.",

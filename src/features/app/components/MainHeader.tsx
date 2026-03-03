@@ -568,18 +568,20 @@ export function MainHeader({
         {showTerminalButton && (
           <button
             type="button"
-            className={`ghost main-header-action${isTerminalOpen ? " is-active" : ""}`}
+            className={`ghost main-header-action ds-tooltip-trigger${isTerminalOpen ? " is-active" : ""}`}
             onClick={onToggleTerminal}
             data-tauri-drag-region="false"
             aria-label={t("mainHeader.actions.toggleTerminalAria")}
             title={t("mainHeader.actions.terminal")}
+            data-tooltip={t("mainHeader.actions.terminal")}
+            data-tooltip-placement="bottom"
           >
             <Terminal size={14} aria-hidden />
           </button>
         )}
         <button
           type="button"
-          className="ghost main-header-action"
+          className="ghost main-header-action ds-tooltip-trigger"
           onClick={() => {
             setThreadInfoOpen(true);
           }}
@@ -587,19 +589,23 @@ export function MainHeader({
             !activeThreadInfo || !onRenameActiveThreadName || !onGenerateActiveThreadName
           }
           data-tauri-drag-region="false"
-          aria-label="Thread info"
-          title="Thread info"
+          aria-label={t("mainHeader.actions.threadInfo")}
+          title={t("mainHeader.actions.threadInfo")}
+          data-tooltip={t("mainHeader.actions.threadInfo")}
+          data-tooltip-placement="bottom"
         >
           <Info size={14} aria-hidden />
         </button>
         <button
           type="button"
-          className={`ghost main-header-action${copyFeedback ? " is-copied" : ""}`}
+          className={`ghost main-header-action ds-tooltip-trigger${copyFeedback ? " is-copied" : ""}`}
           onClick={handleCopyClick}
           disabled={!canCopyThread || !onCopyThread}
           data-tauri-drag-region="false"
           aria-label={t("mainHeader.actions.copyThread")}
           title={t("mainHeader.actions.copyThread")}
+          data-tooltip={t("mainHeader.actions.copyThread")}
+          data-tooltip-placement="bottom"
         >
           <span className="main-header-icon" aria-hidden>
             <Copy className="main-header-icon-copy" size={14} />

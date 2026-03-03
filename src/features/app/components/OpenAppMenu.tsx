@@ -193,12 +193,14 @@ export function OpenAppMenu({
       actionButton={
         <button
           type="button"
-          className="ghost main-header-action open-app-action"
+          className="ghost main-header-action open-app-action ds-tooltip-trigger"
           onClick={handleOpen}
           disabled={!selectedCanOpen}
           data-tauri-drag-region="false"
           aria-label={t("openApp.menu.openIn", { app: selectedOpenTarget.label })}
           title={openLabel}
+          data-tooltip={openLabel}
+          data-tooltip-placement="bottom"
         >
           <span className="open-app-label">
             <img
@@ -213,9 +215,11 @@ export function OpenAppMenu({
       }
       isOpen={openMenuOpen}
       onToggle={openMenu.toggle}
-      toggleClassName="ghost main-header-action open-app-toggle"
+      toggleClassName="ghost main-header-action open-app-toggle ds-tooltip-trigger"
       toggleAriaLabel={t("openApp.menu.selectEditor")}
       toggleTitle={t("openApp.menu.selectEditor")}
+      toggleTooltip={t("openApp.menu.selectEditor")}
+      toggleTooltipPlacement="bottom"
       toggleIcon={<ChevronDown size={14} aria-hidden />}
       popoverClassName="open-app-dropdown"
       popoverRole="menu"
