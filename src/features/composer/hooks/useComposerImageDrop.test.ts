@@ -155,6 +155,7 @@ describe("useComposerImageDrop", () => {
 
     const file = new File(["data"], "paste.png", { type: "image/png" });
     const item = {
+      kind: "file",
       type: "image/png",
       getAsFile: () => file,
     };
@@ -170,6 +171,58 @@ describe("useComposerImageDrop", () => {
     expect(onAttachImages).toHaveBeenCalledWith([
       "data:image/png;base64,MOCK",
     ]);
+
+    hook.unmount();
+    restoreFileReader();
+  });
+
+  it("handles pasted images from clipboard files when items are missing", async () => {
+    const restoreFileReader = setMockFileReader();
+    const onAttachImages = vi.fn();
+    const hook = renderImageDropHook({ disabled: false, onAttachImages });
+    const preventDefault = vi.fn();
+
+    const file = new File(["data"], "paste-file.png", { type: "image/png" });
+
+    await act(async () => {
+      await hook.result.handlePaste({
+        clipboardData: {
+          items: [],
+          files: [file],
+          getData: () => "",
+        },
+        preventDefault,
+      } as unknown as React.ClipboardEvent<HTMLTextAreaElement>);
+    });
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(onAttachImages).toHaveBeenCalledWith(["data:image/png;base64,MOCK"]);
+
+    hook.unmount();
+    restoreFileReader();
+  });
+
+  it("keeps default text paste for mixed clipboard payloads", async () => {
+    const restoreFileReader = setMockFileReader();
+    const onAttachImages = vi.fn();
+    const hook = renderImageDropHook({ disabled: false, onAttachImages });
+    const preventDefault = vi.fn();
+
+    const file = new File(["data"], "mixed.png", { type: "image/png" });
+
+    await act(async () => {
+      await hook.result.handlePaste({
+        clipboardData: {
+          items: [],
+          files: [file],
+          getData: (type: string) => (type === "text/plain" ? "hello" : ""),
+        },
+        preventDefault,
+      } as unknown as React.ClipboardEvent<HTMLTextAreaElement>);
+    });
+
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(onAttachImages).toHaveBeenCalledWith(["data:image/png;base64,MOCK"]);
 
     hook.unmount();
     restoreFileReader();

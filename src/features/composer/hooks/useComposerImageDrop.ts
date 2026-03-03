@@ -43,6 +43,10 @@ function readFilesAsDataUrls(files: File[]) {
   ).then((items) => items.filter(Boolean));
 }
 
+function buildFileDedupKey(file: File) {
+  return `${file.name}|${file.size}|${file.type}|${file.lastModified}`;
+}
+
 function getDragPosition(position: { x: number; y: number }) {
   return position;
 }
@@ -187,33 +191,31 @@ export function useComposerImageDrop({
     if (disabled) {
       return;
     }
-    const items = Array.from(event.clipboardData?.items ?? []);
-    const imageItems = items.filter((item) => item.type.startsWith("image/"));
-    if (imageItems.length === 0) {
-      return;
-    }
-    event.preventDefault();
-    const files = imageItems
+    const clipboardData = event.clipboardData;
+    const items = Array.from(clipboardData?.items ?? []);
+    const itemImageFiles = items
+      .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
       .map((item) => item.getAsFile())
       .filter((file): file is File => Boolean(file));
-    if (!files.length) {
+    const pastedImageFiles = Array.from(clipboardData?.files ?? []).filter((file) =>
+      file.type.startsWith("image/"),
+    );
+    const dedupedImageFiles = Array.from(
+      new Map(
+        [...itemImageFiles, ...pastedImageFiles].map((file) => [buildFileDedupKey(file), file]),
+      ).values(),
+    );
+    if (dedupedImageFiles.length === 0) {
       return;
     }
-    const dataUrls = await Promise.all(
-      files.map(
-        (file) =>
-          new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () =>
-              resolve(typeof reader.result === "string" ? reader.result : "");
-            reader.onerror = () => resolve("");
-            reader.readAsDataURL(file);
-          }),
-      ),
-    );
-    const valid = dataUrls.filter(Boolean);
-    if (valid.length > 0) {
-      onAttachImages?.(valid);
+    const pastedText =
+      typeof clipboardData?.getData === "function" ? clipboardData.getData("text/plain") : "";
+    if (!pastedText) {
+      event.preventDefault();
+    }
+    const dataUrls = await readFilesAsDataUrls(dedupedImageFiles);
+    if (dataUrls.length > 0) {
+      onAttachImages?.(dataUrls);
     }
   };
 
