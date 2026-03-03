@@ -214,6 +214,7 @@ pub fn run() {
             files::file_read,
             files::file_write,
             files::read_image_as_data_url,
+            files::read_clipboard_file_as_data_url,
             files::write_text_file,
             codex::get_config_model,
             menu::menu_set_accelerators,

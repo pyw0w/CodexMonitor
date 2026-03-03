@@ -210,6 +210,7 @@ export function ComposerInput({
     handleDragLeave,
     handleDrop,
     handlePaste,
+    handlePasteFromKeyboard,
   } = useComposerImageDrop({
     disabled,
     onAttachImages,
@@ -412,6 +413,21 @@ export function ComposerInput({
     [handlePaste, onTextPaste],
   );
 
+  const handleTextareaKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (
+        !disabled &&
+        event.key.toLowerCase() === "v" &&
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey
+      ) {
+        void handlePasteFromKeyboard();
+      }
+      onKeyDown(event);
+    },
+    [disabled, handlePasteFromKeyboard, onKeyDown],
+  );
+
   const handleMobileAttachClick = useCallback(() => {
     if (disabled || !onAddAttachment) {
       return;
@@ -532,7 +548,7 @@ export function ComposerInput({
             onChange={handleTextareaChange}
             onSelect={handleTextareaSelect}
             disabled={disabled}
-            onKeyDown={onKeyDown}
+            onKeyDown={handleTextareaKeyDown}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}

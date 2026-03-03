@@ -248,6 +248,26 @@ describe("Composer attachments integration", () => {
     restoreFileReader();
   });
 
+  it("attaches pasted non-image files from clipboard", async () => {
+    const restoreFileReader = setMockFileReader();
+    const harness = renderComposerHarness({
+      activeThreadId: "thread-1",
+      activeWorkspaceId: "ws-1",
+    });
+    const textarea = getTextarea(harness.container);
+
+    const file = new File(["pdf"], "doc.pdf", { type: "application/pdf" });
+
+    await act(async () => {
+      dispatchPaste(textarea, { files: [file] });
+    });
+
+    expect(getAttachmentNames(harness.container)).toEqual(["Pasted image"]);
+
+    harness.unmount();
+    restoreFileReader();
+  });
+
   it("removes attachments and clears drafts", async () => {
     const harness = renderComposerHarness({
       activeThreadId: "thread-1",

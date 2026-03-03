@@ -21,6 +21,13 @@ vi.mock("../../../services/dragDrop", () => ({
   },
 }));
 
+const readClipboardFileAsDataUrlMock = vi.fn<() => Promise<string | null>>(
+  async () => null,
+);
+vi.mock("../../../services/tauri", () => ({
+  readClipboardFileAsDataUrl: () => readClipboardFileAsDataUrlMock(),
+}));
+
 type HookResult = ReturnType<typeof useComposerImageDrop>;
 
 type RenderedHook = {
@@ -78,9 +85,28 @@ function setMockFileReader() {
   };
 }
 
+function setMockClipboardRead(items: Array<{ types: string[]; getType: (type: string) => Promise<Blob> }>) {
+  const originalClipboard = navigator.clipboard;
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: {
+      ...originalClipboard,
+      read: vi.fn(async () => items),
+    },
+  });
+  return () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: originalClipboard,
+    });
+  };
+}
+
 describe("useComposerImageDrop", () => {
   beforeEach(() => {
     mockOnDragDropEvent = null;
+    readClipboardFileAsDataUrlMock.mockReset();
+    readClipboardFileAsDataUrlMock.mockResolvedValue(null);
   });
 
   it("tracks drag over state for file transfers", () => {
@@ -202,6 +228,32 @@ describe("useComposerImageDrop", () => {
     restoreFileReader();
   });
 
+  it("handles pasted non-image files", async () => {
+    const restoreFileReader = setMockFileReader();
+    const onAttachImages = vi.fn();
+    const hook = renderImageDropHook({ disabled: false, onAttachImages });
+    const preventDefault = vi.fn();
+
+    const file = new File(["pdf"], "doc.pdf", { type: "application/pdf" });
+
+    await act(async () => {
+      await hook.result.handlePaste({
+        clipboardData: {
+          items: [],
+          files: [file],
+          getData: () => "",
+        },
+        preventDefault,
+      } as unknown as React.ClipboardEvent<HTMLTextAreaElement>);
+    });
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(onAttachImages).toHaveBeenCalledWith(["data:application/pdf;base64,MOCK"]);
+
+    hook.unmount();
+    restoreFileReader();
+  });
+
   it("keeps default text paste for mixed clipboard payloads", async () => {
     const restoreFileReader = setMockFileReader();
     const onAttachImages = vi.fn();
@@ -226,6 +278,78 @@ describe("useComposerImageDrop", () => {
 
     hook.unmount();
     restoreFileReader();
+  });
+
+  it("falls back to navigator clipboard read when paste payload omits items/files", async () => {
+    const restoreFileReader = setMockFileReader();
+    const restoreClipboardRead = setMockClipboardRead([
+      {
+        types: ["image/png"],
+        getType: async () => new Blob(["img"], { type: "image/png" }),
+      },
+    ]);
+    const onAttachImages = vi.fn();
+    const hook = renderImageDropHook({ disabled: false, onAttachImages });
+    const preventDefault = vi.fn();
+
+    await act(async () => {
+      await hook.result.handlePaste({
+        clipboardData: {
+          items: [],
+          files: [],
+          getData: () => "",
+        },
+        preventDefault,
+      } as unknown as React.ClipboardEvent<HTMLTextAreaElement>);
+    });
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(onAttachImages).toHaveBeenCalledWith(["data:image/png;base64,MOCK"]);
+
+    hook.unmount();
+    restoreClipboardRead();
+    restoreFileReader();
+  });
+
+  it("falls back to tauri clipboard command when web clipboard APIs are empty", async () => {
+    const onAttachImages = vi.fn();
+    const hook = renderImageDropHook({ disabled: false, onAttachImages });
+    const preventDefault = vi.fn();
+    readClipboardFileAsDataUrlMock.mockResolvedValueOnce(
+      "data:image/png;base64,TAURI",
+    );
+
+    await act(async () => {
+      await hook.result.handlePaste({
+        clipboardData: {
+          items: [],
+          files: [],
+          getData: () => "",
+        },
+        preventDefault,
+      } as unknown as React.ClipboardEvent<HTMLTextAreaElement>);
+    });
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(onAttachImages).toHaveBeenCalledWith(["data:image/png;base64,TAURI"]);
+
+    hook.unmount();
+  });
+
+  it("handles keyboard paste fallback when event payload is missing", async () => {
+    const onAttachImages = vi.fn();
+    const hook = renderImageDropHook({ disabled: false, onAttachImages });
+    readClipboardFileAsDataUrlMock.mockResolvedValueOnce(
+      "data:image/png;base64,TAURI",
+    );
+
+    await act(async () => {
+      await hook.result.handlePasteFromKeyboard();
+    });
+
+    expect(onAttachImages).toHaveBeenCalledWith(["data:image/png;base64,TAURI"]);
+
+    hook.unmount();
   });
 
   it("filters tauri drag-drop paths and respects drop target", async () => {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { subscribeWindowDragDrop } from "../../../services/dragDrop";
+import { readClipboardFileAsDataUrl } from "../../../services/tauri";
 
 const imageExtensions = [
   ".png",
@@ -41,6 +42,51 @@ function readFilesAsDataUrls(files: File[]) {
         }),
     ),
   ).then((items) => items.filter(Boolean));
+}
+
+function readBlobsAsDataUrls(blobs: Blob[]) {
+  return Promise.all(
+    blobs.map(
+      (blob) =>
+        new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () =>
+            resolve(typeof reader.result === "string" ? reader.result : "");
+          reader.onerror = () => resolve("");
+          reader.readAsDataURL(blob);
+        }),
+    ),
+  ).then((items) => items.filter(Boolean));
+}
+
+async function readClipboardApiBlobs() {
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.clipboard ||
+    typeof navigator.clipboard.read !== "function"
+  ) {
+    return [];
+  }
+  try {
+    const clipboardItems = await navigator.clipboard.read();
+    const blobs: Blob[] = [];
+    for (const clipboardItem of clipboardItems) {
+      const binaryTypes = clipboardItem.types.filter((type) => !type.startsWith("text/"));
+      for (const binaryType of binaryTypes) {
+        try {
+          const blob = await clipboardItem.getType(binaryType);
+          if (blob.size > 0) {
+            blobs.push(blob);
+          }
+        } catch {
+          // Ignore partially unreadable clipboard variants.
+        }
+      }
+    }
+    return blobs;
+  } catch {
+    return [];
+  }
 }
 
 function buildFileDedupKey(file: File) {
@@ -193,29 +239,68 @@ export function useComposerImageDrop({
     }
     const clipboardData = event.clipboardData;
     const items = Array.from(clipboardData?.items ?? []);
-    const itemImageFiles = items
-      .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+    const itemFiles = items
+      .filter((item) => item.kind === "file" || item.type !== "text/plain")
       .map((item) => item.getAsFile())
       .filter((file): file is File => Boolean(file));
-    const pastedImageFiles = Array.from(clipboardData?.files ?? []).filter((file) =>
-      file.type.startsWith("image/"),
-    );
-    const dedupedImageFiles = Array.from(
-      new Map(
-        [...itemImageFiles, ...pastedImageFiles].map((file) => [buildFileDedupKey(file), file]),
-      ).values(),
-    );
-    if (dedupedImageFiles.length === 0) {
-      return;
-    }
+    const pastedFiles = Array.from(clipboardData?.files ?? []);
     const pastedText =
       typeof clipboardData?.getData === "function" ? clipboardData.getData("text/plain") : "";
+    const dedupedFiles = Array.from(
+      new Map(
+        [...itemFiles, ...pastedFiles].map((file) => [buildFileDedupKey(file), file]),
+      ).values(),
+    );
+    if (dedupedFiles.length > 0) {
+      if (!pastedText) {
+        event.preventDefault();
+      }
+      const dataUrls = await readFilesAsDataUrls(dedupedFiles);
+      if (dataUrls.length > 0) {
+        onAttachImages?.(dataUrls);
+      }
+      return;
+    }
+
+    const clipboardApiBlobs = await readClipboardApiBlobs();
+    if (clipboardApiBlobs.length > 0) {
+      if (!pastedText) {
+        event.preventDefault();
+      }
+      const dataUrls = await readBlobsAsDataUrls(clipboardApiBlobs);
+      if (dataUrls.length > 0) {
+        onAttachImages?.(dataUrls);
+      }
+      return;
+    }
+
+    const tauriDataUrl = await readClipboardFileAsDataUrl();
+    if (!tauriDataUrl) {
+      return;
+    }
     if (!pastedText) {
       event.preventDefault();
     }
-    const dataUrls = await readFilesAsDataUrls(dedupedImageFiles);
-    if (dataUrls.length > 0) {
-      onAttachImages?.(dataUrls);
+    onAttachImages?.([tauriDataUrl]);
+  };
+
+  const handlePasteFromKeyboard = async () => {
+    if (disabled) {
+      return;
+    }
+
+    const clipboardApiBlobs = await readClipboardApiBlobs();
+    if (clipboardApiBlobs.length > 0) {
+      const dataUrls = await readBlobsAsDataUrls(clipboardApiBlobs);
+      if (dataUrls.length > 0) {
+        onAttachImages?.(dataUrls);
+        return;
+      }
+    }
+
+    const tauriDataUrl = await readClipboardFileAsDataUrl();
+    if (tauriDataUrl) {
+      onAttachImages?.([tauriDataUrl]);
     }
   };
 
@@ -227,5 +312,6 @@ export function useComposerImageDrop({
     handleDragLeave,
     handleDrop,
     handlePaste,
+    handlePasteFromKeyboard,
   };
 }

@@ -13,6 +13,33 @@ pub(crate) mod io;
 pub(crate) mod ops;
 pub(crate) mod policy;
 
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+fn read_clipboard_file_as_data_url_desktop() -> Result<String, String> {
+    use arboard::Clipboard;
+    use base64::engine::general_purpose::STANDARD;
+    use base64::Engine;
+    use png::{BitDepth, ColorType, Encoder};
+
+    let mut clipboard = Clipboard::new().map_err(|err| err.to_string())?;
+    let image = clipboard.get_image().map_err(|err| err.to_string())?;
+    let width = image.width as u32;
+    let height = image.height as u32;
+
+    let mut encoded_png = Vec::new();
+    {
+        let mut encoder = Encoder::new(&mut encoded_png, width, height);
+        encoder.set_color(ColorType::Rgba);
+        encoder.set_depth(BitDepth::Eight);
+        let mut writer = encoder.write_header().map_err(|err| err.to_string())?;
+        writer
+            .write_image_data(image.bytes.as_ref())
+            .map_err(|err| err.to_string())?;
+    }
+
+    let data = STANDARD.encode(encoded_png);
+    Ok(format!("data:image/png;base64,{data}"))
+}
+
 async fn file_read_impl(
     scope: FileScope,
     kind: FileKind,
@@ -123,4 +150,20 @@ pub(crate) fn write_text_file(path: String, content: String) -> Result<(), Strin
         }
     }
     std::fs::write(&target, content).map_err(|err| format!("Failed to write export file: {err}"))
+}
+
+#[tauri::command]
+pub(crate) fn read_clipboard_file_as_data_url() -> Result<Option<String>, String> {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+        return Ok(None);
+    }
+
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        match read_clipboard_file_as_data_url_desktop() {
+            Ok(data_url) => Ok(Some(data_url)),
+            Err(_) => Ok(None),
+        }
+    }
 }

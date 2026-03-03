@@ -230,6 +230,14 @@ export async function readImageAsDataUrl(path: string): Promise<string> {
   return invoke<string>("read_image_as_data_url", { path });
 }
 
+export async function readClipboardFileAsDataUrl(): Promise<string | null> {
+  try {
+    return await invoke<string | null>("read_clipboard_file_as_data_url");
+  } catch {
+    return null;
+  }
+}
+
 export async function readGlobalAgentsMd(): Promise<GlobalAgentsResponse> {
   return fileRead("global", "agents");
 }
