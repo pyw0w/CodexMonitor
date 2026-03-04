@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build_linux:
-    name: linux bundles (AppImage + RPM, ${{ matrix.arch }})
+    name: linux bundles (DEB + RPM, ${{ matrix.arch }})
     runs-on: ${{ matrix.platform }}
     environment: release
     env:
@@ -55,20 +55,20 @@ jobs:
           mkdir -p "$HOME/.tauri"
           echo "$TAURI_SIGNING_PRIVATE_KEY_B64" | base64 --decode > "$HOME/.tauri/codexmonitor.key"
 
-      - name: Build Linux AppImage and Fedora-compatible RPM
+      - name: Build Linux DEB and Fedora-compatible RPM
         run: |
           set -euo pipefail
           export TAURI_SIGNING_PRIVATE_KEY
           TAURI_SIGNING_PRIVATE_KEY="$(cat "$HOME/.tauri/codexmonitor.key")"
-          npm run tauri -- build --bundles appimage,rpm
+          npm run tauri -- build --bundles deb,rpm
 
       - name: Validate Linux bundle outputs
         run: |
           set -euo pipefail
-          mapfile -t appimages < <(find src-tauri/target/release/bundle/appimage -type f -name '*.AppImage*' | sort)
+          mapfile -t debs < <(find src-tauri/target/release/bundle/deb -type f -name '*.deb' | sort)
           mapfile -t rpms < <(find src-tauri/target/release/bundle/rpm -type f -name '*.rpm' | sort)
-          if [ ${#appimages[@]} -eq 0 ]; then
-            echo "No AppImage output found"
+          if [ ${#debs[@]} -eq 0 ]; then
+            echo "No DEB output found"
             exit 1
           fi
           if [ ${#rpms[@]} -eq 0 ]; then
@@ -95,7 +95,7 @@ jobs:
         with:
           name: linux-bundles-${{ matrix.arch }}
           path: |
-            src-tauri/target/release/bundle/appimage/*.AppImage*
+            src-tauri/target/release/bundle/deb/*.deb
             src-tauri/target/release/bundle/rpm/*.rpm
 
   build_windows:
@@ -299,7 +299,7 @@ jobs:
           notes = "\n".join(output).strip()
           if not notes:
               notes = "- No user-facing changes."
-          notes += "\n\n- Linux: Fedora-compatible RPM bundles are available; updates are manual via package download/upgrade."
+          notes += "\n\n- Linux: DEB and RPM bundles are available; updates are manual via package download/upgrade."
 
           Path("release-artifacts/release-notes.md").write_text(notes + "\n")
           PY
@@ -317,32 +317,6 @@ jobs:
             return f"https://github.com/Dimillian/CodexMonitor/releases/download/v${VERSION}/{quote(filename)}"
 
           platforms = {}
-
-          appimages = list(artifacts_dir.rglob("*.AppImage.tar.gz"))
-          if not appimages:
-            appimages = list(artifacts_dir.rglob("*.AppImage"))
-          if not appimages:
-            raise SystemExit("No AppImage artifacts found for latest.json")
-
-          def detect_arch(name):
-            lowered = name.lower()
-            if "aarch64" in lowered or "arm64" in lowered:
-              return "aarch64"
-            if "x86_64" in lowered or "amd64" in lowered:
-              return "x86_64"
-            return None
-
-          for appimage in appimages:
-            arch = detect_arch(appimage.name)
-            if not arch:
-              continue
-            sig_path = appimage.with_suffix(appimage.suffix + ".sig")
-            if not sig_path.exists():
-              raise SystemExit(f"Missing signature for {appimage.name}")
-            platforms[f"linux-{arch}"] = {
-              "url": release_url(appimage.name),
-              "signature": sig_path.read_text().strip(),
-            }
 
           exe_candidates = sorted(artifacts_dir.rglob("*.exe"), key=lambda p: p.name.lower())
           windows_installer = None
@@ -429,7 +403,7 @@ jobs:
           )
 
           shopt -s nullglob globstar
-          appimages=(release-artifacts/**/*.AppImage*)
+          debs=(release-artifacts/**/*.deb)
           mapfile -t rpms < <(find release-artifacts -type f -name '*.rpm' | sort)
           mapfile -t windows_exes < <(find release-artifacts -type f -name '*.exe*' | sort)
           mapfile -t windows_msis < <(find release-artifacts -type f -name '*.msi*' | sort)
@@ -453,7 +427,7 @@ jobs:
             --title "v${VERSION}" \
             --notes-file release-artifacts/release-notes.md \
             --target "$GITHUB_SHA" \
-            "${appimages[@]}" \
+            "${debs[@]}" \
             "${rpms[@]}" \
             "${windows_exes[@]}" \
             "${windows_msis[@]}" \

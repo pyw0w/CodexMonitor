@@ -41,7 +41,12 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "deb",
+      "rpm",
+      "nsis",
+      "msi"
+    ],
     "createUpdaterArtifacts": true,
     "iOS": {
       "frameworks": [

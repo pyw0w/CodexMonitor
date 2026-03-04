@@ -233,7 +233,7 @@ Linux close behavior:
 npm run tauri:dev:linux
 ```
 
-The release workflow publishes Linux AppImage and RPM artifacts.
+The release workflow publishes Linux DEB and RPM artifacts.
 
 ### Fedora (native RPM)
 
